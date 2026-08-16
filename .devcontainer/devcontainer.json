@@ -1,0 +1,35 @@
+{
+  "name": "Looper FE",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+
+  // Codespace 생성 직후 의존성 설치와 .env 준비까지 자동으로 끝낸다.
+  // .env 가 이미 있으면 덮어쓰지 않는다 (-n).
+  "postCreateCommand": "npm install && cp -n .env.example .env || true",
+
+  // Vite 개발 서버 포트. onAutoForward: openPreview 로 두면
+  // npm run dev 를 실행하는 순간 VS Code 안에서 미리보기가 바로 열린다.
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "Looper FE (Vite)",
+      "onAutoForward": "openPreview"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        }
+      }
+    }
+  }
+}

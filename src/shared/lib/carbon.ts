@@ -15,6 +15,12 @@
  *     (거래 완료·반납 완료 시점에 1회만 반영 — 서버가 강제)
  *     이 파일의 계산 함수는 등록 화면의 미리보기와 계산식 설명
  *     화면에서만 쓰고, 대시보드 수치는 서버 응답을 그대로 쓴다.
+ *
+ *  ⚠️ 계수·출처·기준일은 `GET /api/v1/carbon/references` 로도 내려온다.
+ *     계산식 화면(/impact/method)은 그 응답을 우선 사용하고,
+ *     아래 상수는 응답 실패 시 폴백으로만 쓴다.
+ *     임팩트 대시보드 응답에는 `disclaimer` 문자열이 포함되므로,
+ *     서버가 준 문구가 있으면 CARBON_DISCLAIMER 대신 그것을 노출한다.
  * ─────────────────────────────────────────────────────────────
  */
 
@@ -43,7 +49,7 @@ export interface SectorFactor {
  *       866 commercial products", Nature Scientific Data (2022)
  */
 export const SECTOR_FACTORS: Record<CarbonSector, SectorFactor> = {
-  FURNITURE_LIVING: {
+  HOME_LIVING: {
     intensity: 4.32,
     productionShare: 0.687,
     avoidanceFactor: 1.93,
@@ -53,7 +59,7 @@ export const SECTOR_FACTORS: Record<CarbonSector, SectorFactor> = {
     productionShare: 0.607,
     avoidanceFactor: 17.94,
   },
-  PAPER_BOOK: {
+  BOOKS_PAPER: {
     intensity: 0.81,
     productionShare: 0.946,
     avoidanceFactor: 0.5,
