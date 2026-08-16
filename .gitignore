@@ -29,3 +29,7 @@ pnpm-debug.log*
 
 # MSW 가 생성하는 서비스워커
 public/mockServiceWorker.js
+
+# 코드 전달용 git 번들·패치 (저장소에 커밋하지 않는다)
+*.bundle
+*.patch

@@ -2,19 +2,19 @@
  * ─────────────────────────────────────────────────────────────
  *  거래·대여 상태 단일 출처 (Single Source of Truth)
  * ─────────────────────────────────────────────────────────────
+ *  값은 BE API 명세(Notion)에서 그대로 가져왔다.
+ *
  *  기획서 R5 대응: "상태를 서버 단일 출처로 관리한다 /
  *  프론트는 서버 응답 상태를 그대로 렌더링한다"
  *
- *  프론트에서 상태를 임의로 계산하거나 낙관적으로 바꾸지 않는다.
- *  이 파일은 서버가 내려준 상태 코드를 화면 표현(라벨·색상)으로
- *  옮기는 매핑과, 어떤 액션 버튼을 보여줄지 판단하기 위한
- *  전이 규칙만 담는다.
+ *  상태는 네 갈래로 나뉜다.
+ *    1. 거래 게시물   TradeStatus
+ *    2. 거래 신청     ApplicationStatus   (신청자 관점)
+ *    3. 대여 요청     RentalStatus
+ *    4. 대여 지원     OfferStatus         (지원자 관점)
  *
- *  ⚠️ 상태 문자열은 BE Enum 값과 반드시 일치해야 한다.
- *     현재 값은 기획서 기준 잠정값이며, BE API 명세(Swagger)가
- *     도착하면 이 파일의 코드값만 맞추면 된다.
- *     화면 코드는 항상 이 파일의 상수를 import 해서 쓰고,
- *     문자열 리터럴을 직접 쓰지 않는다.
+ *  반납 지연은 상태가 아니라 `is_overdue` 불리언 플래그다.
+ *  RentalStatus 와 독립적으로 겹쳐 표시해야 한다.
  * ─────────────────────────────────────────────────────────────
  */
 
@@ -28,7 +28,6 @@ export type StatusTone =
   | 'done';
 
 export interface StatusMeta {
-  /** 뱃지에 노출되는 한글 라벨 */
   label: string;
   tone: StatusTone;
   /** 상세 화면 안내 문구 */
@@ -45,29 +44,22 @@ export const TONE_CLASS: Record<StatusTone, string> = {
   done: 'bg-tone-done-bg text-tone-done-fg',
 };
 
-/* ─────────────────────────── 거래 ─────────────────────────── */
+/* ─────────────────── 1. 거래 게시물 ─────────────────── */
 
 /**
- * 거래 흐름 (기획서 4-1)
- *   거래 가능 → 거래 신청 → 작성자가 신청자 1명 수락 → 예약 중
- *   → 지정 날짜에 픽업존에서 전달 → 양측 확인으로 거래 완료
+ * 흐름: 거래 가능 → (신청 접수) → 작성자가 1명 수락 → 예약 중
+ *       → 완료 요청 → 상대방 확인 → 거래 완료
  *
- * 규칙
- *   - 동일 게시물에 활성 신청은 1건만 허용 (서버가 강제)
- *   - 예약 취소 시 AVAILABLE 로 복귀
- *   - COMPLETED 는 MVP 에서 되돌릴 수 없음
+ * 신청이 들어와도 게시물 자체는 AVAILABLE 을 유지한다.
+ * '신청 대기'는 게시물이 아니라 신청 건의 상태(ApplicationStatus.PENDING)다.
  */
 export const TRADE_STATUS = {
-  /** 거래 가능 — 신청을 받을 수 있는 상태 */
   AVAILABLE: 'AVAILABLE',
-  /** 신청 대기 — 신청이 들어왔고 작성자의 수락을 기다리는 상태 */
-  APPLIED: 'APPLIED',
-  /** 예약 중 — 신청자 1명이 수락되어 지정 날짜를 기다리는 상태 */
   RESERVED: 'RESERVED',
-  /** 거래 완료 — 양측 확인 완료. 되돌릴 수 없음 */
+  /** 한쪽이 완료를 요청하고 상대방 확인을 기다리는 상태 */
+  COMPLETION_PENDING: 'COMPLETION_PENDING',
   COMPLETED: 'COMPLETED',
-  /** 거래 취소 — 게시물 자체가 내려간 상태 */
-  CANCELED: 'CANCELED',
+  CANCELLED: 'CANCELLED',
 } as const;
 
 export type TradeStatus = (typeof TRADE_STATUS)[keyof typeof TRADE_STATUS];
@@ -78,76 +70,91 @@ export const TRADE_STATUS_META: Record<TradeStatus, StatusMeta> = {
     tone: 'brand',
     description: '지금 거래를 신청할 수 있어요.',
   },
-  APPLIED: {
-    label: '신청 대기',
-    tone: 'info',
-    description: '신청이 접수되어 작성자의 수락을 기다리고 있어요.',
-  },
   RESERVED: {
     label: '예약 중',
     tone: 'warning',
     description: '거래가 확정되었어요. 약속한 날짜에 픽업존에서 만나세요.',
+  },
+  COMPLETION_PENDING: {
+    label: '완료 확인 대기',
+    tone: 'info',
+    description: '상대방의 완료 확인을 기다리고 있어요.',
   },
   COMPLETED: {
     label: '거래 완료',
     tone: 'done',
     description: '거래가 완료되었어요. 완료된 거래는 되돌릴 수 없어요.',
   },
-  CANCELED: {
+  CANCELLED: {
     label: '거래 취소',
     tone: 'neutral',
     description: '취소된 거래예요.',
   },
 };
 
-/** 거래 상태 전이 규칙. 여기에 없는 전이는 UI 에서 액션을 노출하지 않는다. */
 export const TRADE_TRANSITIONS: Record<TradeStatus, readonly TradeStatus[]> = {
-  AVAILABLE: ['APPLIED', 'CANCELED'],
-  APPLIED: ['RESERVED', 'AVAILABLE'], // 수락 / 신청 철회·거절
-  RESERVED: ['COMPLETED', 'AVAILABLE'], // 완료 / 예약 취소 시 다시 거래 가능
+  AVAILABLE: ['RESERVED', 'CANCELLED'],
+  RESERVED: ['COMPLETION_PENDING', 'AVAILABLE'], // 예약 취소 시 다시 거래 가능
+  COMPLETION_PENDING: ['COMPLETED'],
   COMPLETED: [], // 되돌릴 수 없음 (기획서 명시)
-  CANCELED: [],
+  CANCELLED: [],
 };
 
-/* ─────────────────────────── 대여 ─────────────────────────── */
+/* ─────────────────── 2. 거래 신청 ─────────────────── */
+
+/** 한 사용자는 동일 게시물에 활성 신청을 1건만 가질 수 있다 (서버가 강제) */
+export const APPLICATION_STATUS = {
+  PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export type ApplicationStatus =
+  (typeof APPLICATION_STATUS)[keyof typeof APPLICATION_STATUS];
+
+export const APPLICATION_STATUS_META: Record<ApplicationStatus, StatusMeta> = {
+  PENDING: {
+    label: '신청 대기',
+    tone: 'info',
+    description: '작성자의 수락을 기다리고 있어요.',
+  },
+  ACCEPTED: {
+    label: '신청 수락됨',
+    tone: 'brand',
+    description: '신청이 수락되었어요. 약속한 날짜에 만나세요.',
+  },
+  CANCELLED: {
+    label: '신청 취소',
+    tone: 'neutral',
+    description: '취소된 신청이에요.',
+  },
+};
+
+/* ─────────────────── 3. 대여 요청 ─────────────────── */
 
 /**
- * 대여 흐름 (기획서 4-2) — 방향이 뒤집힌 구조
- *   필요한 사람이 요청을 올리고, 보유자가 '빌려줄게요'로 지원한다.
- *
- *   지원자 모집 중 → 빌려줄게요 지원 → 요청자가 지원자 선택
- *   → 대여 확정 → 물품 수령(대여 중) → 반납 → 지원자 확인 → 반납 완료
- *
- * 규칙
- *   - 반납 예정 시간을 넘기면 OVERDUE 로 표시되고 신뢰도에 반영
- *   - 물품 수령(IN_USE) 전까지는 요청자·지원자 모두 취소 가능
+ * 흐름: 지원자 모집 중 → 요청자가 지원자 1명 선택 → 대여 확정
+ *       → 물품 수령(대여 중) → 반납 요청 → 지원자 확인 → 반납 완료
  */
 export const RENTAL_STATUS = {
-  /** 지원자 모집 중 — 아직 지원자가 선택되지 않은 상태 */
-  OPEN: 'OPEN',
-  /** 대여 확정 — 지원자가 선택되어 수령을 기다리는 상태 */
-  MATCHED: 'MATCHED',
-  /** 대여 중 — 물품을 수령해 사용 중인 상태 */
+  RECRUITING: 'RECRUITING',
+  CONFIRMED: 'CONFIRMED',
   IN_USE: 'IN_USE',
-  /** 반납 대기 — 요청자가 '반납했어요'를 눌러 지원자 확인을 기다리는 상태 */
+  /** 요청자가 '반납했어요'를 눌러 지원자 확인을 기다리는 상태 */
   RETURN_PENDING: 'RETURN_PENDING',
-  /** 반납 지연 — 반납 예정 시간을 초과한 상태 */
-  OVERDUE: 'OVERDUE',
-  /** 반납 완료 — 양측 확인 완료 */
-  RETURNED: 'RETURNED',
-  /** 대여 취소 — 수령 전 취소 */
-  CANCELED: 'CANCELED',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
 } as const;
 
 export type RentalStatus = (typeof RENTAL_STATUS)[keyof typeof RENTAL_STATUS];
 
 export const RENTAL_STATUS_META: Record<RentalStatus, StatusMeta> = {
-  OPEN: {
-    label: '지원자 모집 중',
+  RECRUITING: {
+    label: '모집 중',
     tone: 'brand',
     description: '빌려줄 수 있는 학생을 찾고 있어요.',
   },
-  MATCHED: {
+  CONFIRMED: {
     label: '대여 확정',
     tone: 'info',
     description: '대여가 확정되었어요. 약속한 장소에서 물품을 받으세요.',
@@ -162,38 +169,75 @@ export const RENTAL_STATUS_META: Record<RentalStatus, StatusMeta> = {
     tone: 'info',
     description: '반납이 접수되어 빌려준 학생의 확인을 기다리고 있어요.',
   },
-  OVERDUE: {
-    label: '반납 지연',
-    tone: 'danger',
-    description: '반납 예정 시간이 지났어요. 지연은 신뢰도에 반영돼요.',
-  },
-  RETURNED: {
+  COMPLETED: {
     label: '반납 완료',
     tone: 'done',
     description: '반납이 완료되었어요.',
   },
-  CANCELED: {
+  CANCELLED: {
     label: '대여 취소',
     tone: 'neutral',
     description: '취소된 대여예요.',
   },
 };
 
-/** 대여 상태 전이 규칙 */
 export const RENTAL_TRANSITIONS: Record<RentalStatus, readonly RentalStatus[]> =
   {
-    OPEN: ['MATCHED', 'CANCELED'],
-    MATCHED: ['IN_USE', 'CANCELED'], // 수령 전까지 양측 취소 가능
-    IN_USE: ['RETURN_PENDING', 'OVERDUE'],
-    RETURN_PENDING: ['RETURNED', 'OVERDUE'],
-    OVERDUE: ['RETURN_PENDING', 'RETURNED'], // 지연 상태에서도 반납은 가능
-    RETURNED: [],
-    CANCELED: [],
+    RECRUITING: ['CONFIRMED', 'CANCELLED'],
+    CONFIRMED: ['IN_USE', 'CANCELLED'], // 수령 전까지 양측 취소 가능
+    IN_USE: ['RETURN_PENDING'],
+    RETURN_PENDING: ['COMPLETED'],
+    COMPLETED: [],
+    CANCELLED: [],
   };
 
-/* ───────────────────────── 헬퍼 ───────────────────────── */
+/* ─────────────────── 4. 대여 지원 ─────────────────── */
 
-export function canTransitionTrade(from: TradeStatus, to: TradeStatus): boolean {
+export const OFFER_STATUS = {
+  PENDING: 'PENDING',
+  SELECTED: 'SELECTED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export type OfferStatus = (typeof OFFER_STATUS)[keyof typeof OFFER_STATUS];
+
+export const OFFER_STATUS_META: Record<OfferStatus, StatusMeta> = {
+  PENDING: {
+    label: '지원 대기',
+    tone: 'info',
+    description: '요청자의 선택을 기다리고 있어요.',
+  },
+  SELECTED: {
+    label: '지원 선택됨',
+    tone: 'brand',
+    description: '요청자가 회원님을 선택했어요.',
+  },
+  CANCELLED: {
+    label: '지원 취소',
+    tone: 'neutral',
+    description: '취소된 지원이에요.',
+  },
+};
+
+/* ─────────────────── 반납 지연 ─────────────────── */
+
+/**
+ * 반납 지연은 상태가 아니라 별도 불리언 플래그(`is_overdue`)다.
+ * 예를 들어 status=IN_USE 이면서 is_overdue=true 인 조합이 존재한다.
+ * 따라서 상태 뱃지 옆에 겹쳐서 표시한다.
+ */
+export const OVERDUE_META: StatusMeta = {
+  label: '반납 지연',
+  tone: 'danger',
+  description: '반납 예정 시간이 지났어요. 지연은 신뢰도에 반영돼요.',
+};
+
+/* ─────────────────── 헬퍼 ─────────────────── */
+
+export function canTransitionTrade(
+  from: TradeStatus,
+  to: TradeStatus,
+): boolean {
   return TRADE_TRANSITIONS[from].includes(to);
 }
 
@@ -205,16 +249,16 @@ export function canTransitionRental(
 }
 
 /**
- * 예약 중이면서 거래 날짜가 아직 오지 않은 건은 '미래 날짜 예약 중'으로
+ * 예약 중이면서 거래 예정일이 아직 오지 않은 건은 '미래 날짜 예약 중'으로
  * 구분해 보여준다. 기획서의 미래 시점 예약 거래를 화면에서 드러내기 위한
  * 표시 전용 구분이며, 서버 상태는 그대로 RESERVED 다.
  */
 export function resolveTradeStatusLabel(
   status: TradeStatus,
-  tradeDate?: string | null,
+  availableDate?: string | null,
   now: Date = new Date(),
 ): string {
-  if (status !== TRADE_STATUS.RESERVED || !tradeDate) {
+  if (status !== TRADE_STATUS.RESERVED || !availableDate) {
     return TRADE_STATUS_META[status].label;
   }
 
@@ -224,24 +268,25 @@ export function resolveTradeStatusLabel(
     now.getDate(),
   ).getTime();
 
-  return new Date(tradeDate).getTime() > today
+  return new Date(availableDate).getTime() > today
     ? '미래 날짜 예약 중'
     : TRADE_STATUS_META[status].label;
 }
 
 /**
  * 시연 검증용 — 기획서가 요구한 9개 상태.
- * 시드 데이터가 이 9개를 모두 포함하는지 확인하는 데 사용한다.
+ * 서버 모델에서는 이 9개가 네 갈래 상태와 is_overdue 플래그에 걸쳐 있다.
+ * 시드 데이터가 이 9개를 모두 만들어내는지 확인하는 데 사용한다.
  * (R2 대응: "첫 화면부터 채워진 상태로 보이게 한다")
  */
 export const DEMO_REQUIRED_STATUSES = [
-  '거래 가능',
-  '신청 대기',
-  '미래 날짜 예약 중',
-  '거래 완료',
-  '지원자 모집 중',
-  '대여 확정',
-  '대여 중',
-  '반납 지연',
-  '반납 완료',
+  { label: '거래 가능', source: 'TradeStatus.AVAILABLE' },
+  { label: '신청 대기', source: 'ApplicationStatus.PENDING' },
+  { label: '미래 날짜 예약 중', source: 'TradeStatus.RESERVED + 미래 날짜' },
+  { label: '거래 완료', source: 'TradeStatus.COMPLETED' },
+  { label: '모집 중', source: 'RentalStatus.RECRUITING' },
+  { label: '대여 확정', source: 'RentalStatus.CONFIRMED' },
+  { label: '대여 중', source: 'RentalStatus.IN_USE' },
+  { label: '반납 지연', source: 'is_overdue = true' },
+  { label: '반납 완료', source: 'RentalStatus.COMPLETED' },
 ] as const;
