@@ -24,7 +24,7 @@ import { useAuthStore } from '@/shared/store/authStore';
 import { Button } from '@/shared/ui/Button';
 import { Field, Input, Select, Textarea } from '@/shared/ui/Field';
 import { FilterChips } from '@/shared/ui/FilterChips';
-import { useToast } from '@/shared/ui/Toast';
+import { useToast } from '@/shared/ui/useToast';
 import { PageTitle } from '@/app/layouts/StackLayout';
 
 const TODAY = new Date().toISOString().slice(0, 10);

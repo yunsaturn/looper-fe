@@ -6,7 +6,11 @@ import { tradeApi } from '@/entities/trade/api';
 import { queryKeys } from '@/shared/api/queryKeys';
 import { ROUTES } from '@/shared/config/navigation';
 import { useAuthStore } from '@/shared/store/authStore';
-import { calculateAvoidedCarbon, formatCarbon } from '@/shared/lib/carbon';
+import {
+  CARBON_DISCLAIMER,
+  calculateAvoidedCarbon,
+  formatCarbon,
+} from '@/shared/lib/carbon';
 import { Button } from '@/shared/ui/Button';
 import { CarbonHeroCard, ImpactStatCard } from '@/shared/ui/ImpactCards';
 import { Skeleton } from '@/shared/ui/feedback';
@@ -54,9 +58,8 @@ export function TradeCompletePage() {
       ? calculateAvoidedCarbon(trade.data.weight_kg, trade.data.carbon_sector)
       : null;
 
-  const disclaimer =
-    impact.data?.disclaimer ??
-    '탄소 수치는 대체율 0.65를 가정한 예상 절감량입니다.';
+  // 각주는 서버가 준 문구를 우선 쓰고, 없을 때만 상수로 폴백한다.
+  const disclaimer = impact.data?.disclaimer ?? CARBON_DISCLAIMER;
 
   return (
     <div className="mx-auto grid max-w-lg gap-5 py-6 text-center">

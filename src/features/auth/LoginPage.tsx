@@ -68,6 +68,8 @@ export function LoginPage() {
           {error && !error.fieldErrors.length && (
             <p className="rounded-btn bg-tone-danger-bg px-3 py-2.5 text-sm text-tone-danger-fg">
               {error.message}
+              {/* 서버가 1분 단위 고정 윈도로 로그인을 제한한다 */}
+              {error.isRateLimited && ' 1분 뒤에 다시 시도해주세요.'}
             </p>
           )}
 

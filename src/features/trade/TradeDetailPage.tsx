@@ -24,7 +24,7 @@ import { ConfirmDialog, Sheet } from '@/shared/ui/Sheet';
 import { StatusBadge } from '@/shared/ui/StatusBadge';
 import { TrustScoreBadge } from '@/shared/ui/TrustScoreBadge';
 import { ErrorState, Skeleton } from '@/shared/ui/feedback';
-import { useToast } from '@/shared/ui/Toast';
+import { useToast } from '@/shared/ui/useToast';
 import { PageTitle } from '@/app/layouts/StackLayout';
 
 /**

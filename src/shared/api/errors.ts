@@ -79,6 +79,18 @@ export class ApiError extends Error {
   get isUnauthorized(): boolean {
     return this.status === 401;
   }
+
+  /**
+   * 요청 제한에 걸렸는지.
+   *
+   * BE 가 인증 엔드포인트에 고정 윈도 제한을 걸어두었다.
+   * (로그인 20회/분, 인증번호 발송 5회/시간, 확인 30회/분,
+   *  같은 인증 건 5회 실패 시 차단)
+   * 시연 중 로그인을 반복하면 걸릴 수 있으므로 안내를 따로 준다.
+   */
+  get isRateLimited(): boolean {
+    return this.status === 429 || this.code === ERROR_CODE.TOO_MANY_REQUESTS;
+  }
 }
 
 /** 네트워크 장애 등 응답 자체를 못 받은 경우 */

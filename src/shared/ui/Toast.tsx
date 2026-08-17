@@ -1,20 +1,13 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { cn } from '@/shared/lib/cn';
-
-type ToastTone = 'success' | 'error' | 'info';
+import { ToastContext, type ToastTone } from './useToast';
 
 interface ToastItem {
   id: number;
   message: string;
   tone: ToastTone;
 }
-
-interface ToastApi {
-  show: (message: string, tone?: ToastTone) => void;
-}
-
-const ToastContext = createContext<ToastApi | null>(null);
 
 const TONE_CLASS: Record<ToastTone, string> = {
   success: 'bg-brand-600',
@@ -59,10 +52,4 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       </div>
     </ToastContext.Provider>
   );
-}
-
-export function useToast(): ToastApi {
-  const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error('useToast 는 ToastProvider 안에서만 쓸 수 있습니다.');
-  return ctx;
 }

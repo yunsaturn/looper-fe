@@ -16,7 +16,7 @@ import { useAuthStore } from '@/shared/store/authStore';
 import { formatDateTime, formatDuration } from '@/shared/lib/format';
 import { Button } from '@/shared/ui/Button';
 import { Input, Select, Textarea } from '@/shared/ui/Field';
-import { useToast } from '@/shared/ui/Toast';
+import { useToast } from '@/shared/ui/useToast';
 import { PageTitle } from '@/app/layouts/StackLayout';
 
 const DURATION_OPTIONS = [30, 60, 120, 180, 360, 720, 1440, 2880];
