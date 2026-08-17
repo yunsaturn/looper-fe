@@ -1,7 +1,9 @@
 /**
- * 거래 유형 · 상품 카테고리 · 상품 상태 · 탄소 섹터
+ * 거래 유형 · 카테고리 · 상품 상태 · 탄소 섹터
  *
- * 값은 BE API 명세(Notion)를 따른다.
+ * 값은 BE 소스의 Java enum 과 1:1로 대조해 맞췄다.
+ * (trade/domain/TradeType, global/domain/Category,
+ *  global/domain/CarbonSector, global/domain/ItemCondition)
  */
 
 /* ─────────────────── 거래 유형 ─────────────────── */
@@ -23,75 +25,59 @@ export const TRADE_TYPE_LABEL: Record<TradeType, string> = {
   WANTED: '구합니다',
 };
 
-/** 목록 필터 칩 순서 (Figma 홈 피드 기준: 전체 / 판매 / 나눔 / 구합니다) */
+/** 목록 필터 칩 (Figma 홈 피드 기준: 전체 / 판매 / 나눔 / 구합니다) */
 export const TRADE_TYPE_FILTERS = [
   TRADE_TYPE.SALE,
   TRADE_TYPE.SHARE,
   TRADE_TYPE.WANTED,
 ] as const;
 
-/* ─────────────────── 탄소 섹터 ─────────────────── */
+/* ─────────────────── 카테고리 · 탄소 섹터 ─────────────────── */
 
 /**
- * The Carbon Catalogue 를 정제해 만든 3개 섹터.
- *
- * 게시물의 `carbon_sector` 는 **서버가 내려준다** (LLM 정규화 결과).
- * 프론트에서 카테고리로부터 추론하지 않는다.
+ * BE 의 `Category` 는 세 값뿐이고, `Category.toCarbonSector()` 가
+ * `CarbonSector.valueOf(name())` 이라 **카테고리와 탄소 섹터가 같은 값**이다.
+ * 따라서 프론트에서 카테고리 → 섹터 매핑 로직을 따로 둘 필요가 없다.
  */
-export const CARBON_SECTOR = {
+export const CATEGORY = {
   HOME_LIVING: 'HOME_LIVING',
   ELECTRONICS: 'ELECTRONICS',
   BOOKS_PAPER: 'BOOKS_PAPER',
 } as const;
 
-export type CarbonSector = (typeof CARBON_SECTOR)[keyof typeof CARBON_SECTOR];
+export type Category = (typeof CATEGORY)[keyof typeof CATEGORY];
 
-export const CARBON_SECTOR_LABEL: Record<CarbonSector, string> = {
+/** 탄소 섹터는 카테고리와 동일한 값 집합이다. */
+export type CarbonSector = Category;
+export const CARBON_SECTOR = CATEGORY;
+
+export const CATEGORY_LABEL: Record<Category, string> = {
   HOME_LIVING: '가구·생활용품',
   ELECTRONICS: '전자기기',
   BOOKS_PAPER: '종이·서적',
 };
 
-/* ─────────────────── 상품 카테고리 ─────────────────── */
+/** 탄소 계산 화면에서도 같은 라벨을 쓴다. */
+export const CARBON_SECTOR_LABEL = CATEGORY_LABEL;
 
-/**
- * ⚠️ 명세 예시에 등장한 값은 `HOME_LIVING`, `ELECTRONICS` 둘뿐이다.
- *    나머지는 Figma 와이어프레임의 카테고리 칩(전자기기·생활용품·도서·의류)에서
- *    유추한 잠정값이므로, BE 담당자에게 Category Enum 전체 목록을 받아
- *    확정해야 한다. 확정 전까지 이 목록은 필터 UI 표시용으로만 쓴다.
- */
-export const CATEGORIES = [
-  { code: 'ELECTRONICS', label: '전자기기' },
-  { code: 'HOME_LIVING', label: '생활용품' },
-  { code: 'FURNITURE', label: '가구·인테리어' },
-  { code: 'BOOKS', label: '도서·교재' },
-  { code: 'CLOTHING', label: '의류·잡화' },
-  { code: 'STATIONERY', label: '문구·사무' },
-  { code: 'SPORTS', label: '스포츠·레저' },
-  { code: 'ETC', label: '기타' },
+export const CATEGORY_FILTERS = [
+  CATEGORY.HOME_LIVING,
+  CATEGORY.ELECTRONICS,
+  CATEGORY.BOOKS_PAPER,
 ] as const;
 
-export type CategoryCode = (typeof CATEGORIES)[number]['code'];
-
-const CATEGORY_LABEL = new Map<string, string>(
-  CATEGORIES.map((c) => [c.code, c.label]),
-);
-
 export function categoryLabel(code: string): string {
-  return CATEGORY_LABEL.get(code) ?? code;
+  return CATEGORY_LABEL[code as Category] ?? code;
 }
 
 /* ─────────────────── 상품 상태 ─────────────────── */
 
-/**
- * ⚠️ 명세 예시에는 `GOOD` 만 등장한다. 나머지는 잠정값이므로
- *    BE Condition Enum 을 받아 확정해야 한다.
- */
 export const ITEM_CONDITION = {
   NEW: 'NEW',
   LIKE_NEW: 'LIKE_NEW',
   GOOD: 'GOOD',
   FAIR: 'FAIR',
+  POOR: 'POOR',
 } as const;
 
 export type ItemCondition =
@@ -102,9 +88,12 @@ export const ITEM_CONDITION_LABEL: Record<ItemCondition, string> = {
   LIKE_NEW: '사용감 거의 없음',
   GOOD: '사용감 있음',
   FAIR: '사용감 많음',
+  POOR: '하자 있음',
 };
 
-/* ─────────────────── AI 보조 응답 ─────────────────── */
+export const ITEM_CONDITIONS = Object.values(ITEM_CONDITION);
+
+/* ─────────────────── AI 보조 ─────────────────── */
 
 /**
  * AI 실패가 게시물 등록을 막지 않도록 서버는 실패해도 HTTP 200 을 주고
