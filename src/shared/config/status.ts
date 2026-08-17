@@ -2,7 +2,9 @@
  * ─────────────────────────────────────────────────────────────
  *  거래·대여 상태 단일 출처 (Single Source of Truth)
  * ─────────────────────────────────────────────────────────────
- *  값은 BE API 명세(Notion)에서 그대로 가져왔다.
+ * 값은 BE 소스의 Java enum 과 1:1로 대조해 맞췄다.
+ *  (trade/domain/TradeStatus, TradeApplicationStatus,
+ *   rental/domain/RentalStatus, RentalOfferStatus)
  *
  *  기획서 R5 대응: "상태를 서버 단일 출처로 관리한다 /
  *  프론트는 서버 응답 상태를 그대로 렌더링한다"
@@ -59,7 +61,6 @@ export const TRADE_STATUS = {
   /** 한쪽이 완료를 요청하고 상대방 확인을 기다리는 상태 */
   COMPLETION_PENDING: 'COMPLETION_PENDING',
   COMPLETED: 'COMPLETED',
-  CANCELLED: 'CANCELLED',
 } as const;
 
 export type TradeStatus = (typeof TRADE_STATUS)[keyof typeof TRADE_STATUS];
@@ -85,19 +86,13 @@ export const TRADE_STATUS_META: Record<TradeStatus, StatusMeta> = {
     tone: 'done',
     description: '거래가 완료되었어요. 완료된 거래는 되돌릴 수 없어요.',
   },
-  CANCELLED: {
-    label: '거래 취소',
-    tone: 'neutral',
-    description: '취소된 거래예요.',
-  },
 };
 
 export const TRADE_TRANSITIONS: Record<TradeStatus, readonly TradeStatus[]> = {
-  AVAILABLE: ['RESERVED', 'CANCELLED'],
+  AVAILABLE: ['RESERVED'],
   RESERVED: ['COMPLETION_PENDING', 'AVAILABLE'], // 예약 취소 시 다시 거래 가능
   COMPLETION_PENDING: ['COMPLETED'],
   COMPLETED: [], // 되돌릴 수 없음 (기획서 명시)
-  CANCELLED: [],
 };
 
 /* ─────────────────── 2. 거래 신청 ─────────────────── */
@@ -106,6 +101,8 @@ export const TRADE_TRANSITIONS: Record<TradeStatus, readonly TradeStatus[]> = {
 export const APPLICATION_STATUS = {
   PENDING: 'PENDING',
   ACCEPTED: 'ACCEPTED',
+  /** 다른 신청자가 수락되어 자동 마감된 상태 */
+  CLOSED: 'CLOSED',
   CANCELLED: 'CANCELLED',
 } as const;
 
@@ -122,6 +119,11 @@ export const APPLICATION_STATUS_META: Record<ApplicationStatus, StatusMeta> = {
     label: '신청 수락됨',
     tone: 'brand',
     description: '신청이 수락되었어요. 약속한 날짜에 만나세요.',
+  },
+  CLOSED: {
+    label: '마감됨',
+    tone: 'neutral',
+    description: '다른 신청자가 수락되어 마감되었어요.',
   },
   CANCELLED: {
     label: '신청 취소',
@@ -196,6 +198,8 @@ export const RENTAL_TRANSITIONS: Record<RentalStatus, readonly RentalStatus[]> =
 export const OFFER_STATUS = {
   PENDING: 'PENDING',
   SELECTED: 'SELECTED',
+  /** 다른 지원자가 선택되어 자동 마감된 상태 */
+  CLOSED: 'CLOSED',
   CANCELLED: 'CANCELLED',
 } as const;
 
@@ -211,6 +215,11 @@ export const OFFER_STATUS_META: Record<OfferStatus, StatusMeta> = {
     label: '지원 선택됨',
     tone: 'brand',
     description: '요청자가 회원님을 선택했어요.',
+  },
+  CLOSED: {
+    label: '마감됨',
+    tone: 'neutral',
+    description: '다른 지원자가 선택되어 마감되었어요.',
   },
   CANCELLED: {
     label: '지원 취소',

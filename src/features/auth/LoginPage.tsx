@@ -1,0 +1,96 @@
+import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { Link, useNavigate } from 'react-router-dom';
+
+import { userApi } from '@/entities/user/api';
+import { ApiError } from '@/shared/api/errors';
+import { ROUTES } from '@/shared/config/navigation';
+import { useAuthStore } from '@/shared/store/authStore';
+import { Button } from '@/shared/ui/Button';
+import { Input } from '@/shared/ui/Field';
+import { LoopIcon } from '@/shared/ui/icons';
+
+export function LoginPage() {
+  const navigate = useNavigate();
+  const signIn = useAuthStore((s) => s.signIn);
+
+  const [email, setEmail] = useState('demo@xx.ac.kr');
+  const [password, setPassword] = useState('password');
+
+  const login = useMutation({
+    mutationFn: () => userApi.login({ email, password }),
+    onSuccess: (res) => {
+      signIn(res);
+      navigate(ROUTES.HOME, { replace: true });
+    },
+  });
+
+  const error = login.error instanceof ApiError ? login.error : null;
+
+  return (
+    <div className="flex min-h-dvh flex-col justify-center px-5 py-10">
+      <div className="mx-auto w-full max-w-sm">
+        <div className="mb-8 text-center">
+          <LoopIcon className="mx-auto h-10 w-10 text-brand-600" />
+          <h1 className="mt-3 text-2xl font-bold text-ink-900">루퍼</h1>
+          <p className="mt-1.5 text-sm text-ink-500">
+            같은 캠퍼스 안에서 물건을 순환시켜요
+          </p>
+        </div>
+
+        <form
+          className="grid gap-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            login.mutate();
+          }}
+        >
+          <Input
+            label="학교 이메일"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="student@university.ac.kr"
+            autoComplete="email"
+            required
+            error={error?.fieldError('email')}
+          />
+          <Input
+            label="비밀번호"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            required
+            error={error?.fieldError('password')}
+          />
+
+          {error && !error.fieldErrors.length && (
+            <p className="rounded-btn bg-tone-danger-bg px-3 py-2.5 text-sm text-tone-danger-fg">
+              {error.message}
+            </p>
+          )}
+
+          <Button type="submit" size="lg" fullWidth loading={login.isPending}>
+            로그인
+          </Button>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-ink-500">
+          아직 계정이 없나요?{' '}
+          <Link
+            to={ROUTES.SIGNUP}
+            className="font-semibold text-brand-700 underline"
+          >
+            회원가입
+          </Link>
+        </p>
+
+        <p className="mt-8 rounded-card bg-ink-50 px-4 py-3 text-xs leading-relaxed text-ink-500">
+          목업 모드에서는 아무 값으로나 로그인됩니다. 학교 이메일 인증
+          회원가입은 실제 서버 연결 후 동작합니다.
+        </p>
+      </div>
+    </div>
+  );
+}

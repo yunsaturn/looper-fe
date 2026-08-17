@@ -27,8 +27,8 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
-# MSW 가 생성하는 서비스워커
-public/mockServiceWorker.js
+# MSW 서비스워커(public/mockServiceWorker.js)는 커밋한다.
+# 없으면 clone·Codespace 직후 목업이 동작하지 않는다. (msw 공식 권장)
 
 # 코드 전달용 git 번들·패치 (저장소에 커밋하지 않는다)
 *.bundle
