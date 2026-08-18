@@ -22,8 +22,8 @@ export function RentalCompletePage() {
   });
 
   const impact = useQuery({
-    queryKey: queryKeys.impact.me,
-    queryFn: impactApi.me,
+    queryKey: queryKeys.impact.me(),
+    queryFn: () => impactApi.me(),
   });
 
   if (rental.isPending || impact.isPending) {

@@ -690,12 +690,34 @@ export const myImpact: MyImpact = {
     { month: '2026-07', estimated_carbon_saved_kg_co2e: 12.4 },
     { month: '2026-08', estimated_carbon_saved_kg_co2e: 24.1 },
   ],
+  tree_equivalent: {
+    tree_count: 2,
+    basis_kg_co2e_per_tree: 60,
+    growth_period_years: 10,
+    source: '산림청 도시숲 탄소흡수량 기준',
+  },
+  forest: {
+    current_trees: 2,
+    carbon_toward_next_tree_kg_co2e: 36,
+    next_tree_threshold_kg_co2e: 60,
+    progress_to_next_tree: 0.6,
+  },
+  month_over_month: {
+    this_month_kg_co2e: 24.1,
+    last_month_kg_co2e: 20.4,
+    change_ratio: 0.18,
+  },
   disclaimer: DISCLAIMER,
 };
 
 export const campusImpact: CampusImpact = {
   campus: { id: DEMO_CAMPUS_ID, name: 'XX대학교 본교 캠퍼스' },
-  estimated_carbon_saved_kg_co2e: 2480,
+  estimated_carbon_saved_kg_co2e: 12480,
+  saved_amount: 1540000,
+  waste_reduced_kg: 428.5,
+  trade_completed_count: 520,
+  sharing_count: 180,
+  rental_completed_count: 160,
   participant_count: 428,
   completed_activity_count: 680,
   category_breakdown: [
@@ -703,7 +725,46 @@ export const campusImpact: CampusImpact = {
     { category: CATEGORY.ELECTRONICS, ratio: 0.31 },
     { category: CATEGORY.BOOKS_PAPER, ratio: 0.17 },
   ],
-  campus_rank: 1,
+  campus_rank: 7,
+  ranking: {
+    top_campuses: [
+      {
+        rank: 1,
+        campus_id: 'campus-a',
+        display_name: 'A대학교',
+        estimated_carbon_saved_kg_co2e: 18420,
+        mine: false,
+      },
+      {
+        rank: 2,
+        campus_id: 'campus-b',
+        display_name: 'B대학교',
+        estimated_carbon_saved_kg_co2e: 15870,
+        mine: false,
+      },
+      {
+        rank: 3,
+        campus_id: 'campus-c',
+        display_name: 'C대학교',
+        estimated_carbon_saved_kg_co2e: 14930,
+        mine: false,
+      },
+    ],
+    my_campus: {
+      rank: 7,
+      campus_id: DEMO_CAMPUS_ID,
+      display_name: 'XX대학교 본교 캠퍼스',
+      estimated_carbon_saved_kg_co2e: 12480,
+      mine: true,
+    },
+    carbon_to_next_rank_kg_co2e: 540,
+  },
+  tree_equivalent: {
+    tree_count: 208,
+    basis_kg_co2e_per_tree: 60,
+    growth_period_years: 10,
+    source: '산림청 도시숲 탄소흡수량 기준',
+  },
   disclaimer: DISCLAIMER,
 };
 

@@ -56,7 +56,7 @@ export function TradeDetailPage() {
   /** 상태를 바꾸는 요청은 전부 성공 후 재조회한다. 낙관적 업데이트는 쓰지 않는다. */
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.trades.all });
-    queryClient.invalidateQueries({ queryKey: queryKeys.impact.me });
+    queryClient.invalidateQueries({ queryKey: queryKeys.impact.all });
   };
 
   const onMutationError = (error: unknown) => {

@@ -63,6 +63,7 @@ export function warmUpServer(): void {
 /* ─────────────────── 토큰 ─────────────────── */
 
 const TOKEN_KEY = 'looper.access_token';
+const REFRESH_KEY = 'looper.refresh_token';
 
 export function getAccessToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -71,6 +72,25 @@ export function getAccessToken(): string | null {
 export function setAccessToken(token: string | null): void {
   if (token) localStorage.setItem(TOKEN_KEY, token);
   else localStorage.removeItem(TOKEN_KEY);
+}
+
+/**
+ * Refresh Token 은 로그아웃 때 서버에 폐기를 요청하려고 보관한다.
+ * Access Token 은 만료 전까지 자체적으로 유효하므로, 로그아웃 시
+ * 서버 폐기와 별개로 **두 토큰을 모두 지워야** 한다. (BE 문서 명시)
+ */
+export function getRefreshToken(): string | null {
+  return localStorage.getItem(REFRESH_KEY);
+}
+
+export function setRefreshToken(token: string | null): void {
+  if (token) localStorage.setItem(REFRESH_KEY, token);
+  else localStorage.removeItem(REFRESH_KEY);
+}
+
+export function clearTokens(): void {
+  setAccessToken(null);
+  setRefreshToken(null);
 }
 
 /* ─────────────────── 인터셉터 ─────────────────── */
@@ -109,7 +129,7 @@ api.interceptors.response.use(
     );
 
     if (apiError.isUnauthorized) {
-      setAccessToken(null);
+      clearTokens();
       onUnauthorized?.();
     }
 

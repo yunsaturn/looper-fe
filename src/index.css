@@ -5,58 +5,82 @@
  *  Looper 디자인 토큰
  * ─────────────────────────────────────────────────────────────
  *  이 파일이 프로젝트의 유일한 색상·타이포·radius 출처다.
- *  Figma 로컬 스타일 값이 도착하면 아래 @theme 블록의 값만
- *  교체하면 되고, 컴포넌트 코드는 건드릴 필요가 없다.
+ *  값은 디자인 시스템(Design System.png)의 HEX 를 그대로 옮겼다.
+ *  화면 코드는 토큰 이름만 쓰므로 팔레트가 바뀌어도 여기만 고치면 된다.
  *
- *  현재 값은 기획서 목업(iPhone 프레임)에서 추출한 근사치이며
- *  Figma 확정 전까지의 잠정값이다.
+ *  브랜드 = Green,  본문 텍스트·테두리 = Cool Neutral,
+ *  경고·오류 = Red,  회색조 배경 = Neutral
  * ─────────────────────────────────────────────────────────────
  */
 @theme {
-  /* 브랜드 그린 — 목업 기준 앵커 500 = #4caf50 (잠정) */
-  --color-brand-50: #f2faf3;
-  --color-brand-100: #e1f4e3;
-  --color-brand-200: #c3e8c7;
-  --color-brand-300: #97d69e;
-  --color-brand-400: #6bc275;
-  --color-brand-500: #4caf50;
-  --color-brand-600: #3b9040;
-  --color-brand-700: #317335;
-  --color-brand-800: #2b5c2e;
-  --color-brand-900: #244c28;
+  /* Green — main 500 */
+  --color-brand-50: #f9fcf9;
+  --color-brand-100: #f4faf4;
+  --color-brand-200: #e2f1e0;
+  --color-brand-300: #c5e2c0;
+  --color-brand-400: #96c98e;
+  --color-brand-500: #67ad5c;
+  --color-brand-600: #55934c;
+  --color-brand-700: #43723c;
+  --color-brand-800: #355b30;
+  --color-brand-900: #274424;
 
-  /* 중립 — 카드 테두리·보조 텍스트 */
-  --color-ink-50: #f7f8f7;
-  --color-ink-100: #eef0ee;
-  --color-ink-200: #e0e3e0;
-  --color-ink-300: #c4c9c4;
-  --color-ink-400: #9aa19a;
-  --color-ink-500: #6f776f;
-  --color-ink-600: #525a52;
-  --color-ink-700: #3d443d;
-  --color-ink-800: #2a2f2a;
-  --color-ink-900: #171a17;
+  /*
+   * Cool Neutral — 텍스트와 테두리.
+   * 디자인 시스템의 semantic 매핑:
+   *   text-primary   900   text-secondary 600   text-tertiary 400
+   */
+  --color-ink-50: #f8f8fa;
+  --color-ink-100: #f1f1f4;
+  --color-ink-200: #e2e2e9;
+  --color-ink-300: #d1d1db;
+  --color-ink-400: #a3a3b3;
+  --color-ink-500: #787885;
+  --color-ink-600: #595966;
+  --color-ink-700: #42424d;
+  --color-ink-800: #2b2b33;
+  --color-ink-900: #1a1a1e;
+
+  /* Neutral — 순수 회색조 배경 */
+  --color-gray-0: #ffffff;
+  --color-gray-50: #f9f9f9;
+  --color-gray-100: #f2f2f2;
+  --color-gray-200: #e5e5e5;
+  --color-gray-300: #d4d4d4;
+  --color-gray-400: #a3a3a3;
+  --color-gray-500: #737373;
+  --color-gray-600: #525252;
+  --color-gray-700: #262626;
+  --color-gray-800: #121212;
+
+  /* Red — error 500 / hover 600 / pressed 700 */
+  --color-danger-50: #fff1f0;
+  --color-danger-100: #ffdcd9;
+  --color-danger-200: #ffb8b3;
+  --color-danger-500: #e53935;
+  --color-danger-600: #d32f2f;
+  --color-danger-700: #b73739;
 
   /* 상태 톤 — shared/config/status.ts 의 StatusTone 과 1:1 대응 */
-  --color-tone-neutral-bg: #eef0ee;
-  --color-tone-neutral-fg: #525a52;
-  --color-tone-info-bg: #e6f0fb;
-  --color-tone-info-fg: #2563a8;
-  --color-tone-brand-bg: #e1f4e3;
-  --color-tone-brand-fg: #317335;
-  --color-tone-warning-bg: #fdf0dc;
-  --color-tone-warning-fg: #a16207;
-  --color-tone-danger-bg: #fce9e9;
-  --color-tone-danger-fg: #b3261e;
-  --color-tone-done-bg: #eef0ee;
-  --color-tone-done-fg: #2a2f2a;
+  --color-tone-neutral-bg: #f1f1f4;
+  --color-tone-neutral-fg: #595966;
+  --color-tone-info-bg: #e2e2e9;
+  --color-tone-info-fg: #42424d;
+  --color-tone-brand-bg: #e2f1e0;
+  --color-tone-brand-fg: #43723c;
+  --color-tone-warning-bg: #ffdcd9;
+  --color-tone-warning-fg: #b73739;
+  --color-tone-danger-bg: #fff1f0;
+  --color-tone-danger-fg: #e53935;
+  --color-tone-done-bg: #f1f1f4;
+  --color-tone-done-fg: #2b2b33;
 
-  /* 타이포 */
+  /* 타이포 — 디자인 시스템 지정 서체 */
   --font-sans:
     'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
     system-ui, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
 
-  /* radius — 목업상 카드 16px / 버튼 12px / 칩 999px */
+  /* radius — 카드 16px / 버튼 12px / 칩 999px */
   --radius-card: 1rem;
   --radius-btn: 0.75rem;
   --radius-chip: 9999px;
