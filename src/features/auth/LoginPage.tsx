@@ -36,11 +36,10 @@ export function LoginPage() {
           <img
             src="/logo.png"
             alt="Looper 로고"
-            className="mx-auto h-9 w-9 shrink-0 md:h-11 md:w-11"
+            className="mx-auto h-9 w-9 shrink-0 md:h-20 md:w-40"
           />
-          <h1 className="mt-3 text-2xl font-bold text-ink-900">루퍼</h1>
           <p className="mt-1.5 text-sm text-ink-500">
-            같은 캠퍼스 안에서 물건을 순환시켜요
+            <strong>루퍼</strong> - 같은 캠퍼스 안에서 물건을 순환시켜요
           </p>
         </div>
 
