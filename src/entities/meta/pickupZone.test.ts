@@ -3,11 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { hasCoordinates, type PickupZoneItem } from './types';
 import {
   activePickupZones,
-  formatPickupZoneSummary,
+  HUFS_SEOUL_FALLBACK_CENTER,
   markerPickupZones,
   resolveMapCenter,
   sanitizeSelectedZoneId,
-  selectPickupZone,
 } from './pickupZone';
 
 /**
@@ -100,10 +99,10 @@ describe('resolveMapCenter', () => {
     });
   });
 
-  it('좌표 보유 존이 하나도 없으면 임의의 학교 좌표를 쓰지 않는다', () => {
+  it('좌표 보유 존이 하나도 없으면 fallback 중심', () => {
     expect(resolveMapCenter([noCoord], '')).toEqual({
-      latitude: 0,
-      longitude: 0,
+      latitude: HUFS_SEOUL_FALLBACK_CENTER.latitude,
+      longitude: HUFS_SEOUL_FALLBACK_CENTER.longitude,
     });
   });
 });
@@ -123,23 +122,5 @@ describe('sanitizeSelectedZoneId', () => {
 
   it('빈 선택은 빈 선택으로', () => {
     expect(sanitizeSelectedZoneId(zones, '')).toBe('');
-  });
-});
-
-describe('pickup zone selection and summary', () => {
-  it('마커와 목록에서 활성 존 id 를 동일하게 선택하고 비활성 id 는 거부한다', () => {
-    expect(selectPickupZone([located1, inactive], 'a')).toBe('a');
-    expect(selectPickupZone([located1, inactive], 'd')).toBe('');
-  });
-
-  it('좌표 없는 존도 목록 선택 id 로 유지한다', () => {
-    expect(selectPickupZone([noCoord], 'c')).toBe('c');
-  });
-
-  it('선택 요약을 중복 없는 두 줄로 만든다', () => {
-    expect(formatPickupZoneSummary('교내 장소 협의')).toEqual([
-      '교내 장소 협의를 희망 장소로 선택했어요.',
-      '신청·지원 메시지에서 구체적인 교내 거래 장소를 협의하세요.',
-    ]);
   });
 });

@@ -18,6 +18,11 @@ import {
  * TODO: BE 가 캠퍼스 응답에 중심 좌표(center_latitude/longitude)를 추가하면
  *       이 상수 대신 그 값을 쓴다.
  */
+export const HUFS_SEOUL_FALLBACK_CENTER = {
+  latitude: 37.5974,
+  longitude: 127.0585,
+} as const;
+
 export interface MapCenter {
   latitude: number;
   longitude: number;
@@ -46,7 +51,7 @@ export function markerPickupZones(
 export function resolveMapCenter(
   zones: PickupZoneItem[],
   selectedId: string,
-  fallback?: MapCenter,
+  fallback: MapCenter = HUFS_SEOUL_FALLBACK_CENTER,
 ): MapCenter {
   const located = markerPickupZones(zones);
 
@@ -60,7 +65,7 @@ export function resolveMapCenter(
     return { latitude: first.latitude, longitude: first.longitude };
   }
 
-  return fallback ?? { latitude: 0, longitude: 0 };
+  return { latitude: fallback.latitude, longitude: fallback.longitude };
 }
 
 /**
@@ -87,27 +92,4 @@ export function findPickupZone(
   zoneId: string,
 ): PickupZoneItem | undefined {
   return zones.find((zone) => zone.id === zoneId);
-}
-
-/** 마커 클릭과 목록 클릭이 같은 활성 픽업존 id 를 선택하도록 한다. */
-export function selectPickupZone(
-  zones: PickupZoneItem[],
-  zoneId: string,
-): string {
-  return activePickupZones(zones).some((zone) => zone.id === zoneId)
-    ? zoneId
-    : '';
-}
-
-function hasFinalConsonant(value: string): boolean {
-  const code = value.charCodeAt(value.length - 1);
-  return code >= 0xac00 && code <= 0xd7a3 && (code - 0xac00) % 28 !== 0;
-}
-
-export function formatPickupZoneSummary(name: string): [string, string] {
-  const particle = hasFinalConsonant(name) ? '을' : '를';
-  return [
-    `${name}${particle} 희망 장소로 선택했어요.`,
-    '신청·지원 메시지에서 구체적인 교내 거래 장소를 협의하세요.',
-  ];
 }
