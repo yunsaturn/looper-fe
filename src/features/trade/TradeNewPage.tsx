@@ -104,7 +104,12 @@ export function TradeNewPage() {
         category,
         condition,
         // 나눔은 서버가 0으로 고정하지만, 보내는 값도 맞춰둔다
-        price: tradeType === TRADE_TYPE.SHARE ? 0 : Number(price || 0),
+        price:
+          tradeType === TRADE_TYPE.SHARE
+            ? 0
+            : tradeType === TRADE_TYPE.WANTED && price.trim() === ''
+              ? null
+              : Number(price),
         weight_kg: Number(weight),
         available_date: availableDate,
         pickup_zone_id: pickupZoneId,

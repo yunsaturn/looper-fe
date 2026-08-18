@@ -2,11 +2,13 @@ import { api, type PageResponse } from '@/shared/api/client';
 
 import type {
   AcceptApplicationRequest,
+  CreatedTrade,
   CreateTradeRequest,
   TradeApplication,
   TradeDetail,
   TradeListFilters,
   TradeListItem,
+  TradeCancellationRequest,
   UpdatedTrade,
   UpdateTradeRequest,
 } from './types';
@@ -23,7 +25,7 @@ export const tradeApi = {
     api.get<TradeDetail>(`${BASE}/${tradeId}`).then((r) => r.data),
 
   create: (body: CreateTradeRequest) =>
-    api.post<TradeDetail>(BASE, body).then((r) => r.data),
+    api.post<CreatedTrade>(BASE, body).then((r) => r.data),
 
   /** AVAILABLE 상태에서만 가능. 보낸 필드만 반영된다 */
   update: (tradeId: string, body: UpdateTradeRequest) =>
@@ -52,14 +54,18 @@ export const tradeApi = {
       .post(`${BASE}/${tradeId}/applications/${applicationId}/accept`, body)
       .then((r) => r.data),
 
-  cancelApplication: (tradeId: string, applicationId: string) =>
+  cancelApplication: (
+    tradeId: string,
+    applicationId: string,
+    body: TradeCancellationRequest = {},
+  ) =>
     api
-      .post(`${BASE}/${tradeId}/applications/${applicationId}/cancel`)
+      .post(`${BASE}/${tradeId}/applications/${applicationId}/cancel`, body)
       .then((r) => r.data),
 
   /* 예약·완료 */
-  cancelReservation: (tradeId: string) =>
-    api.post(`${BASE}/${tradeId}/reservation/cancel`).then((r) => r.data),
+  cancelReservation: (tradeId: string, body: TradeCancellationRequest = {}) =>
+    api.post(`${BASE}/${tradeId}/reservation/cancel`, body).then((r) => r.data),
 
   requestCompletion: (tradeId: string) =>
     api.post(`${BASE}/${tradeId}/completion/request`).then((r) => r.data),

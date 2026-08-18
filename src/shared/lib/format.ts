@@ -26,8 +26,9 @@ export function formatTime(iso: string): string {
   });
 }
 
-/** 12000 → '12,000원', 0 → '무료' */
-export function formatPrice(won: number): string {
+/** 12000 → '12,000원', 0 → '무료', null/누락 → '가격 협의' */
+export function formatPrice(won?: number | null): string {
+  if (won == null) return '가격 협의';
   return won === 0 ? '무료' : `${won.toLocaleString(KST)}원`;
 }
 

@@ -1,11 +1,14 @@
 import { api, type PageResponse } from '@/shared/api/client';
 
 import type {
+  CreatedRental,
   CreateRentalRequest,
+  RentalCancellationRequest,
   RentalDetail,
   RentalListFilters,
   RentalListItem,
   RentalOffer,
+  RentalReturnRequest,
   UpdatedRental,
   UpdateRentalRequest,
 } from './types';
@@ -22,7 +25,7 @@ export const rentalApi = {
     api.get<RentalDetail>(`${BASE}/${rentalId}`).then((r) => r.data),
 
   create: (body: CreateRentalRequest) =>
-    api.post<RentalDetail>(BASE, body).then((r) => r.data),
+    api.post<CreatedRental>(BASE, body).then((r) => r.data),
 
   /** RECRUITING 상태에서만 가능. 시간을 바꾸면 서버가 반납 예정 시각을 다시 계산한다 */
   update: (rentalId: string, body: UpdateRentalRequest) =>
@@ -44,21 +47,25 @@ export const rentalApi = {
       .post(`${BASE}/${rentalId}/offers/${offerId}/select`)
       .then((r) => r.data),
 
-  cancelOffer: (rentalId: string, offerId: string) =>
+  cancelOffer: (
+    rentalId: string,
+    offerId: string,
+    body: RentalCancellationRequest = {},
+  ) =>
     api
-      .post(`${BASE}/${rentalId}/offers/${offerId}/cancel`)
+      .post(`${BASE}/${rentalId}/offers/${offerId}/cancel`, body)
       .then((r) => r.data),
 
   /* 수령·반납 */
   confirmPickup: (rentalId: string) =>
     api.post(`${BASE}/${rentalId}/pickup/confirm`).then((r) => r.data),
 
-  requestReturn: (rentalId: string) =>
-    api.post(`${BASE}/${rentalId}/return/request`).then((r) => r.data),
+  requestReturn: (rentalId: string, body: RentalReturnRequest = {}) =>
+    api.post(`${BASE}/${rentalId}/return/request`, body).then((r) => r.data),
 
   confirmReturn: (rentalId: string) =>
     api.post(`${BASE}/${rentalId}/return/confirm`).then((r) => r.data),
 
-  cancel: (rentalId: string) =>
-    api.post(`${BASE}/${rentalId}/cancel`).then((r) => r.data),
+  cancel: (rentalId: string, body: RentalCancellationRequest = {}) =>
+    api.post(`${BASE}/${rentalId}/cancel`, body).then((r) => r.data),
 };

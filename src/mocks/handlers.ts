@@ -314,6 +314,12 @@ export const handlers = [
     const zone =
       pickupZones.find((z) => z.id === body.pickup_zone_id) ?? pickupZones[0];
 
+    if (!body.weight_kg || Number(body.weight_kg) <= 0) {
+      return validationError([
+        { field: 'weightKg', message: '0보다 큰 무게를 입력해주세요.' },
+      ]);
+    }
+
     const created = {
       ...trades[0],
       id: `trade-${trades.length + 1}`,
@@ -329,7 +335,24 @@ export const handlers = [
     } as (typeof trades)[number];
 
     trades.unshift(created);
-    return HttpResponse.json(created, { status: 201 });
+    return HttpResponse.json(
+      {
+        id: created.id,
+        trade_type: created.trade_type,
+        title: created.title,
+        description: created.description,
+        category: created.category,
+        carbon_sector: created.category,
+        condition: created.condition,
+        price: created.price,
+        weight_kg: created.weight_kg,
+        available_date: created.available_date,
+        pickup_zone: created.pickup_zone,
+        status: created.status,
+        created_at: created.created_at,
+      },
+      { status: 201 },
+    );
   }),
 
   http.post(
@@ -368,6 +391,36 @@ export const handlers = [
       applications: applications.filter((a) => a.trade_id === params.tradeId),
     });
   }),
+
+  http.post(
+    `${BASE}/trades/:tradeId/applications/:applicationId/cancel`,
+    async ({ params, request }) => {
+      await delay(LATENCY_MS);
+      await request.json(); // BE의 필수 @RequestBody 계약을 목업에서도 강제한다
+      const trade = trades.find((t) => t.id === params.tradeId);
+      const application = applications.find(
+        (a) => a.id === params.applicationId && a.trade_id === params.tradeId,
+      );
+      if (!trade || !application) return notFound();
+
+      if (application.status !== APPLICATION_STATUS.PENDING) {
+        return invalidState(
+          application.status,
+          [APPLICATION_STATUS.PENDING],
+          'CANCEL_APPLICATION',
+        );
+      }
+
+      application.status = APPLICATION_STATUS.CANCELLED;
+      return HttpResponse.json({
+        application_id: application.id,
+        trade_id: trade.id,
+        status: application.status,
+        cancelled_by: 'TRADE_APPLICANT',
+        cancelled_at: new Date().toISOString(),
+      });
+    },
+  ),
 
   http.post(
     `${BASE}/trades/:tradeId/applications/:applicationId/accept`,
@@ -457,8 +510,9 @@ export const handlers = [
 
   http.post(
     `${BASE}/trades/:tradeId/reservation/cancel`,
-    async ({ params }) => {
+    async ({ params, request }) => {
       await delay(LATENCY_MS);
+      await request.json(); // 선택 사유와 별개로 JSON 본문은 필수다
       const trade = trades.find((t) => t.id === params.tradeId);
       if (!trade) return notFound();
 
@@ -578,6 +632,9 @@ export const handlers = [
 
     return HttpResponse.json({
       ...rental,
+      offer_count: offers.filter(
+        (o) => o.rental_id === rental.id && o.status === OFFER_STATUS.PENDING,
+      ).length,
       my_offer_status: mine?.status ?? null,
       can_offer:
         rental.status === RENTAL_STATUS.RECRUITING &&
@@ -591,6 +648,12 @@ export const handlers = [
     const body = (await request.json()) as Record<string, unknown>;
     const zone =
       pickupZones.find((z) => z.id === body.pickup_zone_id) ?? pickupZones[0];
+
+    if (!body.weight_kg || Number(body.weight_kg) <= 0) {
+      return validationError([
+        { field: 'weightKg', message: '0보다 큰 무게를 입력해주세요.' },
+      ]);
+    }
 
     const startAt = body.start_at as string;
     // 반납 예정 시간은 서버가 시작 시간 + 사용 시간으로 자동 계산한다
@@ -611,12 +674,28 @@ export const handlers = [
       is_overdue: false,
       overdue_at: null,
       requester: users[0],
+      offer_count: 0,
       my_offer_status: null,
       can_offer: false,
     } as (typeof rentals)[number];
 
     rentals.unshift(created);
-    return HttpResponse.json(created, { status: 201 });
+    return HttpResponse.json(
+      {
+        id: created.id,
+        item_name: created.item_name,
+        category: created.category,
+        description: created.description,
+        pickup_zone: created.pickup_zone,
+        start_at: created.start_at,
+        duration_minutes: body.duration_minutes as number,
+        due_at: created.due_at,
+        offered_price: created.offered_price,
+        status: created.status,
+        created_at: new Date().toISOString(),
+      },
+      { status: 201 },
+    );
   }),
 
   http.post(`${BASE}/rentals/:rentalId/offers`, async ({ params, request }) => {
@@ -652,6 +731,36 @@ export const handlers = [
       offers: offers.filter((o) => o.rental_id === params.rentalId),
     });
   }),
+
+  http.post(
+    `${BASE}/rentals/:rentalId/offers/:offerId/cancel`,
+    async ({ params, request }) => {
+      await delay(LATENCY_MS);
+      await request.json();
+      const rental = rentals.find((r) => r.id === params.rentalId);
+      const offer = offers.find(
+        (o) => o.id === params.offerId && o.rental_id === params.rentalId,
+      );
+      if (!rental || !offer) return notFound();
+
+      if (offer.status !== OFFER_STATUS.PENDING) {
+        return invalidState(
+          offer.status,
+          [OFFER_STATUS.PENDING],
+          'CANCEL_OFFER',
+        );
+      }
+
+      offer.status = OFFER_STATUS.CANCELLED;
+      return HttpResponse.json({
+        offer_id: offer.id,
+        rental_id: rental.id,
+        status: offer.status,
+        cancelled_by: 'RENTAL_OFFERER',
+        cancelled_at: new Date().toISOString(),
+      });
+    },
+  ),
 
   // 대여 수정 — RECRUITING 에서만. 시간이 바뀌면 반납 예정 시각을 다시 계산한다
   http.patch(`${BASE}/rentals/:rentalId`, async ({ params, request }) => {
@@ -742,22 +851,27 @@ export const handlers = [
     return HttpResponse.json({ status: rental.status });
   }),
 
-  http.post(`${BASE}/rentals/:rentalId/return/request`, async ({ params }) => {
-    await delay(LATENCY_MS);
-    const rental = rentals.find((r) => r.id === params.rentalId);
-    if (!rental) return notFound();
+  http.post(
+    `${BASE}/rentals/:rentalId/return/request`,
+    async ({ params, request }) => {
+      await delay(LATENCY_MS);
+      const body = (await request.json()) as { message?: string };
+      const rental = rentals.find((r) => r.id === params.rentalId);
+      if (!rental) return notFound();
 
-    if (rental.status !== RENTAL_STATUS.IN_USE) {
-      return invalidState(
-        rental.status,
-        [RENTAL_STATUS.IN_USE],
-        'REQUEST_RETURN',
-      );
-    }
+      if (rental.status !== RENTAL_STATUS.IN_USE) {
+        return invalidState(
+          rental.status,
+          [RENTAL_STATUS.IN_USE],
+          'REQUEST_RETURN',
+        );
+      }
 
-    rental.status = RENTAL_STATUS.RETURN_PENDING;
-    return HttpResponse.json({ status: rental.status });
-  }),
+      rental.status = RENTAL_STATUS.RETURN_PENDING;
+      rental.return_message = body.message;
+      return HttpResponse.json({ status: rental.status });
+    },
+  ),
 
   http.post(`${BASE}/rentals/:rentalId/return/confirm`, async ({ params }) => {
     await delay(LATENCY_MS);
@@ -777,6 +891,41 @@ export const handlers = [
     myImpact.rental_completed_count += 1;
 
     return HttpResponse.json({ status: rental.status });
+  }),
+
+  http.post(`${BASE}/rentals/:rentalId/cancel`, async ({ params, request }) => {
+    await delay(LATENCY_MS);
+    await request.json();
+    const rental = rentals.find((r) => r.id === params.rentalId);
+    if (!rental) return notFound();
+
+    if (
+      rental.status !== RENTAL_STATUS.RECRUITING &&
+      rental.status !== RENTAL_STATUS.CONFIRMED
+    ) {
+      return invalidState(
+        rental.status,
+        [RENTAL_STATUS.RECRUITING, RENTAL_STATUS.CONFIRMED],
+        'CANCEL_RENTAL',
+      );
+    }
+
+    rental.status = RENTAL_STATUS.CANCELLED;
+    offers
+      .filter((o) => o.rental_id === rental.id)
+      .forEach((o) => {
+        if (
+          o.status === OFFER_STATUS.PENDING ||
+          o.status === OFFER_STATUS.SELECTED
+        ) {
+          o.status = OFFER_STATUS.CANCELLED;
+        }
+      });
+    return HttpResponse.json({
+      rental_id: rental.id,
+      status: rental.status,
+      cancelled_at: new Date().toISOString(),
+    });
   }),
 
   /* ─────────────────── AI 등록 보조 ─────────────────── */
