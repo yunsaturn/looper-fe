@@ -45,6 +45,7 @@ function UnauthorizedRedirect() {
       signOut();
       navigate(ROUTES.LOGIN, { replace: true });
     });
+    return () => setUnauthorizedHandler(null);
   }, [navigate, signOut]);
 
   return null;
