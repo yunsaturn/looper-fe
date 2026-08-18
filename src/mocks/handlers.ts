@@ -1,5 +1,7 @@
 import { http, HttpResponse, delay } from 'msw';
 
+import type { UpdateProfileRequest } from '@/entities/user/types';
+
 import { CATEGORY } from '@/shared/config/categories';
 import {
   APPLICATION_STATUS,
@@ -19,6 +21,7 @@ import {
   toTradeListItem,
   trades,
   users,
+  myProfile,
 } from './seed';
 
 /**
@@ -152,19 +155,48 @@ export const handlers = [
     );
   }),
 
+  // 서버가 학교·캠퍼스를 중첩 객체로 준다. 평평한 필드가 아니다.
   http.get(`${BASE}/users/me`, async () => {
     await delay(LATENCY_MS);
+    return HttpResponse.json(myProfile);
+  }),
+
+  http.patch(`${BASE}/users/me`, async ({ request }) => {
+    await delay(LATENCY_MS);
+    const body = (await request.json()) as Partial<UpdateProfileRequest>;
+    // 보낸 필드만 반영한다 (PATCH 의미론)
+    if (body.nickname !== undefined) myProfile.nickname = body.nickname;
+    if (body.department !== undefined) myProfile.department = body.department;
+    if (body.main_building !== undefined) {
+      myProfile.main_building = body.main_building;
+    }
     return HttpResponse.json({
-      id: DEMO_ME_ID,
-      nickname: users[0].nickname,
-      email: 'demo@xx.ac.kr',
-      school_id: 'school-1',
-      school_name: 'XX대학교',
-      campus_id: DEMO_CAMPUS_ID,
-      campus_name: '본교 캠퍼스',
-      department: '컴퓨터공학과',
-      main_building: '공학관',
-      trust_score: users[0].trust_score,
+      id: myProfile.id,
+      nickname: myProfile.nickname,
+      department: myProfile.department,
+      main_building: myProfile.main_building,
+      updated_at: new Date().toISOString(),
+    });
+  }),
+
+  // 공개 프로필에는 이메일·학과가 없다 (기획서 R6)
+  http.get(`${BASE}/users/:userId`, async ({ params }) => {
+    await delay(LATENCY_MS);
+    const user = users.find((u) => u.id === params.userId);
+    if (!user) {
+      return HttpResponse.json(
+        { code: 'RESOURCE_NOT_FOUND', message: '사용자를 찾을 수 없습니다.', field_errors: [] },
+        { status: 404 },
+      );
+    }
+    return HttpResponse.json({
+      id: user.id,
+      nickname: user.nickname,
+      school_name: myProfile.school.name,
+      campus_name: myProfile.campus.name,
+      trust_score: user.trust_score,
+      trade_completed_count: 12,
+      rental_completed_count: 7,
     });
   }),
 

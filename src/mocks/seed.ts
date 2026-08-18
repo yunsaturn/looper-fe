@@ -11,7 +11,7 @@ import type {
   TradeListItem,
 } from '@/entities/trade/types';
 import type { RentalDetail, SeededRentalOffer } from '@/entities/rental/types';
-import type { UserSummary } from '@/entities/user/types';
+import type { MyProfile, UserSummary } from '@/entities/user/types';
 import type { CampusImpact, MyImpact } from '@/entities/impact/types';
 import type { PickupZone } from '@/entities/trade/types';
 
@@ -325,6 +325,22 @@ export const offers: SeededRentalOffer[] = [
     created_at: iso(-190),
   },
 ];
+
+/* ─────────────────── 내 프로필 ─────────────────── */
+
+/** PATCH 목업이 이 객체를 직접 고쳐서 수정이 화면에 반영되게 한다 */
+export const myProfile: MyProfile = {
+  id: DEMO_ME_ID,
+  email: 'demo@xx.ac.kr',
+  nickname: '캠퍼스루퍼',
+  school: { id: 'school-1', name: 'XX대학교' },
+  campus: { id: DEMO_CAMPUS_ID, name: '본교 캠퍼스' },
+  department: '컴퓨터공학과',
+  main_building: '공학관',
+  trust_score: 92,
+  trade_completed_count: 12,
+  rental_completed_count: 7,
+};
 
 /* ─────────────────── 임팩트 ─────────────────── */
 

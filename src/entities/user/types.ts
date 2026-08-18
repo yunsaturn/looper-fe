@@ -40,6 +40,22 @@ export interface PublicProfile {
   rental_completed_count: number;
 }
 
+/** PATCH /api/v1/users/me — 보낸 필드만 바뀐다. 빼면 기존 값 유지 */
+export interface UpdateProfileRequest {
+  nickname?: string;
+  department?: string;
+  main_building?: string;
+}
+
+/** 수정 응답은 바뀐 필드만 돌려준다. 전체 프로필은 다시 조회해야 한다 */
+export interface UpdatedProfile {
+  id: string;
+  nickname: string;
+  department: string | null;
+  main_building: string | null;
+  updated_at: string;
+}
+
 export interface AuthTokens {
   access_token: string;
   refresh_token: string;
