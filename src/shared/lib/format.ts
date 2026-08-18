@@ -26,10 +26,26 @@ export function formatTime(iso: string): string {
   });
 }
 
-/** 12000 → '12,000원', 0 → '무료', null/누락 → '가격 협의' */
+/**
+ * **거래 가격·사용료** 표기. 12000 → '12,000원', 0 → '무료', 누락 → '가격 협의'
+ *
+ * ⚠️ 여기서 0 은 "값을 매기지 않았다"는 뜻이라 '무료'가 맞다.
+ *    합계 금액(절약한 금액 등)에는 절대 쓰지 말 것 — 0원은 '무료'가 아니라
+ *    '아직 없음'이므로 formatAmount 를 써야 한다.
+ */
 export function formatPrice(won?: number | null): string {
   if (won == null) return '가격 협의';
   return won === 0 ? '무료' : `${won.toLocaleString(KST)}원`;
+}
+
+/**
+ * **합계 금액** 표기. 12000 → '12,000원', 0 → '0원', 누락 → '0원'
+ *
+ * 절약한 금액처럼 누적된 수치는 0 이어도 '0원'이다. formatPrice 를 쓰면
+ * 아직 거래가 없는 사용자에게 "절약한 금액: 무료"라고 표시된다.
+ */
+export function formatAmount(won?: number | null): string {
+  return `${(won ?? 0).toLocaleString(KST)}원`;
 }
 
 /** 며칠 남았는지. 오늘이면 'D-DAY', 지났으면 'D+n' */

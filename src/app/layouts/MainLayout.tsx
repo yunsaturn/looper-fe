@@ -106,7 +106,7 @@ function DesktopSidebar() {
   const { pathname } = useLocation();
 
   return (
-    <aside className="hidden w-52 shrink-0 border-r border-ink-100 py-8 md:block">
+    <aside className="hidden w-52 shrink-0 rounded-card bg-gray-50 px-3 py-6 md:mt-6 md:block">
       <p className="px-3 pb-2 text-xs font-semibold text-ink-400">메뉴</p>
       <nav className="grid gap-0.5">
         {DESKTOP_SIDEBAR_ITEMS.map((item) => {

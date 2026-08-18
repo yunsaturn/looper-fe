@@ -9,6 +9,7 @@
 export const queryKeys = {
   me: ['me'] as const,
   user: (userId: string) => ['user', userId] as const,
+  activities: (filters: object = {}) => ['me', 'activities', filters] as const,
 
   schools: ['schools'] as const,
   pickupZones: (campusId: string) => ['pickupZones', campusId] as const,

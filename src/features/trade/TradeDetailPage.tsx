@@ -17,7 +17,13 @@ import {
   TRADE_STATUS_META,
 } from '@/shared/config/status';
 import { useAuthStore } from '@/shared/store/authStore';
-import { formatDate, formatPrice } from '@/shared/lib/format';
+import {
+  formatAmount,
+  formatDate,
+  formatDateTime,
+  formatPrice,
+} from '@/shared/lib/format';
+import { CARBON_DISCLAIMER, formatCarbon } from '@/shared/lib/carbon';
 import { Button } from '@/shared/ui/Button';
 import { Textarea } from '@/shared/ui/Field';
 import { ConfirmDialog, Sheet } from '@/shared/ui/Sheet';
@@ -215,6 +221,62 @@ export function TradeDetailPage() {
             </dl>
           </section>
 
+          {/*
+            확정된 거래 약속. 수락 시점에 정해지므로 예약 이후에만 온다.
+            약속을 못 보면 언제 어디서 만나는지 알 방법이 없어서 상세에서
+            가장 먼저 눈에 띄어야 하는 정보다.
+          */}
+          {data.meeting && (
+            <section className="rounded-card border border-brand-300 bg-brand-100 p-4">
+              <h3 className="text-sm font-bold text-brand-800">거래 약속</h3>
+              <dl className="mt-3 grid gap-2 text-sm">
+                <Row
+                  label="만나는 시각"
+                  value={formatDateTime(data.meeting.meeting_at)}
+                />
+                <Row label="장소" value={data.meeting.pickup_zone.name} />
+                {data.counterparty && (
+                  <Row
+                    label="상대방"
+                    value={`${data.counterparty.nickname} · 신뢰도 ${data.counterparty.trust_score}`}
+                  />
+                )}
+              </dl>
+              {data.meeting.message && (
+                <p className="mt-3 rounded-btn bg-white/70 px-3 py-2 text-sm text-ink-700">
+                  {data.meeting.message}
+                </p>
+              )}
+            </section>
+          )}
+
+          {/* 완료된 거래는 그때 기록된 임팩트를 그대로 보여준다 */}
+          {data.impact && (
+            <section className="rounded-card border border-ink-200 p-4">
+              <h3 className="text-sm font-bold text-ink-900">이 거래의 성과</h3>
+              <dl className="mt-3 grid grid-cols-3 gap-3 text-center">
+                <ImpactCell
+                  label="절약 금액"
+                  value={formatAmount(data.impact.saved_amount)}
+                />
+                <ImpactCell
+                  label="줄인 폐기물"
+                  value={`${data.impact.waste_reduced_kg}kg`}
+                />
+                <ImpactCell
+                  label="예상 탄소"
+                  value={formatCarbon(
+                    data.impact.estimated_carbon_saved_kg_co2e,
+                  )}
+                />
+              </dl>
+              <p className="mt-3 text-[11px] text-ink-400">
+                {CARBON_DISCLAIMER} · {formatDateTime(data.impact.completed_at)}{' '}
+                완료
+              </p>
+            </section>
+          )}
+
           {/* 액션 — 상태와 역할에 따라 달라진다 */}
           <section className="rounded-card border border-ink-200 p-4">
             <p className="text-sm text-ink-600">{meta.description}</p>
@@ -390,6 +452,17 @@ function DetailSkeleton() {
         <Skeleton className="h-24 w-full" />
         <Skeleton className="h-11 w-full" />
       </div>
+    </div>
+  );
+}
+
+function ImpactCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-xs text-ink-500">{label}</dt>
+      <dd className="mt-0.5 text-sm font-bold text-ink-900 tabular-nums">
+        {value}
+      </dd>
     </div>
   );
 }

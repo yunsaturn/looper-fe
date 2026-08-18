@@ -15,10 +15,12 @@ import {
 import { useAuthStore } from '@/shared/store/authStore';
 import {
   formatDateTime,
+  formatDuration,
   formatPrice,
   formatRemaining,
   formatTime,
 } from '@/shared/lib/format';
+import { CARBON_DISCLAIMER, formatCarbon } from '@/shared/lib/carbon';
 import { Button } from '@/shared/ui/Button';
 import { Textarea } from '@/shared/ui/Field';
 import { ConfirmDialog, Sheet } from '@/shared/ui/Sheet';
@@ -161,6 +163,15 @@ export function RentalDetailPage() {
             />
             <Row label="희망 장소" value={data.pickup_zone.name} />
             <Row label="사용료" value={formatPrice(data.offered_price)} />
+            {data.status === RENTAL_STATUS.RECRUITING && (
+              <Row label="지원자" value={`${data.offer_count}명`} />
+            )}
+            {data.remaining_minutes != null && (
+              <Row
+                label="남은 시간"
+                value={formatDuration(Math.max(0, data.remaining_minutes))}
+              />
+            )}
           </dl>
 
           {data.is_overdue && (
@@ -169,6 +180,56 @@ export function RentalDetailPage() {
             </p>
           )}
         </section>
+
+        {/* 확정된 제공자 — 선택 전에는 응답에서 빠진다 */}
+        {data.selected_offerer && (
+          <section className="rounded-card border border-brand-300 bg-brand-100 p-4">
+            <h3 className="text-sm font-bold text-brand-800">빌려주는 학생</h3>
+            <div className="mt-3 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold text-brand-700">
+                {data.selected_offerer.nickname[0]}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-ink-900">
+                  {data.selected_offerer.nickname}
+                </p>
+                <p className="mt-0.5 text-xs text-ink-600">
+                  신뢰도 {data.selected_offerer.trust_score} · 대여 완료{' '}
+                  {data.selected_offerer.rental_completed_count}건
+                </p>
+              </div>
+            </div>
+            {data.return_message && (
+              <p className="mt-3 rounded-btn bg-white/70 px-3 py-2 text-sm text-ink-700">
+                {data.return_message}
+              </p>
+            )}
+          </section>
+        )}
+
+        {/* 완료된 대여의 기록된 임팩트 */}
+        {data.impact && (
+          <section className="rounded-card border border-ink-200 p-4">
+            <h3 className="text-sm font-bold text-ink-900">이 대여의 성과</h3>
+            <dl className="mt-3 grid grid-cols-2 gap-3 text-center">
+              <div>
+                <dt className="text-xs text-ink-500">줄인 폐기물</dt>
+                <dd className="mt-0.5 text-sm font-bold text-ink-900 tabular-nums">
+                  {data.impact.waste_reduced_kg}kg
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-ink-500">예상 탄소</dt>
+                <dd className="mt-0.5 text-sm font-bold text-ink-900 tabular-nums">
+                  {formatCarbon(data.impact.estimated_carbon_saved_kg_co2e)}
+                </dd>
+              </div>
+            </dl>
+            <p className="mt-3 text-[11px] text-ink-400">
+              {CARBON_DISCLAIMER} · 대여는 절약 금액을 0원으로 계산해요.
+            </p>
+          </section>
+        )}
 
         <section className="rounded-card border border-ink-200 p-4">
           <h3 className="text-sm font-bold text-ink-900">요청자</h3>

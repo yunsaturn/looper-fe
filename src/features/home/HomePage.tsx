@@ -14,7 +14,7 @@ import {
 import { LAYOUT, ROUTES } from '@/shared/config/navigation';
 import { useAuthStore } from '@/shared/store/authStore';
 import { formatCarbon } from '@/shared/lib/carbon';
-import { formatPrice } from '@/shared/lib/format';
+import { formatAmount } from '@/shared/lib/format';
 import { Button } from '@/shared/ui/Button';
 import { FilterChips } from '@/shared/ui/FilterChips';
 import { ItemCard } from '@/shared/ui/ItemCard';
@@ -106,7 +106,7 @@ export function HomePage() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
           <ImpactStatCard
             label="내 절약 금액"
-            value={impact.data ? formatPrice(impact.data.saved_amount) : '—'}
+            value={impact.data ? formatAmount(impact.data.saved_amount) : '—'}
             caption="내 완료 활동 기준"
           />
           <ImpactStatCard

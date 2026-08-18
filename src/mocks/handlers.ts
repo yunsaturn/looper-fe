@@ -205,6 +205,103 @@ export const handlers = [
     });
   }),
 
+  // 회원 탈퇴 — 비밀번호 재확인 + 'DELETE' 문구
+  http.delete(`${BASE}/users/me`, async ({ request }) => {
+    await delay(LATENCY_MS);
+    const body = (await request.json()) as {
+      password?: string;
+      confirmation?: string;
+    };
+    if (body.confirmation !== 'DELETE') {
+      return validationError([
+        { field: 'confirmation', message: 'DELETE 를 정확히 입력해주세요.' },
+      ]);
+    }
+    if (!body.password) {
+      return validationError([
+        { field: 'password', message: '비밀번호를 입력해주세요.' },
+      ]);
+    }
+    return HttpResponse.json({
+      user_id: DEMO_ME_ID,
+      withdrawn: true,
+      withdrawn_at: new Date().toISOString(),
+    });
+  }),
+
+  // 내 거래·대여 통합 활동
+  http.get(`${BASE}/users/me/activities`, async ({ request }) => {
+    await delay(LATENCY_MS);
+    const url = new URL(request.url);
+    const resourceType = url.searchParams.get('resource_type') ?? 'ALL';
+    const role = url.searchParams.get('role') ?? 'ALL';
+
+    const tradeItems = trades
+      .filter((t) => t.author.id === DEMO_ME_ID)
+      .map((t) => ({
+        id: t.id,
+        resource_type: 'TRADE',
+        activity_type: t.trade_type,
+        title: t.title,
+        thumbnail_url: t.image_urls[0],
+        role: 'OWNER',
+        status: t.status,
+        overdue: false,
+        created_at: t.created_at,
+      }));
+
+    const appliedItems = applications
+      .filter((a) => a.applicant.id === DEMO_ME_ID)
+      .flatMap((a) => {
+        const trade = trades.find((t) => t.id === a.trade_id);
+        return trade
+          ? [
+              {
+                id: trade.id,
+                resource_type: 'TRADE',
+                activity_type: trade.trade_type,
+                title: trade.title,
+                thumbnail_url: trade.image_urls[0],
+                role: 'APPLICANT',
+                status: trade.status,
+                counterparty: trade.author,
+                overdue: false,
+                created_at: a.created_at,
+              },
+            ]
+          : [];
+      });
+
+    const rentalItems = rentals
+      .filter((r) => r.requester.id === DEMO_ME_ID)
+      .map((r) => ({
+        id: r.id,
+        resource_type: 'RENTAL',
+        activity_type: 'RENTAL',
+        title: r.item_name,
+        role: 'REQUESTER',
+        status: r.status,
+        due_at: r.due_at,
+        overdue: r.is_overdue,
+        created_at: r.start_at,
+      }));
+
+    let content = [...tradeItems, ...appliedItems, ...rentalItems];
+    if (resourceType !== 'ALL') {
+      content = content.filter((i) => i.resource_type === resourceType);
+    }
+    if (role !== 'ALL') content = content.filter((i) => i.role === role);
+    content.sort((a, b) => b.created_at.localeCompare(a.created_at));
+
+    return HttpResponse.json({
+      content,
+      page: 0,
+      size: content.length,
+      total_elements: content.length,
+      has_next: false,
+    });
+  }),
+
   // 공개 프로필에는 이메일·학과가 없다 (기획서 R6)
   http.get(`${BASE}/users/:userId`, async ({ params }) => {
     await delay(LATENCY_MS);
@@ -304,8 +401,38 @@ export const handlers = [
         a.status !== APPLICATION_STATUS.CANCELLED,
     );
 
+    // 약속·상대방·임팩트는 예약/완료 이후에만 채워진다
+    const accepted = applications.find(
+      (a) =>
+        a.trade_id === trade.id && a.status === APPLICATION_STATUS.ACCEPTED,
+    );
+    const reserved =
+      trade.status === TRADE_STATUS.RESERVED ||
+      trade.status === TRADE_STATUS.COMPLETION_PENDING ||
+      trade.status === TRADE_STATUS.COMPLETED;
+
     return HttpResponse.json({
       ...trade,
+      ...(reserved &&
+        accepted && {
+          counterparty: accepted.applicant,
+          meeting: {
+            meeting_at: new Date(Date.now() + 2 * 86_400_000).toISOString(),
+            pickup_zone: trade.pickup_zone,
+            message: '학생회관 정문에서 만나요.',
+          },
+          reserved_at: new Date(Date.now() - 86_400_000).toISOString(),
+        }),
+      ...(trade.status === TRADE_STATUS.COMPLETED && {
+        completed_at: new Date(Date.now() - 3_600_000).toISOString(),
+        impact: {
+          saved_amount: trade.price,
+          waste_reduced_kg: trade.weight_kg ?? 0,
+          estimated_carbon_saved_kg_co2e:
+            Math.round((trade.weight_kg ?? 0) * 1.93 * 100) / 100,
+          completed_at: new Date(Date.now() - 3_600_000).toISOString(),
+        },
+      }),
       my_application_status: mine?.status ?? null,
       can_apply:
         trade.status === TRADE_STATUS.AVAILABLE &&
@@ -636,11 +763,36 @@ export const handlers = [
         o.status !== OFFER_STATUS.CANCELLED,
     );
 
+    // 선택된 지원자·남은 시간은 서버가 응답 시점에 계산한다
+    const selected = offers.find(
+      (o) => o.rental_id === rental.id && o.status === OFFER_STATUS.SELECTED,
+    );
+    const remainingMs = new Date(rental.due_at).getTime() - Date.now();
+    const inProgress =
+      rental.status === RENTAL_STATUS.CONFIRMED ||
+      rental.status === RENTAL_STATUS.IN_USE;
+
     return HttpResponse.json({
       ...rental,
       offer_count: offers.filter(
         (o) => o.rental_id === rental.id && o.status === OFFER_STATUS.PENDING,
       ).length,
+      ...(selected && {
+        selected_offerer: { ...selected.offerer, rental_completed_count: 5 },
+      }),
+      ...(inProgress && {
+        remaining_minutes: Math.max(0, Math.round(remainingMs / 60_000)),
+      }),
+      ...(rental.status === RENTAL_STATUS.COMPLETED && {
+        completed_at: rental.due_at,
+        return_message: '정상 반납했습니다.',
+        impact: {
+          saved_amount: 0,
+          waste_reduced_kg: 0.2,
+          estimated_carbon_saved_kg_co2e: 3.59,
+          completed_at: rental.due_at,
+        },
+      }),
       my_offer_status: mine?.status ?? null,
       can_offer:
         rental.status === RENTAL_STATUS.RECRUITING &&

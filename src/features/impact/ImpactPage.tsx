@@ -8,7 +8,7 @@ import { queryKeys } from '@/shared/api/queryKeys';
 import { CATEGORY_LABEL } from '@/shared/config/categories';
 import { ROUTES } from '@/shared/config/navigation';
 import { useAuthStore } from '@/shared/store/authStore';
-import { formatPrice } from '@/shared/lib/format';
+import { formatAmount } from '@/shared/lib/format';
 import { Select } from '@/shared/ui/Field';
 import { ErrorState, Skeleton } from '@/shared/ui/feedback';
 
@@ -145,7 +145,7 @@ export function ImpactPage() {
             <dl className="grid grid-cols-2 gap-3 rounded-card border border-ink-200 p-4 md:grid-cols-5">
               <Stat
                 label="절약한 금액"
-                value={formatPrice(me.data.saved_amount)}
+                value={formatAmount(me.data.saved_amount)}
                 measured
               />
               <Stat
