@@ -9,6 +9,7 @@ import { queryKeys } from '@/shared/api/queryKeys';
 import { TRADE_TYPE } from '@/shared/config/categories';
 import { buildPath, ROUTES } from '@/shared/config/navigation';
 import { TRADE_STATUS } from '@/shared/config/status';
+import { toLocalDateValue } from '@/shared/lib/format';
 import { useAuthStore } from '@/shared/store/authStore';
 import { Button } from '@/shared/ui/Button';
 import { Input, Select, Textarea } from '@/shared/ui/Field';
@@ -143,7 +144,7 @@ function TradeEditForm({
   });
 
   const error = save.error instanceof ApiError ? save.error : null;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toLocalDateValue(new Date());
 
   return (
     <>

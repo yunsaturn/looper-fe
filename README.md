@@ -1,207 +1,228 @@
 # Looper FE
 
-캠퍼스 순환거래 플랫폼 **Looper** 프론트엔드입니다.
+> 같은 캠퍼스 안에서 물건을 사고, 나누고, 빌리며 자원 순환 효과를 확인하는
+> 웹 서비스
 
-학교 이메일로 인증한 같은 캠퍼스 구성원끼리, 버릴 물건은 원하는 날짜에
-넘기고 잠깐 필요한 물건은 시간 단위로 빌려 쓰게 연결하며, 그 결과를
-예상 탄소 절감량으로 보여줍니다.
+[배포된 서비스 바로가기](https://fe-vlak.vercel.app)
 
-> 2026 EST AI Challengers Online Hackathon · TEAM 37.5°C
+Looper는 학교 이메일로 인증된 구성원을 연결합니다. 사용하지 않는 물건은
+거래·나눔하고, 잠깐 필요한 물건은 시간 단위로 빌릴 수 있습니다. 완료된
+활동은 절약 금액, 줄인 폐기물, 예상 탄소 절감량으로 보여줍니다.
 
-## 시작하기
+2026 EST AI Challengers Online Hackathon · Team 37.5°C
+
+## 무엇을 할 수 있나요?
+
+| 기능              | 설명                                                        |
+| ----------------- | ----------------------------------------------------------- |
+| 캠퍼스 인증       | 학교 이메일 인증 후 같은 캠퍼스 사용자끼리 이용합니다.      |
+| 거래·나눔         | 판매, 나눔, 구합니다 게시물을 등록하고 신청자를 선택합니다. |
+| 사진·AI 입력 보조 | 사진을 최대 5장 올리고 상품명·카테고리 추천을 받습니다.     |
+| 시간 단위 대여    | 시작 시간과 사용 시간을 정해 물건을 빌리거나 빌려줍니다.    |
+| 안전한 상태 전이  | 예약, 취소, 완료를 서버 상태에 맞춰 처리합니다.             |
+| 순환 임팩트       | 개인·캠퍼스의 절약 금액과 예상 탄소 절감량을 확인합니다.    |
+| 프로필·활동       | 신뢰도, 완료 횟수, 내가 등록·신청한 활동을 확인합니다.      |
+
+탄소 수치는 실측값이 아닌 **예상 절감량**입니다. 화면에는 적용한 가정과
+계수 출처를 함께 표시합니다.
+
+## 3분 만에 실행하기
+
+### 준비물
+
+- Node.js 22 권장
+- npm 10 이상
+
+### 1. 설치
 
 ```bash
-npm install
-cp .env.example .env   # 기본값이 목업 모드라 BE 없이 바로 뜹니다
-npm run dev            # http://localhost:5173
+git clone https://github.com/EST-AI-Challengers-37-Looper/FE.git
+cd FE
+npm ci
+cp .env.example .env
 ```
 
-| 스크립트 | 설명 |
-| --- | --- |
-| `npm run dev` | 개발 서버 |
-| `npm run build` | 타입 검사 + 프로덕션 빌드 |
-| `npm run preview` | 빌드 결과 미리보기 |
-| `npm run typecheck` | 타입 검사만 |
-| `npm run lint` | ESLint |
-| `npm run format` | Prettier 일괄 포맷 |
-| `npm run gen:api` | Swagger JSON → TS 타입 생성 (`docs/api-spec.json` 필요) |
+### 2. 실행
 
-## 기술 스택
-
-- **Vite + React 18 + TypeScript**
-- **Tailwind CSS v4** — 유틸리티 CSS
-- **React Router v7** — 라우팅
-- **TanStack Query v5** — 서버 상태 단일 출처
-- **axios** — API 클라이언트
-- **zustand** — 인증 토큰 등 최소 클라이언트 상태
-- **MSW** — 목업 서버 (BE 없이 개발 + 시연 폴백)
-
-`@/` 는 `src/` 를 가리킵니다. (`vite.config.ts`, `tsconfig.json` 양쪽에 설정)
-
-## 폴더 구조
-
-한 줄로 요약하면 이렇습니다.
-
-> **화면은 서버를 직접 모릅니다.** 화면이 서버와 이야기하고 싶으면
-> 반드시 `entities/` 를 거칩니다.
-
-```
-features/*  →  entities/*/api.ts  →  shared/api/client.ts  →  (MSW | Spring Boot)
-   화면            주소·타입             axios 인스턴스           실제 응답
+```bash
+npm run dev
 ```
 
-이렇게 나눠 두면 BE 명세가 바뀌어도 `entities/` 만 고치면 되고, 화면
-코드는 건드릴 일이 없습니다.
+브라우저에서 `http://localhost:5173`을 엽니다.
 
-### 전체 지도
+기본 환경변수는 목업 모드이므로 BE 없이도 주요 화면을 확인할 수 있습니다.
+목업 로그인은 `demo@xx.ac.kr`과 비어 있지 않은 비밀번호를 사용하면 됩니다.
 
+### GitHub Codespaces
+
+```bash
+npm run dev
 ```
+
+VS Code의 **Ports** 탭에서 5173 포트의 `Open in Browser`를 누릅니다. 다른
+사람에게 공유할 때만 포트 공개 범위를 `Public`으로 바꾸세요. 개발 서버는
+5173 포트를 고정해서 사용하므로 이미 사용 중이면 다른 포트로 자동 변경하지
+않고 오류를 알려줍니다.
+
+## 실제 BE에 연결하기
+
+`.env`를 다음처럼 바꿉니다.
+
+```dotenv
+VITE_API_BASE_URL=https://be-andh.onrender.com
+VITE_USE_MOCK=false
+```
+
+그다음 개발 서버를 다시 시작합니다.
+
+```bash
+npm run dev
+```
+
+`VITE_` 환경변수는 빌드 시점에 포함됩니다. Vercel에서 값을 바꿨다면 반드시
+재배포해야 합니다.
+
+### CORS 확인
+
+FE와 BE 도메인이 다르므로 BE는 다음을 허용해야 합니다.
+
+- Origin: 배포된 FE 주소
+- Methods: `GET`, `POST`, `PATCH`, `DELETE`, `OPTIONS`
+- Headers: `Authorization`, `Content-Type`
+
+브라우저에서 실제 요청보다 먼저 전송되는 `OPTIONS`가 403이면 FE 요청 로직이
+아니라 BE의 CORS 설정과 배포 상태를 먼저 확인하세요.
+
+## 자주 쓰는 명령어
+
+| 명령어              | 용도                                 |
+| ------------------- | ------------------------------------ |
+| `npm run dev`       | Vite 개발 서버 실행                  |
+| `npm test`          | Vitest 단위·계약 테스트 실행         |
+| `npm run lint`      | ESLint 정적 검사                     |
+| `npm run typecheck` | TypeScript 타입 검사                 |
+| `npm run format`    | 소스 코드 자동 정렬                  |
+| `npm run build`     | 타입 검사 후 프로덕션 빌드           |
+| `npm run validate`  | 포맷·린트·테스트·빌드를 한 번에 검증 |
+| `npm run preview`   | 빌드 결과를 로컬에서 확인            |
+
+PR을 올리기 전에는 아래 한 줄을 실행하면 됩니다.
+
+```bash
+npm run validate
+```
+
+같은 검증은 GitHub Actions에서도 PR과 `main` 푸시마다 자동 실행됩니다.
+
+## 프로젝트 구조
+
+```text
 src/
-├─ main.tsx        브라우저 진입점. 목업 워커를 먼저 켜고 React 를 띄운다
-├─ index.css       디자인 토큰 (색·글자 크기·모서리) — 이 프로젝트의 유일한 색 출처
-│
-├─ app/            앱을 "켜는" 코드. 도메인 로직은 없다
-│   ├─ App.tsx        Providers + AppRouter 를 감싸는 껍데기
-│   ├─ providers.tsx  QueryClient · Router · Toast · 401 처리 주입
-│   ├─ router.tsx     전체 라우트 선언 (미구현 화면은 Placeholder 로 연결)
-│   └─ layouts/       MainLayout(탭 있는 화면) · StackLayout(뒤로가기 헤더)
-│
-├─ shared/         어느 기능에서나 쓰는 공통 자산. 도메인 지식이 없다
-│   ├─ api/           axios 인스턴스 · 오류 타입 · 쿼리 키
-│   ├─ config/        상태 · 라우트 · 카테고리 상수  ← "단일 출처" 파일들
-│   ├─ lib/           날짜/가격 포맷, 탄소 계산, className 유틸
-│   ├─ store/         zustand 인증 스토어 (서버 데이터는 넣지 않는다)
-│   └─ ui/            Button · Field · Sheet · Toast 등 공통 컴포넌트
-│
-├─ entities/       서버와 주고받는 타입 + 호출 함수  ← BE 연동 시 여기만 수정
-│   ├─ user/  trade/  rental/  impact/     핵심 도메인 (types.ts + api.ts)
-│   ├─ ai/                                  이미지 → 제목·카테고리·설명 초안
-│   ├─ meta/                                학교 · 캠퍼스 · 픽업존 목록
-│   └─ storage/                             이미지 업로드 (presigned URL)
-│
-├─ features/       실제 화면. 폴더 하나 = 기능 영역 하나
-│   ├─ auth/    로그인
-│   ├─ home/    홈 피드
-│   ├─ trade/   거래 (목록 · 상세 · 등록 · 신청자 · 완료 · AI 입력 도우미)
-│   ├─ rent/    대여 (목록 · 상세 · 등록 · 지원자 · 완료)
-│   ├─ impact/  탄소 절감 대시보드 · 계산식 설명
-│   └─ misc/    아직 안 만든 화면을 대신 보여주는 PlaceholderPage
-│
-└─ mocks/         MSW 목업 서버
-    ├─ browser.ts   워커 기동 (VITE_USE_MOCK=true 일 때만)
-    ├─ handlers.ts  요청 핸들러
-    └─ seed.ts      시드 데이터
+├── app/       앱 시작, Provider, Router, Layout
+├── features/  사용자가 보는 기능별 화면
+├── entities/  BE DTO 타입과 API 호출 함수
+├── shared/    공통 설정, API 클라이언트, 상태, UI, 유틸
+└── mocks/     BE 없이 실행하기 위한 MSW 핸들러와 시드
 ```
 
-각 폴더의 자세한 규칙은 그 폴더의 `README.md` 에 있습니다.
-[app](src/app/README.md) · [shared](src/shared/README.md) ·
-[entities](src/entities/README.md) · [features](src/features/README.md) ·
-[mocks](src/mocks/README.md)
+데이터 흐름은 한 방향입니다.
 
-### 처음 보는 사람이 읽는 순서
+```text
+화면(features)
+  → 도메인 API(entities)
+  → 공통 Axios 클라이언트(shared/api)
+  → MSW 목업 또는 Spring Boot API
+```
 
-1. `src/main.tsx` — 앱이 어떻게 시작되는지
-2. `src/app/router.tsx` — 어떤 화면들이 있는지
-3. `src/features/trade/TradeListPage.tsx` — 화면 하나가 어떻게 생겼는지
-4. `src/entities/trade/api.ts` — 그 화면이 서버를 어떻게 부르는지
-5. `src/mocks/handlers.ts` — 그 호출에 지금 누가 답하고 있는지
+화면에서 `axios`를 직접 호출하지 않습니다. API 경로와 DTO는 `entities/`에,
+토큰 첨부·갱신과 공통 오류 처리는 `shared/api/client.ts`에 모아둡니다.
 
-## 설계 원칙
+더 자세한 규칙:
 
-**1. 상태는 서버가 단일 출처입니다**
+- [앱과 라우팅](src/app/README.md)
+- [API와 DTO](src/entities/README.md)
+- [기능 화면](src/features/README.md)
+- [공통 코드](src/shared/README.md)
+- [목업 서버](src/mocks/README.md)
 
-거래·대여의 상태 전이 규칙(활성 신청 1건 제한, 완료 1회 반영, 양측 확인)은
-서버가 강제합니다. 프론트는 서버 응답 상태를 그대로 렌더링하며, 낙관적
-업데이트를 사용하지 않습니다. mutation 성공 후에는 `invalidateQueries` 로
-다시 조회합니다.
+## 핵심 설계
 
-상태 코드·라벨·색상은 전부 `src/shared/config/status.ts` 한 곳에서 옵니다.
+### 서버 상태가 기준입니다
 
-**2. AI 서비스는 직접 호출하지 않습니다**
+거래·대여 상태는 TanStack Query로 조회하고, 변경 성공 후 관련 쿼리를 다시
+불러옵니다. 중복 수락이나 이중 완료를 막기 위해 mutation 자동 재시도와
+낙관적 업데이트는 사용하지 않습니다.
 
-AI(FastAPI)는 Private API 이며 Spring Boot 만 접근할 수 있습니다.
-프론트는 `VITE_API_BASE_URL` 로만 통신합니다. (`entities/ai/api.ts` 도
-Spring Boot 의 `/api/v1/ai/...` 를 부릅니다)
+### 인증 실패는 한 번만 갱신합니다
 
-**3. 탄소 수치는 항상 각주와 함께 표기합니다**
+여러 요청이 동시에 401을 받아도 Refresh Token 요청은 하나만 전송합니다.
+갱신에 실패하면 토큰과 사용자별 캐시를 정리한 뒤 로그인 화면으로 이동합니다.
 
-모든 탄소 수치는 실측값이 아닌 **예상 절감량**입니다. 실측값(절약 금액,
-줄인 폐기물 kg)을 위에 두고, 추정값(kgCO₂e)은 `"대체율 0.65 가정"` 각주와
-함께 아래에 배치합니다. 계수와 계산식은 `src/shared/lib/carbon.ts` 에
-출처와 함께 정의되어 있습니다.
+### AI 장애가 등록을 막지 않습니다
 
-**4. 개인정보는 최소한만 다룹니다**
+AI는 입력 보조 기능입니다. 분석 실패나 낮은 신뢰도 응답이 와도 사용자가
+상품명·카테고리·설명을 직접 입력해 게시물을 등록할 수 있습니다.
 
-주민등록번호·전화번호·주소는 수집하지 않습니다. 공개 정보는 닉네임, 학교,
-캠퍼스, 신뢰도로 한정합니다. API 키와 비밀값은 `.env` 로 분리하며 커밋하지
-않습니다.
+### 코드 분할과 목업 분리
 
-## BE 연동
+상세·등록·프로필·임팩트 화면은 라우트 단위로 나눠 내려받습니다. MSW와 목업
+데이터도 동적 import하므로 실제 서버 모드에서는 목업 번들을 받지 않습니다.
 
-프론트는 Spring Boot REST API 하나만 바라봅니다.
-`.env` 의 `VITE_USE_MOCK` 으로 목업/실서버를 전환합니다.
+## 환경변수
 
-| 값 | 동작 |
-| --- | --- |
-| `VITE_USE_MOCK=true` | MSW 목업 서버. BE 없이 전체 화면이 동작합니다 |
-| `VITE_USE_MOCK=false` | `VITE_API_BASE_URL` 의 실제 서버로 나갑니다 |
+| 이름                | 기본값                  | 설명                                      |
+| ------------------- | ----------------------- | ----------------------------------------- |
+| `VITE_API_BASE_URL` | `http://localhost:8080` | Spring Boot API 주소                      |
+| `VITE_USE_MOCK`     | `true`                  | `true`면 MSW 목업, `false`면 실제 BE 사용 |
 
-연동 절차는 [`src/entities/README.md`](src/entities/README.md) 를 참고하세요.
+API 키와 비밀값은 프론트 환경변수에 넣으면 안 됩니다. `VITE_` 값은 브라우저에
+공개되므로 주소와 공개 설정만 사용하세요.
 
-BE 는 Jackson SNAKE_CASE 이므로 요청·응답 필드가 모두 snake_case 이고,
-프론트 타입도 변환 없이 snake_case 를 그대로 씁니다.
+## 배포
 
-## 배포 (Vercel)
+Vercel은 `vercel.json`을 사용합니다.
 
-`vercel.json` 이 세 가지를 처리합니다. JSON 은 주석을 지원하지 않아 이유를 여기 적어둡니다.
+- SPA 경로를 `index.html`로 연결
+- 해시가 붙은 정적 자산을 장기 캐시
+- 목업 서비스워커 파일은 캐시하지 않음
 
-**SPA 폴백** — `rewrites` 가 모든 경로를 `index.html` 로 보냅니다.
-라우트가 25개라 `/trades/trade-1` 같은 주소로 직접 들어오면 정적 호스팅은 404 를 냅니다.
-Vercel 은 rewrite 보다 **실제 파일을 먼저** 찾으므로 `assets/` 와
-`mockServiceWorker.js` 는 이 규칙에 걸리지 않고 그대로 나갑니다.
+배포 환경에서는 다음 값을 권장합니다.
 
-**서비스워커 캐시 차단** — `mockServiceWorker.js` 가 캐시되면
-`VITE_USE_MOCK` 을 `false` 로 바꿔 재배포해도 옛 워커가 요청을 계속 가로챕니다.
+```dotenv
+VITE_API_BASE_URL=https://be-andh.onrender.com
+VITE_USE_MOCK=false
+```
 
-**번들 영구 캐시** — `assets/` 의 파일명에는 해시가 붙으므로 `immutable` 로 둡니다.
+## 현재 구현 상태
 
-### 환경변수
+완료:
 
-`VITE_` 로 시작하는 값은 **빌드 시점에 코드에 박힙니다.** 런타임 설정이 아니라서
-값을 바꾸면 반드시 재배포해야 합니다.
+- 로그인, 이메일 인증 회원가입, 비밀번호 재설정, 로그아웃·탈퇴
+- 거래 목록·상세·등록·수정·삭제·신청·예약·완료
+- 사진 최대 5장 업로드와 AI 입력 보조
+- 대여 목록·상세·등록·수정·지원·수령·반납·완료
+- 홈 피드, 검색, 내 프로필, 공개 프로필, 내 활동
+- 개인·캠퍼스 임팩트와 순환 랭킹
+- 반응형 레이아웃, MSW 목업, Vercel·Codespaces 설정
 
-Vercel → Settings → Environment Variables 에 등록합니다.
+남은 범위:
 
-| 키 | 값 |
-| --- | --- |
-| `VITE_API_BASE_URL` | BE 서버 주소 |
-| `VITE_USE_MOCK` | `false` (목업으로 시연할 때만 `true`) |
+- 관리자 기능: BE API가 추가된 뒤 구현
 
-BE 가 아직 배포 전이면 `VITE_USE_MOCK=true` 로 먼저 올려 FE 주소를 확보한 뒤,
-그 주소를 BE 의 `CORS_ALLOWED_ORIGINS` 에 추가해달라고 요청하면 됩니다.
+## 검증 기준
 
-## 진행 상황
+현재 저장소는 다음 항목을 통과해야 병합 가능한 상태로 봅니다.
 
-**기반**
+1. Prettier 소스 포맷 검사
+2. ESLint 정적 검사
+3. TypeScript strict 타입 검사
+4. Vitest 단위·API 계약 테스트
+5. Vite 프로덕션 빌드
 
-- [x] 스캐폴딩 (Vite · TS strict · Tailwind v4 · ESLint · Prettier)
-- [x] 디자인 토큰 (`src/index.css`)
-- [x] 거래·대여 상태 규격 (`src/shared/config/status.ts`) — BE Java enum 과 1:1 대조
-- [x] 공통 UI 컴포넌트 14종
-- [x] API 클라이언트 + entities 레이어
-- [x] MSW 목업 + 시드 데이터 (9개 시연 상태 전부)
-- [x] 반응형 레이아웃 + 라우터 25개
-- [x] Codespaces · Vercel 설정
+```bash
+npm run validate
+```
 
-**화면**
+## 라이선스
 
-- [x] 로그인
-- [x] 홈 피드
-- [x] 거래 — 목록 · 상세 · 등록 · 신청자 · 완료
-- [x] 대여 — 목록 · 상세 · 등록 · 지원자 · 완료
-- [x] 임팩트 대시보드 · 계산식 공개
-- [x] AI 이미지 추천 (성공 / 저신뢰 / 장애 폴백)
-- [x] 회원가입 3단계 (이메일 인증)
-- [ ] 마이프로필 · 상대방 프로필
-- [ ] 알림 · 통합검색 · 게시물 수정
-- [ ] 관리자 (BE 에 해당 API 없음)
+[Apache License 2.0](LICENSE)

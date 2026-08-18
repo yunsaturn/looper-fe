@@ -23,6 +23,7 @@ export default defineConfig({
     // 컨테이너 밖(포트 포워딩)에서 접근할 수 있도록 0.0.0.0 바인딩
     host: true,
     port: 5173,
+    strictPort: true,
     ...(isCodespaces ? { hmr: { clientPort: 443 } } : {}),
   },
 });

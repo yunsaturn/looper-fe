@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
     "typecheck": "tsc --noEmit",
+    "validate": "npm run format:check && npm run lint && npm test && npm run build",
     "gen:api": "openapi-typescript docs/api-spec.json -o src/shared/api/schema.d.ts"
   },
   "dependencies": {

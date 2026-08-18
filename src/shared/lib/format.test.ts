@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatAmount, formatPrice } from './format';
+import { formatAmount, formatPrice, toLocalDateValue } from './format';
 
 describe('formatPrice', () => {
   it('formats paid and free prices', () => {
@@ -24,5 +24,14 @@ describe('formatAmount', () => {
   it('treats a missing amount as 0원', () => {
     expect(formatAmount(null)).toBe('0원');
     expect(formatAmount(undefined)).toBe('0원');
+  });
+});
+
+describe('toLocalDateValue', () => {
+  it('keeps the browser local calendar date instead of the UTC date', () => {
+    const date = new Date('2026-08-18T16:00:00.000Z');
+    Object.defineProperty(date, 'getTimezoneOffset', { value: () => -540 });
+
+    expect(toLocalDateValue(date)).toBe('2026-08-19');
   });
 });

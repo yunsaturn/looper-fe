@@ -8,7 +8,7 @@ import { queryKeys } from '@/shared/api/queryKeys';
 import { CATEGORY_LABEL } from '@/shared/config/categories';
 import { ROUTES } from '@/shared/config/navigation';
 import { useAuthStore } from '@/shared/store/authStore';
-import { formatAmount } from '@/shared/lib/format';
+import { formatAmount, toLocalDateValue } from '@/shared/lib/format';
 import { Select } from '@/shared/ui/Field';
 import { ErrorState, Skeleton } from '@/shared/ui/feedback';
 
@@ -48,14 +48,13 @@ type PeriodKey = (typeof PERIOD_OPTIONS)[number]['value'];
 function toPeriodParams(key: PeriodKey): ImpactPeriodParams {
   if (key === 'all') return {};
   const now = new Date();
-  const iso = (d: Date) => d.toISOString().slice(0, 10);
   const from =
     key === 'month'
       ? new Date(now.getFullYear(), now.getMonth(), 1)
       : key === 'quarter'
         ? new Date(now.getFullYear(), now.getMonth() - 2, 1)
         : new Date(now.getFullYear(), 0, 1);
-  return { from: iso(from), to: iso(now) };
+  return { from: toLocalDateValue(from), to: toLocalDateValue(now) };
 }
 
 export function ImpactPage() {

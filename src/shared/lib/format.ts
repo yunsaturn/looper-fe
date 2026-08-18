@@ -110,6 +110,12 @@ export function formatDuration(minutes: number): string {
   return m === 0 ? `${h}시간` : `${h}시간 ${m}분`;
 }
 
+/** Date -> `<input type="date">` 이 요구하는 로컬 기준 'YYYY-MM-DD'. */
+export function toLocalDateValue(date: Date): string {
+  const offsetMs = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 10);
+}
+
 /**
  * Date -> `<input type="datetime-local">` 이 요구하는 'YYYY-MM-DDTHH:mm'.
  *

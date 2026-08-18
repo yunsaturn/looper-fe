@@ -21,6 +21,7 @@ import {
   type TradeType,
 } from '@/shared/config/categories';
 import { buildPath, ROUTES } from '@/shared/config/navigation';
+import { toLocalDateValue } from '@/shared/lib/format';
 import { useAuthStore } from '@/shared/store/authStore';
 import { Button } from '@/shared/ui/Button';
 import { Field, Input, Select, Textarea } from '@/shared/ui/Field';
@@ -29,7 +30,7 @@ import { useToast } from '@/shared/ui/useToast';
 import { PageTitle } from '@/app/layouts/StackLayout';
 import { AiAssistField, type AiAssistResult } from './AiAssistField';
 
-const TODAY = new Date().toISOString().slice(0, 10);
+const TODAY = toLocalDateValue(new Date());
 
 /**
  * 게시물 등록.

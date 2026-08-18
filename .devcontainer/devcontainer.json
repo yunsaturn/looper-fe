@@ -3,8 +3,8 @@
   "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
 
   // Codespace 생성 직후 의존성 설치와 .env 준비까지 자동으로 끝낸다.
-  // .env 가 이미 있으면 덮어쓰지 않는다 (-n).
-  "postCreateCommand": "npm install && cp -n .env.example .env || true",
+  // .env 가 이미 있으면 유지한다.
+  "postCreateCommand": "npm ci && if [ ! -f .env ]; then cp .env.example .env; fi",
 
   // Vite 개발 서버 포트. onAutoForward: openPreview 로 두면
   // npm run dev 를 실행하는 순간 VS Code 안에서 미리보기가 바로 열린다.
