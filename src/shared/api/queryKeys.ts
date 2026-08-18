@@ -29,6 +29,7 @@ export const queryKeys = {
       ['rentals', 'list', filters] as const,
     detail: (rentalId: string) => ['rentals', 'detail', rentalId] as const,
     offers: (rentalId: string) => ['rentals', 'offers', rentalId] as const,
+    safety: (rentalId: string) => ['rentals', 'safety', rentalId] as const,
   },
 
   impact: {

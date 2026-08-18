@@ -6,6 +6,7 @@ import type {
   UpdateTradeRequest,
 } from '@/entities/trade/types';
 import type { UpdateRentalRequest } from '@/entities/rental/types';
+import type { CreateReportRequest } from '@/entities/rental/safety/types';
 
 import { CATEGORY } from '@/shared/config/categories';
 import {
@@ -29,6 +30,7 @@ import {
   myProfile,
   notifications,
 } from './seed';
+import { getSafety, mockAiCompare, setSafety } from './safety';
 
 /**
  * MSW 핸들러.
@@ -1095,6 +1097,147 @@ export const handlers = [
 
       rental.status = RENTAL_STATUS.CONFIRMED;
       return HttpResponse.json({ status: rental.status });
+    },
+  ),
+
+  /* ─────────────── 대여 전후 사진·반납 확인 ─────────────── */
+
+  http.get(`${BASE}/rentals/:rentalId/safety`, async ({ params }) => {
+    await delay(LATENCY_MS);
+    const rental = rentals.find((r) => r.id === params.rentalId);
+    if (!rental) return notFound();
+    return HttpResponse.json(getSafety(rental.id));
+  }),
+
+  http.post(
+    `${BASE}/rentals/:rentalId/safety/condition/before`,
+    async ({ params, request }) => {
+      await delay(LATENCY_MS);
+      const rental = rentals.find((r) => r.id === params.rentalId);
+      if (!rental) return notFound();
+      if (rental.status !== RENTAL_STATUS.CONFIRMED) {
+        return invalidState(
+          rental.status,
+          [RENTAL_STATUS.CONFIRMED],
+          'REGISTER_CONDITION_BEFORE',
+        );
+      }
+
+      const body = (await request.json()) as {
+        image_urls: string[];
+        description?: string;
+        components?: string[];
+      };
+      const safety = getSafety(rental.id);
+      const before = {
+        image_urls: body.image_urls,
+        description: body.description,
+        components: body.components,
+        registered_at: new Date().toISOString(),
+      };
+      setSafety(rental.id, { ...safety, before });
+      return HttpResponse.json({
+        image_urls: before.image_urls,
+        registered_at: before.registered_at,
+      });
+    },
+  ),
+
+  http.post(
+    `${BASE}/rentals/:rentalId/safety/condition/accept`,
+    async ({ params }) => {
+      await delay(LATENCY_MS);
+      const rental = rentals.find((r) => r.id === params.rentalId);
+      if (!rental) return notFound();
+      const safety = getSafety(rental.id);
+      if (rental.status !== RENTAL_STATUS.CONFIRMED || !safety.before) {
+        return invalidState(
+          rental.status,
+          [RENTAL_STATUS.CONFIRMED],
+          'ACCEPT_CONDITION',
+        );
+      }
+
+      rental.status = RENTAL_STATUS.IN_USE;
+      setSafety(rental.id, { ...safety, condition_accepted: true });
+      return HttpResponse.json({ status: rental.status });
+    },
+  ),
+
+  http.post(
+    `${BASE}/rentals/:rentalId/safety/condition/after`,
+    async ({ params, request }) => {
+      await delay(LATENCY_MS);
+      const rental = rentals.find((r) => r.id === params.rentalId);
+      if (!rental) return notFound();
+      if (rental.status !== RENTAL_STATUS.IN_USE) {
+        return invalidState(
+          rental.status,
+          [RENTAL_STATUS.IN_USE],
+          'REGISTER_CONDITION_AFTER',
+        );
+      }
+
+      const body = (await request.json()) as {
+        image_urls: string[];
+        description?: string;
+      };
+      const result = mockAiCompare(body.image_urls, body.description);
+      if (result.needs_retake) return HttpResponse.json(result);
+
+      const safety = getSafety(rental.id);
+      rental.status = RENTAL_STATUS.RETURN_PENDING;
+      setSafety(rental.id, {
+        ...safety,
+        after: {
+          image_urls: body.image_urls,
+          description: body.description,
+          registered_at: new Date().toISOString(),
+        },
+        ai_result: result,
+      });
+      return HttpResponse.json(result);
+    },
+  ),
+
+  http.post(
+    `${BASE}/rentals/:rentalId/safety/return/approve`,
+    async ({ params }) => {
+      await delay(LATENCY_MS);
+      const rental = rentals.find((r) => r.id === params.rentalId);
+      if (!rental) return notFound();
+      const safety = getSafety(rental.id);
+      if (rental.status !== RENTAL_STATUS.RETURN_PENDING || !safety.after) {
+        return invalidState(
+          rental.status,
+          [RENTAL_STATUS.RETURN_PENDING],
+          'APPROVE_RETURN',
+        );
+      }
+
+      rental.status = RENTAL_STATUS.COMPLETED;
+      rental.is_overdue = false;
+      myImpact.rental_completed_count += 1;
+      setSafety(rental.id, { ...safety, return_approved: true });
+      return HttpResponse.json({ status: rental.status });
+    },
+  ),
+
+  http.post(
+    `${BASE}/rentals/:rentalId/reports`,
+    async ({ params, request }) => {
+      await delay(LATENCY_MS);
+      const rental = rentals.find((r) => r.id === params.rentalId);
+      if (!rental) return notFound();
+      const body = (await request.json()) as CreateReportRequest;
+      const safety = getSafety(rental.id);
+      const report = {
+        id: `rental-report-${safety.reports.length + 1}`,
+        ...body,
+        created_at: new Date().toISOString(),
+      };
+      setSafety(rental.id, { ...safety, reports: [...safety.reports, report] });
+      return HttpResponse.json(report, { status: 201 });
     },
   ),
 

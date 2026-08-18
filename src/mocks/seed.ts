@@ -701,6 +701,33 @@ export const offers: SeededRentalOffer[] = [
     status: OFFER_STATUS.CLOSED,
     created_at: iso(-190),
   },
+  // CONFIRMED — 내가 제공자 (기준 사진 등록 시연)
+  {
+    id: 'offer-6',
+    rental_id: 'rental-10',
+    offerer: users[0],
+    message: '여행용 캐리어 깨끗해요.',
+    status: OFFER_STATUS.SELECTED,
+    created_at: iso(-150),
+  },
+  // IN_USE — 내가 요청자 (반납 촬영 시연)
+  {
+    id: 'offer-7',
+    rental_id: 'rental-13',
+    offerer: users[1],
+    message: '마커 세트 드릴게요.',
+    status: OFFER_STATUS.SELECTED,
+    created_at: iso(-40),
+  },
+  // RETURN_PENDING — 내가 제공자 (반납 확인 시연)
+  {
+    id: 'offer-8',
+    rental_id: 'rental-16',
+    offerer: users[0],
+    message: '멀티탭 빌려드릴게요.',
+    status: OFFER_STATUS.SELECTED,
+    created_at: iso(-250),
+  },
 ];
 
 /* ─────────────────── 내 프로필 ─────────────────── */

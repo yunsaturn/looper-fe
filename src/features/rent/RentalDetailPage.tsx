@@ -30,6 +30,7 @@ import { TrustScoreBadge } from '@/shared/ui/TrustScoreBadge';
 import { ErrorState, Skeleton } from '@/shared/ui/feedback';
 import { useToast } from '@/shared/ui/useToast';
 import { PageTitle } from '@/app/layouts/StackLayout';
+import { RentalSafetyFlow } from './safety/RentalSafetyFlow';
 
 /**
  * 대여 요청 상세.
@@ -50,12 +51,7 @@ export function RentalDetailPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [confirmAction, setConfirmAction] = useState<
-    | 'pickup'
-    | 'return-request'
-    | 'return-confirm'
-    | 'cancel'
-    | 'cancel-offer'
-    | null
+    'cancel' | 'cancel-offer' | null
   >(null);
 
   const rental = useQuery({
@@ -133,23 +129,12 @@ export function RentalDetailPage() {
     onError: onMutationError,
   });
 
-  const step = useMutation({
-    mutationFn: (
-      action: 'pickup' | 'return-request' | 'return-confirm' | 'cancel',
-    ) => {
-      if (action === 'pickup') return rentalApi.confirmPickup(rentalId);
-      if (action === 'return-request') return rentalApi.requestReturn(rentalId);
-      if (action === 'return-confirm') return rentalApi.confirmReturn(rentalId);
-      return rentalApi.cancel(rentalId);
-    },
-    onSuccess: (_data, action) => {
+  const cancelRental = useMutation({
+    mutationFn: () => rentalApi.cancel(rentalId),
+    onSuccess: () => {
       setConfirmAction(null);
       invalidate();
-      if (action === 'return-confirm') {
-        navigate(buildPath(ROUTES.RENTAL_COMPLETE, { rentalId }));
-        return;
-      }
-      toast.show(STEP_MESSAGE[action], 'success');
+      toast.show('대여를 취소했어요.', 'success');
     },
     onError: (error) => {
       setConfirmAction(null);
@@ -207,6 +192,13 @@ export function RentalDetailPage() {
             {data.description}
           </p>
         </section>
+
+        <RentalSafetyFlow
+          rentalId={data.id}
+          rentalStatus={data.status}
+          isRequester={isRequester}
+          isSelectedOfferer={isSelectedOfferer}
+        />
 
         <section className="rounded-card border border-ink-200 p-4">
           <h3 className="text-sm font-bold text-ink-900">대여 조건</h3>
@@ -362,31 +354,6 @@ export function RentalDetailPage() {
               </Button>
             )}
 
-            {isRequester && data.status === RENTAL_STATUS.CONFIRMED && (
-              <Button fullWidth onClick={() => setConfirmAction('pickup')}>
-                물품 수령했어요
-              </Button>
-            )}
-
-            {isRequester && data.status === RENTAL_STATUS.IN_USE && (
-              <Button
-                fullWidth
-                onClick={() => setConfirmAction('return-request')}
-              >
-                반납했어요
-              </Button>
-            )}
-
-            {isSelectedOfferer &&
-              data.status === RENTAL_STATUS.RETURN_PENDING && (
-                <Button
-                  fullWidth
-                  onClick={() => setConfirmAction('return-confirm')}
-                >
-                  반납 확인했어요
-                </Button>
-              )}
-
             {isRequester &&
               (data.status === RENTAL_STATUS.RECRUITING ||
                 data.status === RENTAL_STATUS.CONFIRMED) && (
@@ -464,40 +431,10 @@ export function RentalDetailPage() {
       />
 
       <ConfirmDialog
-        open={confirmAction === 'pickup'}
-        onClose={() => setConfirmAction(null)}
-        onConfirm={() => step.mutate('pickup')}
-        loading={step.isPending}
-        title="물품을 수령했나요?"
-        description="확인하면 대여 중으로 바뀌고 반납 예정 시간 카운트가 시작돼요."
-        confirmLabel="수령 확인"
-      />
-
-      <ConfirmDialog
-        open={confirmAction === 'return-request'}
-        onClose={() => setConfirmAction(null)}
-        onConfirm={() => step.mutate('return-request')}
-        loading={step.isPending}
-        title="반납했나요?"
-        description="빌려준 학생이 확인하면 반납이 완료됩니다."
-        confirmLabel="반납 완료 요청"
-      />
-
-      <ConfirmDialog
-        open={confirmAction === 'return-confirm'}
-        onClose={() => setConfirmAction(null)}
-        onConfirm={() => step.mutate('return-confirm')}
-        loading={step.isPending}
-        title="반납을 확인할까요?"
-        description="확인하면 반납이 완료되고 양측 신뢰도와 예상 탄소 절감량이 반영됩니다."
-        confirmLabel="반납 확인"
-      />
-
-      <ConfirmDialog
         open={confirmAction === 'cancel'}
         onClose={() => setConfirmAction(null)}
-        onConfirm={() => step.mutate('cancel')}
-        loading={step.isPending}
+        onConfirm={() => cancelRental.mutate()}
+        loading={cancelRental.isPending}
         title="대여를 취소할까요?"
         description="물품 수령 전까지만 취소할 수 있어요. 확정 후 취소는 신뢰도에 반영돼요."
         confirmLabel="대여 취소"
@@ -506,13 +443,6 @@ export function RentalDetailPage() {
     </>
   );
 }
-
-const STEP_MESSAGE: Record<string, string> = {
-  pickup: '수령을 확인했어요. 반납 예정 시간을 지켜주세요.',
-  'return-request': '반납 요청을 보냈어요.',
-  'return-confirm': '반납이 완료되었어요.',
-  cancel: '대여를 취소했어요.',
-};
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
