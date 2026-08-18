@@ -88,7 +88,7 @@ export function AiAssistField({
     );
     if (unsupportedFile) {
       setLocalError(
-        `${unsupportedFile.name}: JPG, PNG, WEBP 이미지만 올릴 수 있어요.`,
+        `${unsupportedFile.name}: JPG, PNG, WEBP, HEIC 이미지만 올릴 수 있어요.`,
       );
       if (inputRef.current) inputRef.current.value = '';
       return;
