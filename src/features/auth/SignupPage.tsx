@@ -142,7 +142,7 @@ export function SignupPage() {
     <div className="flex min-h-dvh flex-col justify-center px-5 py-10">
       <div className="mx-auto w-full max-w-sm">
         <div className="mb-7 text-center">
-          <BrandLogo size="sm" />
+          <BrandLogo />
           <h1 className="mt-3 text-xl font-bold text-ink-900">회원가입</h1>
           <p className="mt-1.5 text-sm text-ink-500">
             학교 이메일로 같은 캠퍼스 구성원임을 확인해요
