@@ -51,8 +51,10 @@ export const ROUTES = {
   IMPACT: '/impact',
   IMPACT_CAMPUS: '/impact/campus',
   IMPACT_METHOD: '/impact/method',
+  IMPACT_ACTIVITY: '/impact/activities/:activityId',
 
   /* 프로필 */
+  NOTIFICATIONS: '/notifications',
   ME: '/me',
   MY_ACTIVITIES: '/me/activities',
   ME_EDIT: '/me/edit',

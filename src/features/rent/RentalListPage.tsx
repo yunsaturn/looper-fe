@@ -15,13 +15,10 @@ import {
   type RentalStatus,
 } from '@/shared/config/status';
 import { LAYOUT, ROUTES } from '@/shared/config/navigation';
-import { cn } from '@/shared/lib/cn';
 import { Button } from '@/shared/ui/Button';
 import { FilterChips } from '@/shared/ui/FilterChips';
 import { RentalCard } from '@/shared/ui/RentalCard';
 import { CardSkeletonGrid, EmptyState, ErrorState } from '@/shared/ui/feedback';
-
-type ViewMode = 'detailed' | 'compact';
 
 /** 목록 상단 상태 필터. 취소 건은 굳이 노출하지 않는다. */
 const STATUS_FILTERS = [
@@ -35,14 +32,16 @@ const STATUS_FILTERS = [
 /**
  * 대여 요청 목록.
  *
- * Figma 모바일에 '한 장씩 보기 / 한눈에 보기' 토글이 있어 그대로 구현했다.
  * 기본 정렬은 시작 시간 오름차순(서버 기본값) — 임박한 요청이 먼저 온다.
+ *
+ * Figma 에 '한 장씩 보기 / 한눈에 보기' 토글이 있었지만 걷어냈다.
+ * 두 모드의 차이가 사용 시간 한 줄뿐이라 고르는 값이 없었고, 선택지가
+ * 하나 줄어드는 편이 목록을 훑는 데 낫다.
  */
 export function RentalListPage() {
   const navigate = useNavigate();
 
   const [category, setCategory] = useState<Category | undefined>();
-  const [view, setView] = useState<ViewMode>('detailed');
   /**
    * 기본은 모집 중만 보여준다. 이 목록의 제목이 '빌려줄 수 있는 요청'이라
    * 이미 끝난 요청이 상단에 오면 안 된다. (정렬은 서버 기본값인
@@ -79,21 +78,6 @@ export function RentalListPage() {
           빌려줄 수 있는 요청
         </h2>
 
-        <div className="flex rounded-btn bg-ink-50 p-1">
-          <ViewTab
-            active={view === 'detailed'}
-            onClick={() => setView('detailed')}
-          >
-            한 장씩 보기
-          </ViewTab>
-          <ViewTab
-            active={view === 'compact'}
-            onClick={() => setView('compact')}
-          >
-            한눈에 보기
-          </ViewTab>
-        </div>
-
         <FilterChips
           options={STATUS_FILTERS.map((s) => ({
             value: s,
@@ -120,15 +104,9 @@ export function RentalListPage() {
       ) : rentals.isError ? (
         <ErrorState error={rentals.error} onRetry={() => rentals.refetch()} />
       ) : rentals.data.content.length ? (
-        <div
-          className={
-            view === 'detailed'
-              ? 'grid grid-cols-1 gap-4 md:grid-cols-2'
-              : LAYOUT.rentalGrid
-          }
-        >
+        <div className={LAYOUT.rentalGrid}>
           {rentals.data.content.map((item) => (
-            <RentalCard key={item.id} item={item} variant={view} />
+            <RentalCard key={item.id} item={item} />
           ))}
         </div>
       ) : (
@@ -143,29 +121,5 @@ export function RentalListPage() {
         />
       )}
     </div>
-  );
-}
-
-function ViewTab({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        'flex-1 rounded-[0.5rem] py-2 text-sm font-medium transition-colors',
-        active ? 'bg-white text-ink-900 shadow-sm' : 'text-ink-500',
-      )}
-    >
-      {children}
-    </button>
   );
 }

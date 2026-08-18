@@ -1,5 +1,6 @@
 import type {
-  CampusRanking,
+  CampusImpact,
+  CampusRankItem,
   ForestProgress,
   TreeEquivalent,
 } from '@/entities/impact/types';
@@ -183,19 +184,38 @@ const MEDALS = ['🥇', '🥈', '🥉'];
  * 시상대는 1위를 가운데 두고 2·3위를 양옆에 둔다. 막대 높이는 1위 대비
  * 비율이라 순위 차이가 눈으로 읽힌다.
  */
-export function CampusRankingSection({ ranking }: { ranking: CampusRanking }) {
-  const top = ranking.top_campuses ?? [];
-  const mine = ranking.my_campus;
+export function CampusRankingSection({ campus }: { campus: CampusImpact }) {
+  const ranking = campus.ranking;
+  const top = ranking?.top_campuses ?? [];
 
-  // 시상대 순서: 2위 · 1위 · 3위
-  const podium = [top[1], top[0], top[2]].filter(Boolean);
+  /*
+   * 내 캠퍼스 카드는 ranking 이 없어도 그린다.
+   *
+   * 예전에는 ranking 이 없으면 섹션 전체를 감췄는데, 그 필드는 비교적
+   * 최근에 생긴 것이라 서버 배포가 밀리면 순위가 통째로 사라졌다.
+   * campus_rank·이름·누적량은 항상 오는 값이므로 그것으로 먼저 그리고,
+   * ranking 은 시상대와 다음 순위 격차를 더해 주는 부가 정보로 다룬다.
+   */
+  const mine: CampusRankItem = ranking?.my_campus ?? {
+    rank: campus.campus_rank,
+    campus_id: campus.campus.id,
+    display_name: campus.campus.name,
+    estimated_carbon_saved_kg_co2e: campus.estimated_carbon_saved_kg_co2e,
+    mine: true,
+  };
+
+  // 시상대 순서: 2위 · 1위 · 3위. 우리 캠퍼스뿐이면 비교가 안 되니 접는다
+  const podium =
+    top.length >= 2 ? [top[1], top[0], top[2]].filter(Boolean) : [];
   const maxKg = Math.max(
     ...top.map((c) => c.estimated_carbon_saved_kg_co2e),
     1,
   );
 
   return (
-    <section className="grid gap-4 md:grid-cols-2">
+    <section
+      className={cn('grid gap-4', podium.length > 0 && 'md:grid-cols-2')}
+    >
       {podium.length > 0 && (
         <div className="flex items-end justify-center gap-3 rounded-card border border-ink-200 p-4">
           {podium.map((campus) => {
@@ -242,57 +262,61 @@ export function CampusRankingSection({ ranking }: { ranking: CampusRanking }) {
         </div>
       )}
 
-      {mine && (
-        <div className="rounded-card border border-brand-300 bg-brand-100 p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs text-ink-500">우리 캠퍼스</p>
-              <p className="truncate text-lg font-bold text-ink-900">
-                {mine.display_name}
-              </p>
-              <p className="mt-0.5 text-sm text-ink-600 tabular-nums">
-                {formatCarbon(mine.estimated_carbon_saved_kg_co2e)}
-              </p>
-            </div>
-            <p className="shrink-0 text-2xl font-extrabold text-brand-700 tabular-nums">
-              {mine.rank}
-              <span className="ml-0.5 text-base font-bold">위</span>
+      <div className="rounded-card border border-brand-300 bg-brand-100 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs text-ink-500">우리 캠퍼스</p>
+            <p className="truncate text-lg font-bold text-ink-900">
+              {mine.display_name}
+            </p>
+            <p className="mt-0.5 text-sm text-ink-600 tabular-nums">
+              {formatCarbon(mine.estimated_carbon_saved_kg_co2e)}
             </p>
           </div>
-
-          {ranking.carbon_to_next_rank_kg_co2e != null && mine.rank > 1 && (
-            <div className="mt-4">
-              <p className="text-xs text-ink-600">
-                {mine.rank - 1}위까지{' '}
-                <strong className="font-bold text-ink-900">
-                  {Math.round(
-                    ranking.carbon_to_next_rank_kg_co2e,
-                  ).toLocaleString('ko-KR')}{' '}
-                  kgCO₂e
-                </strong>{' '}
-                남았어요
-              </p>
-              <div className="mt-1.5 h-2 overflow-hidden rounded-chip bg-brand-200">
-                <div
-                  className="h-full rounded-chip bg-brand-500"
-                  style={{
-                    width: `${gapProgress(
-                      mine.estimated_carbon_saved_kg_co2e,
-                      ranking.carbon_to_next_rank_kg_co2e,
-                    )}%`,
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-          {mine.rank === 1 && (
-            <p className="mt-4 text-xs font-semibold text-brand-700">
-              전체 캠퍼스 중 1위예요. 이대로 이어가요!
-            </p>
-          )}
+          <p className="shrink-0 text-2xl font-extrabold text-brand-700 tabular-nums">
+            {mine.rank}
+            <span className="ml-0.5 text-base font-bold">위</span>
+          </p>
         </div>
-      )}
+
+        {ranking?.carbon_to_next_rank_kg_co2e != null && mine.rank > 1 && (
+          <div className="mt-4">
+            <p className="text-xs text-ink-600">
+              {mine.rank - 1}위까지{' '}
+              <strong className="font-bold text-ink-900">
+                {Math.round(ranking.carbon_to_next_rank_kg_co2e).toLocaleString(
+                  'ko-KR',
+                )}{' '}
+                kgCO₂e
+              </strong>{' '}
+              남았어요
+            </p>
+            <div className="mt-1.5 h-2 overflow-hidden rounded-chip bg-brand-200">
+              <div
+                className="h-full rounded-chip bg-brand-500"
+                style={{
+                  width: `${gapProgress(
+                    mine.estimated_carbon_saved_kg_co2e,
+                    ranking.carbon_to_next_rank_kg_co2e,
+                  )}%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {mine.rank === 1 && (
+          <p className="mt-4 text-xs font-semibold text-brand-700">
+            전체 캠퍼스 중 1위예요. 이대로 이어가요!
+          </p>
+        )}
+
+        {podium.length === 0 && mine.rank !== 1 && (
+          <p className="mt-4 text-xs text-ink-500">
+            비교할 다른 캠퍼스의 기록이 아직 없어요.
+          </p>
+        )}
+      </div>
     </section>
   );
 }

@@ -41,10 +41,14 @@ export const queryKeys = {
 
   carbonReferences: ['carbon', 'references'] as const,
 
-  search: (params: Record<string, unknown>) => ['search', params] as const,
+  search: (params: object = {}) => ['search', params] as const,
 
   notifications: {
-    list: ['notifications'] as const,
+    all: ['notifications'] as const,
+    list: (filters: object = {}) => ['notifications', 'list', filters] as const,
     unreadCount: ['notifications', 'unreadCount'] as const,
   },
+
+  impactActivity: (activityId: string) =>
+    ['impact', 'activity', activityId] as const,
 } as const;

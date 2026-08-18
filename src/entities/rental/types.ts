@@ -45,6 +45,8 @@ export interface RentalDetail {
   impact?: RecordedImpact;
   /** 내가 낸 지원의 상태. 지원한 적 없으면 null */
   my_offer_status?: OfferStatus | null;
+  /** 내 최근 지원 UUID — 취소 API 호출에 쓴다. 이력이 없으면 빠진다 */
+  my_offer_id?: string;
   /** 서버가 판단한 지원 가능 여부 */
   can_offer: boolean;
 }

@@ -71,6 +71,8 @@ export interface MyImpact {
 
 /** 완료된 거래·대여에 스냅샷으로 남은 임팩트. 완료 전이면 응답에서 빠진다 */
 export interface RecordedImpact {
+  /** 계산 근거 상세 조회용 (/impact/activities/{id}) */
+  activity_id: string;
   saved_amount: number;
   waste_reduced_kg: number;
   estimated_carbon_saved_kg_co2e: number;
@@ -131,6 +133,26 @@ export interface ImpactPeriodParams {
   /** 'YYYY-MM-DD' */
   from?: string;
   to?: string;
+}
+
+/** GET /api/v1/impact/activities/{activityId} — 한 활동의 계산 근거 스냅샷 */
+export interface ImpactActivityDetail {
+  activity_id: string;
+  activity_type: 'TRADE' | 'RENTAL';
+  weight_kg: number;
+  carbon_sector: Category;
+  sector_carbon_intensity: number;
+  production_stage_ratio: number;
+  substitution_rate: number;
+  reported_substitution_rate: number;
+  avoidance_factor_kg_co2e_per_kg: number;
+  estimated_carbon_saved_kg_co2e: number;
+  formula: string;
+  reference_date: string;
+  calculated_at: string;
+  calculation_method: string;
+  /** 현재 항상 true — 실측이 아니라 모델 기반 예상치다 */
+  is_estimate: boolean;
 }
 
 export interface CarbonSectorReference {

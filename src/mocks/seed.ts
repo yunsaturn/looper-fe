@@ -791,3 +791,39 @@ export function toTradeListItem(t: TradeDetail): TradeListItem {
     created_at: t.created_at,
   };
 }
+
+/* ─────────────────── 알림 ─────────────────── */
+
+export const notifications = [
+  {
+    id: 'noti-1',
+    type: 'TRADE_APPLICATION_RECEIVED',
+    title: '새 거래 신청이 왔어요',
+    message: "'1인용 미니 밥솥' 에 기숙사생 님이 신청했어요.",
+    resource_type: 'TRADE',
+    resource_id: 'trade-1',
+    read: false,
+    created_at: iso(-12),
+  },
+  {
+    id: 'noti-2',
+    type: 'RENTAL_OFFER_RECEIVED',
+    title: '빌려주겠다는 학생이 있어요',
+    message: "'캠핑 텐트 (3~4인용)' 요청에 지원이 들어왔어요.",
+    resource_type: 'RENTAL',
+    resource_id: 'rental-1',
+    read: false,
+    created_at: iso(-40),
+  },
+  {
+    id: 'noti-3',
+    type: 'TRADE_COMPLETED',
+    title: '거래가 완료됐어요',
+    message: "'선형대수학 교재' 거래로 2.7 kgCO₂e 를 줄였어요.",
+    resource_type: 'TRADE',
+    resource_id: 'trade-20',
+    read: true,
+    read_at: iso(-100),
+    created_at: iso(-180),
+  },
+];
