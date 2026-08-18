@@ -15,6 +15,8 @@ import { Button } from '@/shared/ui/Button';
 import { CarbonHeroCard, ImpactStatCard } from '@/shared/ui/ImpactCards';
 import { Skeleton } from '@/shared/ui/feedback';
 
+import { ForestProgressCard } from '../impact/components';
+
 /**
  * 거래 완료 결과.
  *
@@ -60,6 +62,7 @@ export function TradeCompletePage() {
 
   // 각주는 서버가 준 문구를 우선 쓰고, 없을 때만 상수로 폴백한다.
   const disclaimer = impact.data?.disclaimer ?? CARBON_DISCLAIMER;
+  const activityId = trade.data?.impact?.activity_id ?? tradeId;
 
   return (
     <div className="mx-auto grid max-w-lg gap-5 py-6 text-center">
@@ -80,6 +83,14 @@ export function TradeCompletePage() {
           kgCO2e={thisActivityKg}
           disclaimer={disclaimer}
           caption={`무게 ${trade.data?.weight_kg}kg 기준으로 계산했어요.`}
+        />
+      )}
+
+      {impact.data?.forest && (
+        <ForestProgressCard
+          forest={impact.data.forest}
+          activityId={activityId}
+          autoPlay
         />
       )}
 
