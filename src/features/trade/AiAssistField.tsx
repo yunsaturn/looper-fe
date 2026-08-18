@@ -105,7 +105,7 @@ export function AiAssistField({
   const needsFallback = Boolean(data?.fallback_required) || assist.isError;
 
   return (
-    <Field label="대표 이미지">
+    <Field label="대표 이미지" required>
       <div className="grid gap-3">
         <input
           ref={inputRef}
@@ -140,7 +140,7 @@ export function AiAssistField({
                   if (inputRef.current) inputRef.current.value = '';
                 }}
               >
-                사진 없이 등록
+                선택 취소
               </Button>
             </div>
           </div>
@@ -153,7 +153,8 @@ export function AiAssistField({
             <span className="text-lg">＋</span>
             사진 선택하기
             <span className="text-xs text-ink-400">
-              올리면 상품명과 카테고리를 추천해 드려요 · JPG PNG WEBP · 10MB 이하
+              등록에 사진이 꼭 필요해요 · 올리면 상품명·카테고리를 추천해 드려요
+              · JPG PNG WEBP · 10MB 이하
             </span>
           </button>
         )}

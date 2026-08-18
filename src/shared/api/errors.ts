@@ -70,9 +70,28 @@ export class ApiError extends Error {
     this.allowedStatuses = body.allowed_statuses ?? null;
   }
 
-  /** 특정 필드의 검증 오류 메시지 */
+  /**
+   * 특정 필드의 검증 오류 메시지.
+   *
+   * ⚠️ 응답 본문은 SNAKE_CASE 지만 **검증 오류의 field 는 camelCase 다.**
+   *    Jackson 이 아니라 Spring 의 BindingResult 가 Java 프로퍼티명을
+   *    그대로 쓰기 때문이다(imageUrls, weightKg, availableDate…).
+   *    그래서 두 표기를 같은 것으로 보고 찾는다. 이걸 안 맞추면
+   *    서버가 이유를 알려줘도 화면에는 아무것도 안 뜬다.
+   */
   fieldError(field: string): string | undefined {
-    return this.fieldErrors.find((e) => e.field === field)?.message;
+    const key = normalizeFieldName(field);
+    return this.fieldErrors.find((e) => normalizeFieldName(e.field) === key)
+      ?.message;
+  }
+
+  /**
+   * 화면에 이미 표시한 필드를 뺀 나머지 검증 오류.
+   * 입력칸이 없는 필드(image_urls 등)의 오류가 조용히 사라지는 걸 막는다.
+   */
+  unshownFieldErrors(shown: string[]): FieldError[] {
+    const keys = new Set(shown.map(normalizeFieldName));
+    return this.fieldErrors.filter((e) => !keys.has(normalizeFieldName(e.field)));
   }
 
   /** 인증이 풀린 상황인지 */
@@ -91,6 +110,11 @@ export class ApiError extends Error {
   get isRateLimited(): boolean {
     return this.status === 429 || this.code === ERROR_CODE.TOO_MANY_REQUESTS;
   }
+}
+
+/** available_date 와 availableDate 를 같은 필드로 취급하기 위한 정규화 */
+function normalizeFieldName(field: string): string {
+  return field.replace(/_/g, '').toLowerCase();
 }
 
 /** 네트워크 장애 등 응답 자체를 못 받은 경우 */

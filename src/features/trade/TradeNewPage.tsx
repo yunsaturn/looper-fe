@@ -80,14 +80,21 @@ export function TradeNewPage() {
   const create = useMutation({
     mutationFn: async () => {
       // 이미지는 API 서버를 거치지 않고 스토리지로 직접 올린 뒤 공개 URL 만 넘긴다.
-      // 업로드가 실패해도 등록 자체는 막지 않는다.
-      let imageUrls: string[] = [];
-      if (imageFile) {
-        try {
-          imageUrls = [await storageApi.upload(imageFile)];
-        } catch {
-          toast.show('사진 업로드에 실패해 사진 없이 등록합니다.', 'info');
-        }
+      //
+      // ⚠️ 서버는 image_urls 를 @NotEmpty 로 강제한다. 업로드가 실패했을 때
+      //    빈 배열로 그냥 보내면 400 이 떨어지는데, 화면에는 "잘못된 요청"
+      //    이라고만 떠서 원인을 알 수 없다. 그래서 여기서 먼저 끊는다.
+      if (!imageFile) {
+        throw new Error('사진을 한 장 이상 첨부해주세요.');
+      }
+
+      let imageUrls: string[];
+      try {
+        imageUrls = [await storageApi.upload(imageFile)];
+      } catch {
+        throw new Error(
+          '사진 업로드에 실패했어요. 잠시 뒤 다시 시도하거나 다른 사진으로 바꿔보세요.',
+        );
       }
 
       return tradeApi.create({
@@ -98,7 +105,7 @@ export function TradeNewPage() {
         condition,
         // 나눔은 서버가 0으로 고정하지만, 보내는 값도 맞춰둔다
         price: tradeType === TRADE_TYPE.SHARE ? 0 : Number(price || 0),
-        weight_kg: weight ? Number(weight) : null,
+        weight_kg: Number(weight),
         available_date: availableDate,
         pickup_zone_id: pickupZoneId,
         image_urls: imageUrls,
@@ -113,14 +120,22 @@ export function TradeNewPage() {
       });
     },
     onError: (error) => {
+      // 업로드 실패처럼 요청 전에 끊은 경우도 사유를 그대로 보여준다
       toast.show(
-        error instanceof ApiError ? error.message : '등록에 실패했어요.',
+        error instanceof Error && error.message
+          ? error.message
+          : '등록에 실패했어요.',
         'error',
       );
     },
   });
 
   const error = create.error instanceof ApiError ? create.error : null;
+  // 서버에 닿기 전에 끊은 오류(사진 미첨부·업로드 실패)도 폼 위에 남긴다
+  const localError =
+    create.error && !error && create.error instanceof Error
+      ? create.error.message
+      : null;
   const isShare = tradeType === TRADE_TYPE.SHARE;
   const isWanted = tradeType === TRADE_TYPE.WANTED;
 
@@ -221,12 +236,14 @@ export function TradeNewPage() {
         <Input
           label="무게 (kg)"
           type="number"
-          min={0}
+          min={0.1}
           step={0.1}
           value={weight}
           onChange={(e) => setWeight(e.target.value)}
           placeholder="2.4"
-          hint="탄소 절감량 계산에 쓰여요. 모르면 비워두셔도 됩니다."
+          required
+          hint="탄소 절감량 계산에 쓰여요. 어림값이라도 괜찮지만, 0보다 커야 해요."
+          error={error?.fieldError('weight_kg')}
         />
 
         <Input
@@ -254,6 +271,33 @@ export function TradeNewPage() {
           error={error?.fieldError('pickup_zone_id')}
         />
 
+        {localError && (
+          <p className="rounded-btn bg-tone-danger-bg px-3 py-2.5 text-sm text-tone-danger-fg">
+            {localError}
+          </p>
+        )}
+
+        {/* 입력칸이 없는 필드의 오류까지 전부 보여준다 */}
+        {error && (
+          <div className="rounded-btn bg-tone-danger-bg px-3 py-2.5 text-sm text-tone-danger-fg">
+            <p>{error.message}</p>
+            {error
+              .unshownFieldErrors([
+                'title',
+                'description',
+                'price',
+                'weight_kg',
+                'available_date',
+                'pickup_zone_id',
+              ])
+              .map((fe) => (
+                <p key={fe.field} className="mt-1 text-xs">
+                  {fe.field}: {fe.message}
+                </p>
+              ))}
+          </div>
+        )}
+
         <div className="flex gap-2 pt-2">
           <Button
             type="button"
@@ -267,7 +311,7 @@ export function TradeNewPage() {
             type="submit"
             fullWidth
             loading={create.isPending}
-            disabled={!pickupZoneId}
+            disabled={!pickupZoneId || !imageFile || !Number(weight)}
           >
             등록하기
           </Button>
