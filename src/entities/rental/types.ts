@@ -1,7 +1,8 @@
 import type { Category } from '@/shared/config/categories';
 import type { OfferStatus, RentalStatus } from '@/shared/config/status';
 import type { UserSummary } from '@/entities/user/types';
-import type { PickupZone, RecordedImpact } from '@/entities/trade/types';
+import type { RecordedImpact } from '@/entities/impact/types';
+import type { PickupZone } from '@/entities/trade/types';
 
 /** 목록 아이템 (GET /api/v1/rentals). 기본 정렬은 start_at 오름차순 */
 export interface RentalListItem {

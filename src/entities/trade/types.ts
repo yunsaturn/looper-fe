@@ -5,17 +5,11 @@ import type {
 } from '@/shared/config/categories';
 import type { ApplicationStatus, TradeStatus } from '@/shared/config/status';
 import type { UserSummary } from '@/entities/user/types';
+import type { RecordedImpact } from '@/entities/impact/types';
 
 export interface PickupZone {
   id: string;
   name: string;
-}
-
-export interface RecordedImpact {
-  saved_amount: number;
-  waste_reduced_kg: number;
-  estimated_carbon_saved_kg_co2e: number;
-  completed_at: string;
 }
 
 /** 목록 아이템 (GET /api/v1/trades) */

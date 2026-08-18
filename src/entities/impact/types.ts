@@ -69,6 +69,14 @@ export interface MyImpact {
   disclaimer: string;
 }
 
+/** 완료된 거래·대여에 스냅샷으로 남은 임팩트. 완료 전이면 응답에서 빠진다 */
+export interface RecordedImpact {
+  saved_amount: number;
+  waste_reduced_kg: number;
+  estimated_carbon_saved_kg_co2e: number;
+  completed_at: string;
+}
+
 export interface CampusSummary {
   id: string;
   /** 학교명 + 캠퍼스명을 합친 표시명 */

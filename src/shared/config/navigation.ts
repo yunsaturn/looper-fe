@@ -53,7 +53,7 @@ export const ROUTES = {
 
   /* 프로필 */
   ME: '/me',
-  MY_TRADES: '/me/trades',
+  MY_ACTIVITIES: '/me/activities',
   ME_EDIT: '/me/edit',
   USER_PROFILE: '/users/:userId',
 

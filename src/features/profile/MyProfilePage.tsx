@@ -15,6 +15,7 @@ import { ErrorState, Skeleton } from '@/shared/ui/feedback';
 import { useToast } from '@/shared/ui/useToast';
 
 import { ProfileStats, ProfileSummary } from './ProfileSummary';
+import { WithdrawSheet } from './WithdrawSheet';
 
 /**
  * 마이 프로필.
@@ -32,6 +33,7 @@ export function MyProfilePage() {
   const logout = useLogout();
 
   const [editing, setEditing] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
 
   const me = useQuery({ queryKey: queryKeys.me, queryFn: userApi.me });
   const impact = useQuery({
@@ -121,9 +123,9 @@ export function MyProfilePage() {
 
       <nav className="grid gap-2">
         <LinkCard
-          to={ROUTES.MY_TRADES}
-          title="내가 쓴 글"
-          description="등록한 게시물과 진행 상태를 확인해요."
+          to={ROUTES.MY_ACTIVITIES}
+          title="내 활동"
+          description="올린 글과 신청·지원한 내역을 한곳에서 확인해요."
         />
         <LinkCard
           to={ROUTES.IMPACT}
@@ -136,14 +138,37 @@ export function MyProfilePage() {
         />
       </nav>
 
-      <Button
-        variant="ghost"
-        fullWidth
-        loading={logout.isPending}
-        onClick={() => logout.mutate()}
-      >
-        로그아웃
-      </Button>
+      <div className="grid gap-1">
+        <Button
+          variant="ghost"
+          fullWidth
+          loading={logout.isPending}
+          onClick={() => logout.mutate()}
+        >
+          로그아웃
+        </Button>
+        <button
+          type="button"
+          onClick={() => setWithdrawOpen(true)}
+          className="justify-self-center px-3 py-2 text-xs text-ink-400 underline hover:text-ink-600"
+        >
+          회원 탈퇴
+        </button>
+      </div>
+
+      <WithdrawSheet
+        open={withdrawOpen}
+        onClose={() => setWithdrawOpen(false)}
+        onWithdrawn={() => {
+          setWithdrawOpen(false);
+          toast.show(
+            '탈퇴가 완료됐어요. 그동안 함께해 주셔서 고마워요.',
+            'success',
+          );
+          // 탈퇴 후에도 로그아웃과 똑같이 토큰·캐시를 비우고 나가야 한다
+          logout.mutate();
+        }}
+      />
     </div>
   );
 }

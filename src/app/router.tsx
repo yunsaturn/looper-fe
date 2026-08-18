@@ -82,9 +82,9 @@ const MyProfilePage = lazyPage(
   () => import('@/features/profile/MyProfilePage'),
   'MyProfilePage',
 );
-const MyTradesPage = lazyPage(
-  () => import('@/features/profile/MyTradesPage'),
-  'MyTradesPage',
+const MyActivitiesPage = lazyPage(
+  () => import('@/features/profile/MyActivitiesPage'),
+  'MyActivitiesPage',
 );
 const PublicProfilePage = lazyPage(
   () => import('@/features/profile/PublicProfilePage'),
@@ -188,7 +188,7 @@ export function AppRouter() {
 
           {/* 프로필 */}
           <Route path={ROUTES.USER_PROFILE} element={<PublicProfilePage />} />
-          <Route path={ROUTES.MY_TRADES} element={<MyTradesPage />} />
+          <Route path={ROUTES.MY_ACTIVITIES} element={<MyActivitiesPage />} />
 
           {/*
           관리자 — BE 에 관련 API 가 없어 MSW 목업으로만 붙일 예정이다.

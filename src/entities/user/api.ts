@@ -1,12 +1,16 @@
-import { api } from '@/shared/api/client';
+import { api, type PageResponse } from '@/shared/api/client';
 
 import type {
+  ActivityFilters,
+  ActivityItem,
   LoginRequest,
   LoginResponse,
   MyProfile,
   PublicProfile,
   UpdatedProfile,
   UpdateProfileRequest,
+  WithdrawalRequest,
+  WithdrawalResult,
 } from './types';
 
 export const userApi = {
@@ -27,6 +31,20 @@ export const userApi = {
 
   updateMe: (body: UpdateProfileRequest) =>
     api.patch<UpdatedProfile>('/api/v1/users/me', body).then((r) => r.data),
+
+  /** 회원 탈퇴. 진행 중인 거래·대여가 있으면 서버가 409 로 막는다 */
+  withdraw: (body: WithdrawalRequest) =>
+    api
+      .delete<WithdrawalResult>('/api/v1/users/me', { data: body })
+      .then((r) => r.data),
+
+  /** 작성·신청한 거래와 요청·지원한 대여를 한 페이지로 합쳐 조회한다 */
+  activities: (filters: ActivityFilters = {}) =>
+    api
+      .get<PageResponse<ActivityItem>>('/api/v1/users/me/activities', {
+        params: filters,
+      })
+      .then((r) => r.data),
 
   publicProfile: (userId: string) =>
     api.get<PublicProfile>(`/api/v1/users/${userId}`).then((r) => r.data),

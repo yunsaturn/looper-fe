@@ -225,7 +225,7 @@ export function CampusRankingSection({ ranking }: { ranking: CampusRanking }) {
                   className={cn(
                     'mt-2 flex w-full items-end justify-center rounded-t-card pb-2',
                     campus.rank === 1
-                      ? 'bg-brand-700'
+                      ? 'bg-brand-600'
                       : campus.mine
                         ? 'bg-brand-300'
                         : 'bg-brand-200',
@@ -243,7 +243,7 @@ export function CampusRankingSection({ ranking }: { ranking: CampusRanking }) {
       )}
 
       {mine && (
-        <div className="rounded-card border border-brand-300 bg-brand-50 p-4">
+        <div className="rounded-card border border-brand-300 bg-brand-100 p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-xs text-ink-500">우리 캠퍼스</p>
