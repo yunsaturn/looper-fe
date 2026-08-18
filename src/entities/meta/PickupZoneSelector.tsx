@@ -2,16 +2,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cn } from '@/shared/lib/cn';
 import { Button } from '@/shared/ui/Button';
+import { Skeleton } from '@/shared/ui/feedback';
 import { loadKakaoMaps } from '@/shared/lib/loadKakaoMaps';
 
 import {
   activePickupZones,
   findPickupZone,
-  formatPickupZoneSummary,
+  HUFS_SEOUL_FALLBACK_CENTER,
   markerPickupZones,
   resolveMapCenter,
   sanitizeSelectedZoneId,
-  selectPickupZone,
 } from './pickupZone';
 import type { LocatedPickupZone, PickupZoneItem } from './types';
 
@@ -29,30 +29,23 @@ import type { LocatedPickupZone, PickupZoneItem } from './types';
 
 /* ── 커스텀 마커 SVG (인라인 Data URI) ── */
 
-const DEFAULT_MARKER_SIZE = { w: 32, h: 44 } as const;
-const SELECTED_MARKER_SIZE = { w: 38, h: 52 } as const;
+const MARKER_SIZE = { w: 28, h: 40 } as const;
 
-function markerIndex(id: string): number {
-  let hash = 0;
-  for (const character of id) {
-    hash = (hash * 31 + character.charCodeAt(0)) % 99;
-  }
-  return hash + 1;
-}
+/** 기본(비선택) 마커 — 회색 */
+const DEFAULT_MARKER_SVG = `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="${MARKER_SIZE.w}" height="${MARKER_SIZE.h}" viewBox="0 0 28 40">` +
+    `<path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="#6B7280"/>` +
+    `<circle cx="14" cy="14" r="6" fill="#fff"/>` +
+    `</svg>`,
+)}`;
 
-function markerSvg(zone: LocatedPickupZone, selected: boolean): string {
-  const size = selected ? SELECTED_MARKER_SIZE : DEFAULT_MARKER_SIZE;
-  const center = size.w / 2;
-  const radius = selected ? 19 : 16;
-  const label = String(markerIndex(zone.id));
-  return `data:image/svg+xml,${encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${size.w}" height="${size.h}" viewBox="0 0 ${size.w} ${size.h}">` +
-      `<path d="M${center} 0C${center - radius} 0 0 ${radius * 0.95} 0 ${radius}c0 ${radius * 0.8} ${center} ${size.h} ${center} ${size.h}s${center}-${size.h * 0.2} ${center}-${size.h * 0.8}C${size.w} ${radius * 0.95} ${center + radius} 0 ${center} 0z" fill="${selected ? '#15803D' : '#22C55E'}" stroke="#ffffff" stroke-width="2"/>` +
-      `<circle cx="${center}" cy="${radius}" r="${selected ? 10 : 9}" fill="#ffffff"/>` +
-      `<text x="${center}" y="${radius + 4}" text-anchor="middle" font-family="sans-serif" font-size="${selected ? 12 : 11}" font-weight="700" fill="#166534">${label}</text>` +
-      `</svg>`,
-  )}`;
-}
+/** 선택된 마커 — 브랜드 컬러 */
+const SELECTED_MARKER_SVG = `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="${MARKER_SIZE.w}" height="${MARKER_SIZE.h}" viewBox="0 0 28 40">` +
+    `<path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="#2563EB"/>` +
+    `<circle cx="14" cy="14" r="6" fill="#fff"/>` +
+    `</svg>`,
+)}`;
 
 /** InfoWindow 안에 들어갈 HTML 을 생성한다. */
 function buildInfoContent(zone: LocatedPickupZone): string {
@@ -106,11 +99,6 @@ export function PickupZoneSelector({
   const activeZones = useMemo(() => activePickupZones(zones), [zones]);
   const locatedZones = useMemo(() => markerPickupZones(zones), [zones]);
   const selected = findPickupZone(zones, value);
-  const summary = selected ? formatPickupZoneSummary(selected.name) : null;
-
-  const handleZoneSelect = (zoneId: string) => {
-    onChange(selectPickupZone(zones, zoneId));
-  };
 
   /** 마커 재생성 여부를 좌표 조합으로만 판단하기 위한 키 */
   const markerKey = useMemo(
@@ -125,12 +113,11 @@ export function PickupZoneSelector({
 
   /** SDK 기반 MarkerImage 생성 — sdk 가 준비된 뒤에만 호출 */
   const makeMarkerImage = useCallback(
-    (zone: LocatedPickupZone, selected: boolean) => {
+    (selected: boolean) => {
       if (!sdk) return undefined;
-      const markerSize = selected ? SELECTED_MARKER_SIZE : DEFAULT_MARKER_SIZE;
-      const src = markerSvg(zone, selected);
-      const size = new sdk.maps.Size(markerSize.w, markerSize.h);
-      const offset = new sdk.maps.Point(markerSize.w / 2, markerSize.h);
+      const src = selected ? SELECTED_MARKER_SVG : DEFAULT_MARKER_SVG;
+      const size = new sdk.maps.Size(MARKER_SIZE.w, MARKER_SIZE.h);
+      const offset = new sdk.maps.Point(MARKER_SIZE.w / 2, MARKER_SIZE.h);
       return new sdk.maps.MarkerImage(src, size, { offset });
     },
     [sdk],
@@ -163,7 +150,7 @@ export function PickupZoneSelector({
   useEffect(() => {
     if (!sdk || !containerRef.current) return;
     try {
-      const center = resolveMapCenter(zones, value);
+      const center = resolveMapCenter(zones, value, HUFS_SEOUL_FALLBACK_CENTER);
       mapRef.current = new sdk.maps.Map(containerRef.current, {
         center: new sdk.maps.LatLng(center.latitude, center.longitude),
         level: 4,
@@ -183,7 +170,6 @@ export function PickupZoneSelector({
   useEffect(() => {
     const map = mapRef.current;
     if (!sdk || !map || mapStatus !== 'ready') return;
-    const markerMap = markerMapRef.current;
 
     // 기존 정리
     markersRef.current.forEach((marker) => marker.setMap(null));
@@ -195,19 +181,21 @@ export function PickupZoneSelector({
     }
 
     const bounds = new sdk.maps.LatLngBounds();
+    const defaultImage = makeMarkerImage(false);
+    const selectedImage = makeMarkerImage(true);
+
     locatedZones.forEach((zone) => {
       const position = new sdk.maps.LatLng(zone.latitude, zone.longitude);
       const isSelected = zone.id === value;
-      const image = makeMarkerImage(zone, isSelected);
       const marker = new sdk.maps.Marker({
         position,
         map,
         title: zone.name,
-        image,
+        image: isSelected ? selectedImage : defaultImage,
       });
 
       sdk.maps.event.addListener(marker, 'click', () => {
-        onChangeRef.current(selectPickupZone(zones, zone.id));
+        onChangeRef.current(zone.id);
       });
 
       markersRef.current.push(marker);
@@ -215,10 +203,7 @@ export function PickupZoneSelector({
       bounds.extend(position);
     });
 
-    if (locatedZones.length > 0) {
-      map.setBounds(bounds);
-      map.setLevel(Math.min(7, Math.max(3, map.getLevel())));
-    }
+    if (locatedZones.length > 0) map.setBounds(bounds);
 
     // 선택된 마커가 있으면 InfoWindow 바로 열기
     const selectedZone = locatedZones.find((z) => z.id === value);
@@ -237,36 +222,38 @@ export function PickupZoneSelector({
     return () => {
       markersRef.current.forEach((marker) => marker.setMap(null));
       markersRef.current = [];
-      markerMap.clear();
+      markerMapRef.current.clear();
       if (infoWindowRef.current) {
         infoWindowRef.current.close();
         infoWindowRef.current = null;
       }
     };
-  }, [sdk, mapStatus, markerKey, locatedZones, value, zones, makeMarkerImage]);
+  }, [sdk, mapStatus, markerKey, locatedZones, value, makeMarkerImage]);
 
   /* 선택이 바뀌면 마커 이미지 교체 + InfoWindow 이동 + 지도 중심 이동 */
   useEffect(() => {
     const map = mapRef.current;
     if (!sdk || !map || mapStatus !== 'ready') return;
 
+    const defaultImage = makeMarkerImage(false);
+    const selectedImage = makeMarkerImage(true);
+
     // 모든 마커를 기본 이미지로 리셋
-    locatedZones.forEach((zone) => {
-      const marker = markerMapRef.current.get(zone.id);
-      const image = makeMarkerImage(zone, false);
-      if (marker && image) marker.setImage(image);
+    markerMapRef.current.forEach((marker) => {
+      if (defaultImage) marker.setImage(defaultImage);
     });
 
+    // InfoWindow 닫기
     if (infoWindowRef.current) {
       infoWindowRef.current.close();
       infoWindowRef.current = null;
     }
 
+    // 선택된 마커 강조 + InfoWindow
     const target = locatedZones.find((zone) => zone.id === value);
     if (target) {
       const marker = markerMapRef.current.get(target.id);
       if (marker) {
-        const selectedImage = makeMarkerImage(target, true);
         if (selectedImage) marker.setImage(selectedImage);
         map.setCenter(new sdk.maps.LatLng(target.latitude, target.longitude));
 
@@ -282,13 +269,25 @@ export function PickupZoneSelector({
 
   /* ── 렌더 ── */
 
+  if (loading) {
+    return (
+      <div className="grid gap-3">
+        <Skeleton className={MAP_CONTAINER_CLASS} />
+        <div className="grid gap-2">
+          <Skeleton className="h-11 w-full" />
+          <Skeleton className="h-11 w-full" />
+          <Skeleton className="h-11 w-full" />
+        </div>
+      </div>
+    );
+  }
+
   const hasZones = activeZones.length > 0;
 
   return (
     <div className="grid gap-3">
       {/* 지도 영역 — SDK 를 못 쓰면 안내로 대체하고 목록은 계속 제공한다 */}
       {hasZones &&
-        locatedZones.length > 0 &&
         (mapStatus === 'unavailable' ? (
           <div
             className={cn(
@@ -322,16 +321,6 @@ export function PickupZoneSelector({
           고르세요.
         </p>
       )}
-      {hasZones && locatedZones.length === 0 && (
-        <p className="rounded-card border border-dashed border-ink-200 bg-ink-50 px-4 py-3 text-sm text-ink-600">
-          등록된 좌표가 없어 목록에서 선택해 주세요.
-        </p>
-      )}
-      {loading && !hasZones && (
-        <div className="rounded-card border border-dashed border-ink-200 px-4 py-6 text-center text-sm text-ink-500">
-          픽업존을 불러오는 중이에요.
-        </div>
-      )}
       {hasZones ? (
         <ul className="grid gap-2">
           {activeZones.map((zone) => {
@@ -340,7 +329,7 @@ export function PickupZoneSelector({
               <li key={zone.id}>
                 <button
                   type="button"
-                  onClick={() => handleZoneSelect(zone.id)}
+                  onClick={() => onChange(zone.id)}
                   aria-pressed={isSelected}
                   className={cn(
                     'flex w-full items-start gap-2 rounded-btn border px-3 py-2.5 text-left transition-colors',
@@ -358,7 +347,7 @@ export function PickupZoneSelector({
                         : 'border-ink-300',
                     )}
                   />
-                  <span className="min-w-0 grow whitespace-normal break-words">
+                  <span className="min-w-0 grow">
                     <span
                       className={cn(
                         'block text-sm font-medium',
@@ -387,10 +376,11 @@ export function PickupZoneSelector({
       )}
 
       {/* 선택 요약 */}
-      {selected && summary && (
-        <p className="grid gap-0.5 rounded-btn bg-brand-50 px-3 py-2 text-sm text-brand-700">
-          <span>{summary[0]}</span>
-          <span>{summary[1]}</span>
+      {selected && (
+        <p className="rounded-btn bg-brand-50 px-3 py-2 text-sm text-brand-700">
+          <strong className="font-semibold">{selected.name}</strong>
+          {selected.description ? ` · ${selected.description}` : ''} 에서
+          거래해요.
         </p>
       )}
 
