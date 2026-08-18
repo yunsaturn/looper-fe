@@ -1,5 +1,6 @@
 import { http, HttpResponse, delay } from 'msw';
 
+import { CATEGORY } from '@/shared/config/categories';
 import {
   APPLICATION_STATUS,
   OFFER_STATUS,
@@ -532,6 +533,91 @@ export const handlers = [
     myImpact.rental_completed_count += 1;
 
     return HttpResponse.json({ status: rental.status });
+  }),
+
+  /* ─────────────────── AI 등록 보조 ─────────────────── */
+
+  /**
+   * 이미지 기반 상품 추천.
+   *
+   * 실제 서버와 마찬가지로 **실패해도 200** 을 준다. 화면이 ai_status 와
+   * fallback_required 로 분기하는지 확인할 수 있도록, 파일 이름에
+   * 'fail' 이 들어가면 장애 폴백, 'low' 가 들어가면 저신뢰 응답을 준다.
+   * (시연 중 폴백 화면을 보여줘야 할 때 쓸 수 있다)
+   */
+  http.post(`${BASE}/ai/listing-assist`, async ({ request }) => {
+    const form = await request.formData();
+    const image = form.get('image');
+    const fileName = image instanceof File ? image.name.toLowerCase() : '';
+
+    // 모델 추론 + LLM 호출을 흉내내 로딩 상태가 실제로 보이게 한다
+    await delay(1400);
+
+    if (fileName.includes('fail')) {
+      return HttpResponse.json({
+        analysis_id: null,
+        ai_status: 'UNAVAILABLE',
+        candidates: [],
+        image_tags: [],
+        description_draft: null,
+        carbon_sector: null,
+        fallback_required: true,
+        message: 'AI 분석을 사용할 수 없어 직접 입력이 필요합니다.',
+      });
+    }
+
+    if (fileName.includes('low')) {
+      return HttpResponse.json({
+        analysis_id: null,
+        ai_status: 'LOW_CONFIDENCE',
+        candidates: [
+          { item_name: '알 수 없는 물품', category: CATEGORY.HOME_LIVING, confidence: 0.31 },
+        ],
+        image_tags: ['object'],
+        description_draft: null,
+        carbon_sector: null,
+        fallback_required: true,
+        message: '사진이 흐릿해 추천 정확도가 낮아요. 직접 확인해주세요.',
+      });
+    }
+
+    return HttpResponse.json({
+      analysis_id: 'analysis-mock-1',
+      ai_status: 'SUCCESS',
+      candidates: [
+        { item_name: 'C타입 충전기', category: CATEGORY.ELECTRONICS, confidence: 0.92 },
+        { item_name: 'USB-C 어댑터', category: CATEGORY.ELECTRONICS, confidence: 0.74 },
+        { item_name: '멀티 케이블', category: CATEGORY.ELECTRONICS, confidence: 0.51 },
+      ],
+      image_tags: ['charger', 'cable', 'electronics'],
+      description_draft:
+        '사용감이 있는 C타입 충전기입니다. 정상 작동하며, 상세 상태와 호환 기기는 직접 확인해주세요.',
+      carbon_sector: CATEGORY.ELECTRONICS,
+      fallback_required: false,
+      message: null,
+    });
+  }),
+
+  /* ─────────────────── 이미지 업로드 ─────────────────── */
+
+  http.post(`${BASE}/images/presigned-uploads`, async () => {
+    await delay(LATENCY_MS);
+    return HttpResponse.json(
+      {
+        object_key: 'mock/object-key',
+        // 목업에서는 실제 스토리지가 없으므로 아래 PUT 핸들러가 받아준다
+        upload_url: 'https://mock-storage.local/upload',
+        public_url: 'https://mock-storage.local/mock-image.jpg',
+        expires_in_seconds: 900,
+        required_headers: { 'Content-Type': 'image/jpeg' },
+      },
+      { status: 201 },
+    );
+  }),
+
+  http.put('https://mock-storage.local/upload', async () => {
+    await delay(LATENCY_MS);
+    return new HttpResponse(null, { status: 200 });
   }),
 
   /* ─────────────────── 임팩트 ─────────────────── */

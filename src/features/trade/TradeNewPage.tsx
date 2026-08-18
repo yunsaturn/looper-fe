@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
 import { metaApi } from '@/entities/meta/api';
+import { storageApi } from '@/entities/storage/api';
 import { tradeApi } from '@/entities/trade/api';
 import { queryKeys } from '@/shared/api/queryKeys';
 import { ApiError } from '@/shared/api/errors';
@@ -26,15 +27,18 @@ import { Field, Input, Select, Textarea } from '@/shared/ui/Field';
 import { FilterChips } from '@/shared/ui/FilterChips';
 import { useToast } from '@/shared/ui/useToast';
 import { PageTitle } from '@/app/layouts/StackLayout';
+import { AiAssistField, type AiAssistResult } from './AiAssistField';
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
 /**
  * 게시물 등록.
  *
- * AI 이미지 추천은 별도 엔드포인트(/api/v1/ai/listing-assist)로 붙는다.
- * 지금은 직접 입력 경로를 먼저 완성했다 — 기획서 R4 원칙상 AI 는 보조이고
- * 직접 입력이 항상 가능해야 하므로, 이쪽이 기본 경로다.
+ * 흐름: 이미지 업로드 → AI 가 상품명·카테고리 후보 제시 → 사용자가 확인·수정
+ *       → 가격·상태·거래 날짜·픽업존 입력 → 등록
+ *
+ * AI 는 보조일 뿐이라 사진 없이도 끝까지 등록할 수 있어야 한다. (기획서 R4)
+ * 그래서 이미지·AI 는 폼의 선택 항목이고, 아래 입력들이 항상 기본 경로다.
  */
 export function TradeNewPage() {
   const navigate = useNavigate();
@@ -53,6 +57,19 @@ export function TradeNewPage() {
   const [weight, setWeight] = useState('');
   const [availableDate, setAvailableDate] = useState(TODAY);
   const [pickupZoneId, setPickupZoneId] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [analysisId, setAnalysisId] = useState<string | null>(null);
+
+  /** AI 후보를 고르면 폼을 채운다. 이후 사용자가 자유롭게 고칠 수 있다. */
+  const applyAiResult = (result: AiAssistResult) => {
+    setTitle(result.itemName);
+    if (result.category) setCategory(result.category);
+    // 설명 초안은 비어 있을 때만 채운다 — 사용자가 쓴 내용을 덮어쓰지 않는다
+    if (result.descriptionDraft && !description.trim()) {
+      setDescription(result.descriptionDraft);
+    }
+    setAnalysisId(result.analysisId);
+  };
 
   const zones = useQuery({
     queryKey: queryKeys.pickupZones(campusId ?? ''),
@@ -61,8 +78,19 @@ export function TradeNewPage() {
   });
 
   const create = useMutation({
-    mutationFn: () =>
-      tradeApi.create({
+    mutationFn: async () => {
+      // 이미지는 API 서버를 거치지 않고 스토리지로 직접 올린 뒤 공개 URL 만 넘긴다.
+      // 업로드가 실패해도 등록 자체는 막지 않는다.
+      let imageUrls: string[] = [];
+      if (imageFile) {
+        try {
+          imageUrls = [await storageApi.upload(imageFile)];
+        } catch {
+          toast.show('사진 업로드에 실패해 사진 없이 등록합니다.', 'info');
+        }
+      }
+
+      return tradeApi.create({
         trade_type: tradeType,
         title,
         description,
@@ -73,8 +101,10 @@ export function TradeNewPage() {
         weight_kg: weight ? Number(weight) : null,
         available_date: availableDate,
         pickup_zone_id: pickupZoneId,
-        image_urls: [],
-      }),
+        image_urls: imageUrls,
+        ai_analysis_id: analysisId,
+      });
+    },
     onSuccess: (created) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.trades.all });
       toast.show('게시물을 등록했어요.', 'success');
@@ -108,6 +138,13 @@ export function TradeNewPage() {
           create.mutate();
         }}
       >
+        <AiAssistField
+          userTitle={title}
+          condition={condition}
+          onApply={applyAiResult}
+          onFileChange={setImageFile}
+        />
+
         <Field label="거래 유형" required>
           <FilterChips
             options={TRADE_TYPE_FILTERS.map((t) => ({
@@ -116,7 +153,7 @@ export function TradeNewPage() {
             }))}
             value={tradeType}
             onChange={(next) => setTradeType(next ?? TRADE_TYPE.SALE)}
-            allLabel="판매"
+            allLabel={null}
           />
         </Field>
 
