@@ -16,7 +16,7 @@ export function Avatar({
   className?: string;
 }) {
   const base = cn(
-    'flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-xl font-bold text-brand-700',
+    'flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-xl font-bold text-brand-700',
     className,
   );
 
