@@ -65,13 +65,13 @@ export function TradeCompletePage() {
   const activityId = trade.data?.impact?.activity_id ?? tradeId;
 
   return (
-    <div className="mx-auto grid max-w-lg gap-5 py-6 text-center">
-      <div>
-        <p className="text-4xl">🌱</p>
-        <h1 className="mt-3 text-2xl font-bold text-ink-900">
+    <div className="mx-auto grid max-w-lg gap-4 py-6 pb-10 text-center sm:gap-5">
+      <div className="space-y-3">
+        <p className="text-4xl leading-none">🌱</p>
+        <h1 className="text-2xl font-extrabold tracking-[-0.02em] text-ink-900">
           거래가 완료되었어요
         </h1>
-        <p className="mt-1.5 text-sm text-ink-500">
+        <p className="text-sm leading-relaxed text-ink-500">
           {trade.data?.title} 이(가) 캠퍼스 안에서 한 번 더 순환했어요.
         </p>
       </div>
@@ -113,7 +113,7 @@ export function TradeCompletePage() {
         />
       </div>
 
-      <div className="mt-2 grid gap-2">
+      <div className="mt-1 grid gap-2">
         <Button fullWidth onClick={() => navigate(ROUTES.IMPACT)}>
           내 임팩트 보러 가기
         </Button>
