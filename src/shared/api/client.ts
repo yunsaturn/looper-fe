@@ -110,7 +110,7 @@ api.interceptors.request.use((config) => {
 /** 401 을 만났을 때 로그인 화면으로 보내는 콜백. providers 에서 주입한다. */
 let onUnauthorized: (() => void) | null = null;
 
-export function setUnauthorizedHandler(handler: () => void): void {
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
   onUnauthorized = handler;
 }
 

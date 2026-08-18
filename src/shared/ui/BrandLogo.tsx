@@ -25,9 +25,9 @@ export function BrandLogo({
    * 카드 너비의 40% 남짓을 차지한다.
    */
   const height = {
-    sm: 'h-9 md:h-10',
-    md: 'h-12 md:h-14',
-    lg: 'h-20 md:h-24',
+    sm: 'h-12 md:h-14',
+    md: 'h-16 md:h-20',
+    lg: 'h-28 md:h-32',
   }[size];
 
   return (
