@@ -30,8 +30,8 @@ export const rentalApi = {
 
   offers: (rentalId: string) =>
     api
-      .get<{ content: RentalOffer[] }>(`${BASE}/${rentalId}/offers`)
-      .then((r) => r.data.content),
+      .get<{ offers: RentalOffer[] }>(`${BASE}/${rentalId}/offers`)
+      .then((r) => r.data.offers),
 
   selectOffer: (rentalId: string, offerId: string) =>
     api
