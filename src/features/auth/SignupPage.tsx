@@ -10,6 +10,8 @@ import { ROUTES } from '@/shared/config/navigation';
 import { useAuthStore } from '@/shared/store/authStore';
 import { Button } from '@/shared/ui/Button';
 import { Input, Select } from '@/shared/ui/Field';
+import { userApi } from '@/entities/user/api';
+import { STUDENT_YEAR_MAX, STUDENT_YEAR_MIN } from '@/entities/user/types';
 import { LoopIcon } from '@/shared/ui/icons';
 
 /**
@@ -27,6 +29,15 @@ type Step = 'email' | 'code' | 'profile';
 /** BE SignupRequest 의 비밀번호 정책과 동일하게 맞춘다 */
 const PASSWORD_RULE = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,72}$/;
 
+/** 서버가 받는 1~8 을 그대로 선택지로 만든다 */
+const STUDENT_YEAR_OPTIONS = Array.from(
+  { length: STUDENT_YEAR_MAX - STUDENT_YEAR_MIN + 1 },
+  (_, i) => {
+    const year = STUDENT_YEAR_MIN + i;
+    return { value: String(year), label: `${year}학년` };
+  },
+);
+
 export function SignupPage() {
   const navigate = useNavigate();
   const signIn = useAuthStore((s) => s.signIn);
@@ -38,6 +49,9 @@ export function SignupPage() {
   const [verificationToken, setVerificationToken] = useState('');
 
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [studentYear, setStudentYear] = useState('');
   const [nickname, setNickname] = useState('');
   const [schoolId, setSchoolId] = useState('');
   const [campusId, setCampusId] = useState('');
@@ -83,15 +97,32 @@ export function SignupPage() {
   });
 
   const signup = useMutation({
-    mutationFn: () =>
-      authApi.signup({
+    mutationFn: async () => {
+      const res = await authApi.signup({
         verification_token: verificationToken,
         password,
         nickname,
         school_id: schoolId,
         campus_id: campusId,
         department: department || undefined,
-      }),
+      });
+
+      /*
+       * 학년은 가입 요청이 받지 않는 값이라(서버 SignupRequest 에 없다)
+       * 가입 직후 프로필 수정으로 반영한다. 여기서 실패해도 계정은 이미
+       * 만들어졌으므로 가입 자체를 되돌리지 않는다 — 마이프로필에서
+       * 언제든 다시 채울 수 있다.
+       */
+      if (studentYear) {
+        signIn(res);
+        try {
+          await userApi.updateMe({ student_year: Number(studentYear) });
+        } catch {
+          // 학년은 부가 정보라 실패를 사용자에게 알리지 않는다
+        }
+      }
+      return res;
+    },
     onSuccess: (res) => {
       signIn(res);
       navigate(ROUTES.HOME, { replace: true });
@@ -103,6 +134,9 @@ export function SignupPage() {
   const error = active.error instanceof ApiError ? active.error : null;
 
   const passwordValid = PASSWORD_RULE.test(password);
+  // 재입력이 어긋난 채로 가입되면 다음 로그인에서야 알게 된다. 미리 막는다
+  const passwordMismatch =
+    passwordConfirm.length > 0 && password !== passwordConfirm;
 
   return (
     <div className="flex min-h-dvh flex-col justify-center px-5 py-10">
@@ -213,7 +247,7 @@ export function SignupPage() {
           >
             <Input
               label="비밀번호"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
@@ -225,6 +259,29 @@ export function SignupPage() {
                   : error?.fieldError('password')
               }
             />
+            <Input
+              label="비밀번호 확인"
+              type={showPassword ? 'text' : 'password'}
+              value={passwordConfirm}
+              onChange={(e) => setPasswordConfirm(e.target.value)}
+              autoComplete="new-password"
+              required
+              error={passwordMismatch ? '비밀번호가 서로 달라요.' : undefined}
+              hint={
+                !passwordMismatch && passwordConfirm && passwordValid
+                  ? '두 비밀번호가 일치해요.'
+                  : undefined
+              }
+            />
+            <label className="-mt-2 flex items-center gap-2 text-sm text-ink-600">
+              <input
+                type="checkbox"
+                checked={showPassword}
+                onChange={(e) => setShowPassword(e.target.checked)}
+                className="h-4 w-4 rounded border-ink-300 accent-brand-500"
+              />
+              비밀번호 보기
+            </label>
             <Input
               label="닉네임"
               value={nickname}
@@ -275,12 +332,28 @@ export function SignupPage() {
               placeholder="컴퓨터공학과"
               maxLength={100}
             />
+            <Select
+              label="학년 (선택)"
+              value={studentYear}
+              onChange={(e) => setStudentYear(e.target.value)}
+              options={STUDENT_YEAR_OPTIONS}
+              placeholder="선택하지 않음"
+            />
+
+            <p className="rounded-btn bg-ink-50 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
+              가입하면 루퍼 이용약관과 개인정보 처리방침에 동의합니다.
+            </p>
             <Button
               type="submit"
               size="lg"
               fullWidth
               loading={signup.isPending}
-              disabled={!passwordValid || !campusId}
+              disabled={
+                !passwordValid ||
+                passwordMismatch ||
+                !passwordConfirm ||
+                !campusId
+              }
             >
               가입하고 시작하기
             </Button>

@@ -86,7 +86,7 @@ export function LoginPage() {
         <p className="mt-6 text-center text-sm text-ink-500">
           아직 계정이 없나요?{' '}
           <Link
-            to={ROUTES.SIGNUP}
+            to={ROUTES.LANDING}
             className="font-semibold text-brand-700 underline"
           >
             회원가입

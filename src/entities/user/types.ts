@@ -16,6 +16,10 @@ export interface CampusSummary {
   name: string;
 }
 
+/** 서버가 허용하는 학년 범위 (1~8, 초과학기 포함) */
+export const STUDENT_YEAR_MIN = 1;
+export const STUDENT_YEAR_MAX = 8;
+
 export interface MyProfile {
   id: string;
   email: string;
@@ -24,20 +28,41 @@ export interface MyProfile {
   campus: CampusSummary;
   department: string | null;
   main_building: string | null;
+  profile_image_url: string | null;
+  bio: string | null;
+  student_year: number | null;
+  /** 이메일 인증을 마친 시각. 인증 전이면 응답에서 빠진다 */
+  email_verified_at?: string;
+  joined_at: string;
   trust_score: number;
   trade_completed_count: number;
   rental_completed_count: number;
+  sharing_completed_count: number;
+  /** 마지막으로 거래·대여를 완료한 시각. 완료 이력이 없으면 빠진다 */
+  last_completed_at?: string;
 }
 
-/** 공개 프로필 — 이메일 등 계정 정보는 내려오지 않는다 (기획서 R6) */
+/**
+ * 공개 프로필 — 이메일·주 이용 건물 등 계정 정보는 내려오지 않는다 (기획서 R6).
+ * 학과·학년·소개는 거래 상대를 가늠하는 데 쓰이므로 공개 대상이다.
+ */
 export interface PublicProfile {
   id: string;
   nickname: string;
   school_name: string;
   campus_name: string;
+  department: string | null;
+  student_year: number | null;
+  profile_image_url: string | null;
+  bio: string | null;
+  /** 내 프로필과 달리 시각이 아니라 여부만 준다 */
+  email_verified: boolean;
+  joined_at: string;
   trust_score: number;
   trade_completed_count: number;
   rental_completed_count: number;
+  sharing_completed_count: number;
+  last_completed_at?: string;
 }
 
 /** PATCH /api/v1/users/me — 보낸 필드만 바뀐다. 빼면 기존 값 유지 */
@@ -45,6 +70,9 @@ export interface UpdateProfileRequest {
   nickname?: string;
   department?: string;
   main_building?: string;
+  profile_image_url?: string;
+  bio?: string;
+  student_year?: number;
 }
 
 /** 수정 응답은 바뀐 필드만 돌려준다. 전체 프로필은 다시 조회해야 한다 */
@@ -53,6 +81,9 @@ export interface UpdatedProfile {
   nickname: string;
   department: string | null;
   main_building: string | null;
+  profile_image_url: string | null;
+  bio: string | null;
+  student_year: number | null;
   updated_at: string;
 }
 

@@ -669,9 +669,16 @@ export const myProfile: MyProfile = {
   campus: { id: DEMO_CAMPUS_ID, name: '본교 캠퍼스' },
   department: '컴퓨터공학과',
   main_building: '공학관',
+  profile_image_url: null,
+  bio: '자취방 정리하면서 안 쓰는 물건 나눔하고 있어요. 전공책도 많습니다!',
+  student_year: 3,
+  email_verified_at: iso(-60 * 24 * 30),
+  joined_at: iso(-60 * 24 * 30),
   trust_score: 92,
   trade_completed_count: 12,
   rental_completed_count: 7,
+  sharing_completed_count: 4,
+  last_completed_at: iso(-60 * 6),
 };
 
 /* ─────────────────── 임팩트 ─────────────────── */
