@@ -10,6 +10,8 @@ import { Button } from '@/shared/ui/Button';
 import { ImpactStatCard } from '@/shared/ui/ImpactCards';
 import { Skeleton } from '@/shared/ui/feedback';
 
+import { ForestProgressCard } from '../impact/components';
+
 /** 반납 완료 결과 — 완료 직후 누적 임팩트를 함께 안내한다. */
 export function RentalCompletePage() {
   const { rentalId = '' } = useParams();
@@ -35,6 +37,8 @@ export function RentalCompletePage() {
     );
   }
 
+  const activityId = rental.data?.impact?.activity_id ?? rentalId;
+
   return (
     <div className="mx-auto grid max-w-lg gap-5 py-6 text-center">
       <div>
@@ -47,6 +51,14 @@ export function RentalCompletePage() {
           반영됩니다.
         </p>
       </div>
+
+      {impact.data?.forest && (
+        <ForestProgressCard
+          forest={impact.data.forest}
+          activityId={activityId}
+          autoPlay
+        />
+      )}
 
       <div className="grid grid-cols-2 gap-3 text-left">
         <ImpactStatCard

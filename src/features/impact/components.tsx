@@ -7,6 +7,8 @@ import type {
 import { cn } from '@/shared/lib/cn';
 import { formatCarbon } from '@/shared/lib/carbon';
 
+import { SaplingGlyph, TreeGrowthAnimation } from './TreeGrowthAnimation';
+
 /**
  * 임팩트 대시보드 전용 카드들.
  *
@@ -126,10 +128,16 @@ export function TreeEquivalentCard({
 /* ─────────────────── 나의 순환숲 ─────────────────── */
 
 /** 누적 탄소가 쌓여 나무가 한 그루씩 늘어나는 진행도 */
-export function ForestProgressCard({ forest }: { forest: ForestProgress }) {
+export function ForestProgressCard({
+  forest,
+  activityId,
+  autoPlay = false,
+}: {
+  forest: ForestProgress;
+  activityId?: string | null;
+  autoPlay?: boolean;
+}) {
   const percent = Math.round(forest.progress_to_next_tree * 100);
-  // 나무가 많아도 카드가 넘치지 않게 한 줄까지만 그린다
-  const glyphCount = Math.min(forest.current_trees, 6);
 
   return (
     <section className="flex flex-col rounded-card border border-ink-200 p-4">
@@ -140,19 +148,27 @@ export function ForestProgressCard({ forest }: { forest: ForestProgress }) {
         </p>
       </div>
 
-      <div className="my-3 flex grow items-end justify-center gap-1">
-        {glyphCount > 0 ? (
-          Array.from({ length: glyphCount }, (_, i) => (
-            <SaplingGlyph key={i} className="h-10 w-10" />
-          ))
+      <div className="my-3">
+        {forest.current_trees > 0 ? (
+          <TreeGrowthAnimation
+            forest={forest}
+            activityId={activityId}
+            autoPlay={autoPlay}
+            className="mx-auto w-full max-w-xs"
+          />
         ) : (
-          <p className="py-3 text-center text-xs text-ink-400">
-            첫 거래를 완료하면 나무가 자라기 시작해요
-          </p>
+          <div className="flex min-h-20 items-center justify-center rounded-card bg-brand-50">
+            <div className="text-center text-xs text-ink-400">
+              <div className="mb-2 flex justify-center">
+                <SaplingGlyph className="h-10 w-10 opacity-60" />
+              </div>
+              첫 거래를 완료하면 나무가 자라기 시작해요
+            </div>
+          </div>
         )}
       </div>
 
-      <div>
+      <div className="mt-1">
         <div className="flex items-baseline justify-between text-xs">
           <span className="text-ink-600">
             다음 나무까지{' '}
@@ -165,7 +181,7 @@ export function ForestProgressCard({ forest }: { forest: ForestProgress }) {
         </div>
         <div className="mt-1.5 h-2 overflow-hidden rounded-chip bg-brand-100">
           <div
-            className="h-full rounded-chip bg-brand-500 transition-[width]"
+            className="h-full rounded-chip bg-brand-500 transition-[width] duration-300"
             style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
           />
         </div>
@@ -329,28 +345,6 @@ function gapProgress(mineKg: number, gapKg: number): number {
 }
 
 /* ─────────────────── 일러스트 ─────────────────── */
-
-function SaplingGlyph({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 48 48"
-      className={cn('h-12 w-12', className)}
-      aria-hidden="true"
-    >
-      <circle cx="24" cy="18" r="11" className="fill-brand-500" />
-      <circle cx="16" cy="23" r="7" className="fill-brand-600" />
-      <circle cx="32" cy="23" r="7" className="fill-brand-600" />
-      <rect
-        x="22"
-        y="27"
-        width="4"
-        height="14"
-        rx="1.5"
-        className="fill-brand-800"
-      />
-    </svg>
-  );
-}
 
 function ForestGlyph() {
   return (
