@@ -87,7 +87,10 @@ export function TradeDetailPage() {
     onSuccess: () => {
       setConfirmAction(null);
       invalidate();
-      toast.show('완료 요청을 보냈어요. 상대방 확인을 기다려주세요.', 'success');
+      toast.show(
+        '완료 요청을 보냈어요. 상대방 확인을 기다려주세요.',
+        'success',
+      );
     },
     onError: onMutationError,
   });
@@ -227,16 +230,32 @@ export function TradeDetailPage() {
 
             <div className="mt-4 grid gap-2">
               {isAuthor && data.status === TRADE_STATUS.AVAILABLE && (
-                <Button
-                  fullWidth
-                  onClick={() =>
-                    navigate(
-                      buildPath(ROUTES.TRADE_APPLICANTS, { tradeId: data.id }),
-                    )
-                  }
-                >
-                  신청자 목록 보기
-                </Button>
+                <>
+                  <Button
+                    fullWidth
+                    onClick={() =>
+                      navigate(
+                        buildPath(ROUTES.TRADE_APPLICANTS, {
+                          tradeId: data.id,
+                        }),
+                      )
+                    }
+                  >
+                    신청자 목록 보기
+                  </Button>
+                  {/* 수정은 거래 가능 상태에서만 열어둔다. 서버 규칙과 같다 */}
+                  <Button
+                    variant="secondary"
+                    fullWidth
+                    onClick={() =>
+                      navigate(
+                        buildPath(ROUTES.TRADE_EDIT, { tradeId: data.id }),
+                      )
+                    }
+                  >
+                    게시물 수정
+                  </Button>
+                </>
               )}
 
               {!isAuthor && data.can_apply && (

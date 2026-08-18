@@ -58,7 +58,10 @@ export function ImpactStatCard({
 }) {
   return (
     <div
-      className={cn('rounded-card border border-ink-200 bg-white p-4', className)}
+      className={cn(
+        'rounded-card border border-ink-200 bg-white p-4',
+        className,
+      )}
     >
       <p className="text-xs font-medium text-ink-500">{label}</p>
       <p className="mt-1 text-xl font-bold text-ink-900 tabular-nums">

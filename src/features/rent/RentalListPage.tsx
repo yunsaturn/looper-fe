@@ -19,11 +19,7 @@ import { cn } from '@/shared/lib/cn';
 import { Button } from '@/shared/ui/Button';
 import { FilterChips } from '@/shared/ui/FilterChips';
 import { RentalCard } from '@/shared/ui/RentalCard';
-import {
-  CardSkeletonGrid,
-  EmptyState,
-  ErrorState,
-} from '@/shared/ui/feedback';
+import { CardSkeletonGrid, EmptyState, ErrorState } from '@/shared/ui/feedback';
 
 type ViewMode = 'detailed' | 'compact';
 
@@ -66,7 +62,9 @@ export function RentalListPage() {
   return (
     <div className="grid gap-5">
       <div>
-        <h1 className="text-xl font-bold text-ink-900 md:text-2xl">대여 요청</h1>
+        <h1 className="text-xl font-bold text-ink-900 md:text-2xl">
+          대여 요청
+        </h1>
         <p className="mt-1 text-sm text-ink-500">
           급하게 필요한 물건을 가까운 학생에게 요청해 보세요.
         </p>
@@ -77,7 +75,9 @@ export function RentalListPage() {
       </Button>
 
       <div className="grid gap-3">
-        <h2 className="text-base font-bold text-ink-900">빌려줄 수 있는 요청</h2>
+        <h2 className="text-base font-bold text-ink-900">
+          빌려줄 수 있는 요청
+        </h2>
 
         <div className="flex rounded-btn bg-ink-50 p-1">
           <ViewTab

@@ -34,7 +34,9 @@ export function ProfileSummary({
 
       <div className="min-w-0 grow">
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="truncate text-lg font-bold text-ink-900">{nickname}</h1>
+          <h1 className="truncate text-lg font-bold text-ink-900">
+            {nickname}
+          </h1>
           <TrustScoreBadge score={trustScore} />
         </div>
         <p className="mt-1 truncate text-sm text-ink-600">{affiliation}</p>

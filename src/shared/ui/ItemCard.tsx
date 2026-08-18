@@ -1,10 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import { buildPath, ROUTES } from '@/shared/config/navigation';
-import {
-  CATEGORY_LABEL,
-  TRADE_TYPE_LABEL,
-} from '@/shared/config/categories';
+import { CATEGORY_LABEL, TRADE_TYPE_LABEL } from '@/shared/config/categories';
 import { formatDate, formatPrice, formatRelative } from '@/shared/lib/format';
 import type { TradeListItem } from '@/entities/trade/types';
 

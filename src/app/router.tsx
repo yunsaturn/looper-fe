@@ -38,6 +38,10 @@ const TradeApplicantsPage = lazyPage(
   () => import('@/features/trade/TradeApplicantsPage'),
   'TradeApplicantsPage',
 );
+const TradeEditPage = lazyPage(
+  () => import('@/features/trade/TradeEditPage'),
+  'TradeEditPage',
+);
 const TradeCompletePage = lazyPage(
   () => import('@/features/trade/TradeCompletePage'),
   'TradeCompletePage',
@@ -57,6 +61,10 @@ const RentalNewPage = lazyPage(
 const RentalOffersPage = lazyPage(
   () => import('@/features/rent/RentalOffersPage'),
   'RentalOffersPage',
+);
+const RentalEditPage = lazyPage(
+  () => import('@/features/rent/RentalEditPage'),
+  'RentalEditPage',
 );
 const RentalCompletePage = lazyPage(
   () => import('@/features/rent/RentalCompletePage'),
@@ -159,10 +167,7 @@ export function AppRouter() {
             element={<TradeApplicantsPage />}
           />
           <Route path={ROUTES.TRADE_COMPLETE} element={<TradeCompletePage />} />
-          <Route
-            path={ROUTES.TRADE_EDIT}
-            element={<PlaceholderPage title="게시물 수정" />}
-          />
+          <Route path={ROUTES.TRADE_EDIT} element={<TradeEditPage />} />
 
           {/* 대여 */}
           <Route path={ROUTES.RENTAL_NEW} element={<RentalNewPage />} />
@@ -172,10 +177,7 @@ export function AppRouter() {
             path={ROUTES.RENTAL_COMPLETE}
             element={<RentalCompletePage />}
           />
-          <Route
-            path={ROUTES.RENTAL_EDIT}
-            element={<PlaceholderPage title="대여 요청 수정" />}
-          />
+          <Route path={ROUTES.RENTAL_EDIT} element={<RentalEditPage />} />
 
           {/* 임팩트 */}
           <Route path={ROUTES.IMPACT_METHOD} element={<ImpactMethodPage />} />

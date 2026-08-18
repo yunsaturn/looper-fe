@@ -1,4 +1,8 @@
-import { CATEGORY, ITEM_CONDITION, TRADE_TYPE } from '@/shared/config/categories';
+import {
+  CATEGORY,
+  ITEM_CONDITION,
+  TRADE_TYPE,
+} from '@/shared/config/categories';
 import {
   APPLICATION_STATUS,
   OFFER_STATUS,
@@ -98,36 +102,212 @@ interface TradeSeed {
 
 const TRADE_SEEDS: TradeSeed[] = [
   // 거래 가능
-  { title: '1인용 미니 밥솥', category: 'HOME_LIVING', type: 'SALE', price: 12000, weight: 2.4, status: 'AVAILABLE', dayOffset: 4 },
-  { title: '맥북 프로 충전기 65W', category: 'ELECTRONICS', type: 'SALE', price: 8000, weight: 0.3, status: 'AVAILABLE', dayOffset: 2 },
-  { title: 'IKEA 수납 박스 3개', category: 'HOME_LIVING', type: 'SHARE', price: 0, weight: 1.8, status: 'AVAILABLE', dayOffset: 1 },
-  { title: '컴퓨터구조 교재 2024', category: 'BOOKS_PAPER', type: 'WANTED', price: 8000, weight: 1.2, status: 'AVAILABLE', dayOffset: 6 },
-  { title: '자전거 헬멧 (S사이즈)', category: 'HOME_LIVING', type: 'SALE', price: 15000, weight: 0.4, status: 'AVAILABLE', dayOffset: 3 },
-  { title: '접이식 드라이기', category: 'ELECTRONICS', type: 'SHARE', price: 0, weight: 0.6, status: 'AVAILABLE', dayOffset: 5 },
-  { title: '전공 원서 (운영체제)', category: 'BOOKS_PAPER', type: 'SALE', price: 20000, weight: 1.5, status: 'AVAILABLE', dayOffset: 8 },
-  { title: '책상 정리대', category: 'HOME_LIVING', type: 'SHARE', price: 0, weight: 1.1, status: 'AVAILABLE', dayOffset: 2 },
-  { title: '무선 마우스', category: 'ELECTRONICS', type: 'SALE', price: 9000, weight: 0.1, status: 'AVAILABLE', dayOffset: 1 },
-  { title: '토익 문제집 세트', category: 'BOOKS_PAPER', type: 'SHARE', price: 0, weight: 2.2, status: 'AVAILABLE', dayOffset: 7 },
+  {
+    title: '1인용 미니 밥솥',
+    category: 'HOME_LIVING',
+    type: 'SALE',
+    price: 12000,
+    weight: 2.4,
+    status: 'AVAILABLE',
+    dayOffset: 4,
+  },
+  {
+    title: '맥북 프로 충전기 65W',
+    category: 'ELECTRONICS',
+    type: 'SALE',
+    price: 8000,
+    weight: 0.3,
+    status: 'AVAILABLE',
+    dayOffset: 2,
+  },
+  {
+    title: 'IKEA 수납 박스 3개',
+    category: 'HOME_LIVING',
+    type: 'SHARE',
+    price: 0,
+    weight: 1.8,
+    status: 'AVAILABLE',
+    dayOffset: 1,
+  },
+  {
+    title: '컴퓨터구조 교재 2024',
+    category: 'BOOKS_PAPER',
+    type: 'WANTED',
+    price: 8000,
+    weight: 1.2,
+    status: 'AVAILABLE',
+    dayOffset: 6,
+  },
+  {
+    title: '자전거 헬멧 (S사이즈)',
+    category: 'HOME_LIVING',
+    type: 'SALE',
+    price: 15000,
+    weight: 0.4,
+    status: 'AVAILABLE',
+    dayOffset: 3,
+  },
+  {
+    title: '접이식 드라이기',
+    category: 'ELECTRONICS',
+    type: 'SHARE',
+    price: 0,
+    weight: 0.6,
+    status: 'AVAILABLE',
+    dayOffset: 5,
+  },
+  {
+    title: '전공 원서 (운영체제)',
+    category: 'BOOKS_PAPER',
+    type: 'SALE',
+    price: 20000,
+    weight: 1.5,
+    status: 'AVAILABLE',
+    dayOffset: 8,
+  },
+  {
+    title: '책상 정리대',
+    category: 'HOME_LIVING',
+    type: 'SHARE',
+    price: 0,
+    weight: 1.1,
+    status: 'AVAILABLE',
+    dayOffset: 2,
+  },
+  {
+    title: '무선 마우스',
+    category: 'ELECTRONICS',
+    type: 'SALE',
+    price: 9000,
+    weight: 0.1,
+    status: 'AVAILABLE',
+    dayOffset: 1,
+  },
+  {
+    title: '토익 문제집 세트',
+    category: 'BOOKS_PAPER',
+    type: 'SHARE',
+    price: 0,
+    weight: 2.2,
+    status: 'AVAILABLE',
+    dayOffset: 7,
+  },
 
   // 예약 중 — 미래 날짜 (라벨이 '미래 날짜 예약 중' 으로 바뀐다)
-  { title: '미니 냉장고 (퇴실 정리)', category: 'HOME_LIVING', type: 'SALE', price: 45000, weight: 18, status: 'RESERVED', dayOffset: 14 },
-  { title: '행거 + 옷걸이 20개', category: 'HOME_LIVING', type: 'SHARE', price: 0, weight: 3.5, status: 'RESERVED', dayOffset: 10 },
-  { title: '모니터 받침대', category: 'HOME_LIVING', type: 'SALE', price: 7000, weight: 1.4, status: 'RESERVED', dayOffset: 21 },
+  {
+    title: '미니 냉장고 (퇴실 정리)',
+    category: 'HOME_LIVING',
+    type: 'SALE',
+    price: 45000,
+    weight: 18,
+    status: 'RESERVED',
+    dayOffset: 14,
+  },
+  {
+    title: '행거 + 옷걸이 20개',
+    category: 'HOME_LIVING',
+    type: 'SHARE',
+    price: 0,
+    weight: 3.5,
+    status: 'RESERVED',
+    dayOffset: 10,
+  },
+  {
+    title: '모니터 받침대',
+    category: 'HOME_LIVING',
+    type: 'SALE',
+    price: 7000,
+    weight: 1.4,
+    status: 'RESERVED',
+    dayOffset: 21,
+  },
 
   // 예약 중 — 오늘
-  { title: '전기포트 1L', category: 'ELECTRONICS', type: 'SALE', price: 11000, weight: 0.9, status: 'RESERVED', dayOffset: 0 },
-  { title: '스탠드 조명', category: 'HOME_LIVING', type: 'SALE', price: 13000, weight: 1.2, status: 'RESERVED', dayOffset: 0 },
+  {
+    title: '전기포트 1L',
+    category: 'ELECTRONICS',
+    type: 'SALE',
+    price: 11000,
+    weight: 0.9,
+    status: 'RESERVED',
+    dayOffset: 0,
+  },
+  {
+    title: '스탠드 조명',
+    category: 'HOME_LIVING',
+    type: 'SALE',
+    price: 13000,
+    weight: 1.2,
+    status: 'RESERVED',
+    dayOffset: 0,
+  },
 
   // 완료 확인 대기
-  { title: '캐논 DSLR EOS 850D', category: 'ELECTRONICS', type: 'SALE', price: 35000, weight: 0.8, status: 'COMPLETION_PENDING', dayOffset: 0 },
-  { title: '자료구조 교재', category: 'BOOKS_PAPER', type: 'SALE', price: 14000, weight: 1.3, status: 'COMPLETION_PENDING', dayOffset: -1 },
+  {
+    title: '캐논 DSLR EOS 850D',
+    category: 'ELECTRONICS',
+    type: 'SALE',
+    price: 35000,
+    weight: 0.8,
+    status: 'COMPLETION_PENDING',
+    dayOffset: 0,
+  },
+  {
+    title: '자료구조 교재',
+    category: 'BOOKS_PAPER',
+    type: 'SALE',
+    price: 14000,
+    weight: 1.3,
+    status: 'COMPLETION_PENDING',
+    dayOffset: -1,
+  },
 
   // 거래 완료
-  { title: '에코백 나눔해요', category: 'HOME_LIVING', type: 'SHARE', price: 0, weight: 0.2, status: 'COMPLETED', dayOffset: -3 },
-  { title: '블루투스 키보드', category: 'ELECTRONICS', type: 'SALE', price: 18000, weight: 0.5, status: 'COMPLETED', dayOffset: -5 },
-  { title: '선형대수학 교재', category: 'BOOKS_PAPER', type: 'SALE', price: 12000, weight: 1.4, status: 'COMPLETED', dayOffset: -7 },
-  { title: '접이식 우산', category: 'HOME_LIVING', type: 'SHARE', price: 0, weight: 0.3, status: 'COMPLETED', dayOffset: -2 },
-  { title: '탁상용 선풍기', category: 'ELECTRONICS', type: 'SALE', price: 9000, weight: 0.7, status: 'COMPLETED', dayOffset: -9 },
+  {
+    title: '에코백 나눔해요',
+    category: 'HOME_LIVING',
+    type: 'SHARE',
+    price: 0,
+    weight: 0.2,
+    status: 'COMPLETED',
+    dayOffset: -3,
+  },
+  {
+    title: '블루투스 키보드',
+    category: 'ELECTRONICS',
+    type: 'SALE',
+    price: 18000,
+    weight: 0.5,
+    status: 'COMPLETED',
+    dayOffset: -5,
+  },
+  {
+    title: '선형대수학 교재',
+    category: 'BOOKS_PAPER',
+    type: 'SALE',
+    price: 12000,
+    weight: 1.4,
+    status: 'COMPLETED',
+    dayOffset: -7,
+  },
+  {
+    title: '접이식 우산',
+    category: 'HOME_LIVING',
+    type: 'SHARE',
+    price: 0,
+    weight: 0.3,
+    status: 'COMPLETED',
+    dayOffset: -2,
+  },
+  {
+    title: '탁상용 선풍기',
+    category: 'ELECTRONICS',
+    type: 'SALE',
+    price: 9000,
+    weight: 0.7,
+    status: 'COMPLETED',
+    dayOffset: -9,
+  },
 ];
 
 export const trades: TradeDetail[] = TRADE_SEEDS.map((seed, i) => {
@@ -156,7 +336,9 @@ export const trades: TradeDetail[] = TRADE_SEEDS.map((seed, i) => {
     status: TRADE_STATUS[seed.status],
     author,
     my_application_status: null,
-    can_apply: TRADE_STATUS[seed.status] === TRADE_STATUS.AVAILABLE && author.id !== DEMO_ME_ID,
+    can_apply:
+      TRADE_STATUS[seed.status] === TRADE_STATUS.AVAILABLE &&
+      author.id !== DEMO_ME_ID,
     created_at: iso(-(i + 1) * 37),
   };
 });
@@ -222,39 +404,188 @@ interface RentalSeed {
 
 const RENTAL_SEEDS: RentalSeed[] = [
   // 모집 중 — 시작 임박순으로 보이도록 오프셋을 흩어둔다
-  { name: 'C타입 충전기', category: 'ELECTRONICS', price: 0, status: 'RECRUITING', startOffset: 60, durationMinutes: 60 },
-  { name: '공학용 계산기', category: 'ELECTRONICS', price: 1000, status: 'RECRUITING', startOffset: 180, durationMinutes: 120 },
-  { name: '우산', category: 'HOME_LIVING', price: 0, status: 'RECRUITING', startOffset: 240, durationMinutes: 180 },
-  { name: '돗자리 (2인용)', category: 'HOME_LIVING', price: 500, status: 'RECRUITING', startOffset: 1440, durationMinutes: 300 },
-  { name: '빔프로젝터 (FHD)', category: 'ELECTRONICS', price: 3000, status: 'RECRUITING', startOffset: 2880, durationMinutes: 240 },
-  { name: 'DSLR 카메라 렌즈 50mm', category: 'ELECTRONICS', price: 2000, status: 'RECRUITING', startOffset: 4320, durationMinutes: 480 },
-  { name: '캠핑 텐트 (3~4인용)', category: 'HOME_LIVING', price: 5000, status: 'RECRUITING', startOffset: 5760, durationMinutes: 1440 },
-  { name: '전공 원서 (하루만)', category: 'BOOKS_PAPER', price: 0, status: 'RECRUITING', startOffset: 720, durationMinutes: 600 },
+  {
+    name: 'C타입 충전기',
+    category: 'ELECTRONICS',
+    price: 0,
+    status: 'RECRUITING',
+    startOffset: 60,
+    durationMinutes: 60,
+  },
+  {
+    name: '공학용 계산기',
+    category: 'ELECTRONICS',
+    price: 1000,
+    status: 'RECRUITING',
+    startOffset: 180,
+    durationMinutes: 120,
+  },
+  {
+    name: '우산',
+    category: 'HOME_LIVING',
+    price: 0,
+    status: 'RECRUITING',
+    startOffset: 240,
+    durationMinutes: 180,
+  },
+  {
+    name: '돗자리 (2인용)',
+    category: 'HOME_LIVING',
+    price: 500,
+    status: 'RECRUITING',
+    startOffset: 1440,
+    durationMinutes: 300,
+  },
+  {
+    name: '빔프로젝터 (FHD)',
+    category: 'ELECTRONICS',
+    price: 3000,
+    status: 'RECRUITING',
+    startOffset: 2880,
+    durationMinutes: 240,
+  },
+  {
+    name: 'DSLR 카메라 렌즈 50mm',
+    category: 'ELECTRONICS',
+    price: 2000,
+    status: 'RECRUITING',
+    startOffset: 4320,
+    durationMinutes: 480,
+  },
+  {
+    name: '캠핑 텐트 (3~4인용)',
+    category: 'HOME_LIVING',
+    price: 5000,
+    status: 'RECRUITING',
+    startOffset: 5760,
+    durationMinutes: 1440,
+  },
+  {
+    name: '전공 원서 (하루만)',
+    category: 'BOOKS_PAPER',
+    price: 0,
+    status: 'RECRUITING',
+    startOffset: 720,
+    durationMinutes: 600,
+  },
 
   // 대여 확정
-  { name: '노트북 거치대', category: 'ELECTRONICS', price: 1000, status: 'CONFIRMED', startOffset: 120, durationMinutes: 180 },
-  { name: '여행용 캐리어', category: 'HOME_LIVING', price: 4000, status: 'CONFIRMED', startOffset: 1800, durationMinutes: 2880 },
-  { name: '삼각대', category: 'ELECTRONICS', price: 1500, status: 'CONFIRMED', startOffset: 300, durationMinutes: 120 },
+  {
+    name: '노트북 거치대',
+    category: 'ELECTRONICS',
+    price: 1000,
+    status: 'CONFIRMED',
+    startOffset: 120,
+    durationMinutes: 180,
+  },
+  {
+    name: '여행용 캐리어',
+    category: 'HOME_LIVING',
+    price: 4000,
+    status: 'CONFIRMED',
+    startOffset: 1800,
+    durationMinutes: 2880,
+  },
+  {
+    name: '삼각대',
+    category: 'ELECTRONICS',
+    price: 1500,
+    status: 'CONFIRMED',
+    startOffset: 300,
+    durationMinutes: 120,
+  },
 
   // 대여 중
-  { name: '보조배터리 20000mAh', category: 'ELECTRONICS', price: 0, status: 'IN_USE', startOffset: -60, durationMinutes: 240 },
-  { name: '스터디룸 화이트보드 마커', category: 'HOME_LIVING', price: 0, status: 'IN_USE', startOffset: -30, durationMinutes: 180 },
+  {
+    name: '보조배터리 20000mAh',
+    category: 'ELECTRONICS',
+    price: 0,
+    status: 'IN_USE',
+    startOffset: -60,
+    durationMinutes: 240,
+  },
+  {
+    name: '스터디룸 화이트보드 마커',
+    category: 'HOME_LIVING',
+    price: 0,
+    status: 'IN_USE',
+    startOffset: -30,
+    durationMinutes: 180,
+  },
 
   // 반납 지연 (status 는 IN_USE 인데 is_overdue = true)
-  { name: '공학용 계산기 (시험용)', category: 'ELECTRONICS', price: 1000, status: 'IN_USE', startOffset: -300, durationMinutes: 120, overdue: true },
-  { name: '실험복', category: 'HOME_LIVING', price: 0, status: 'IN_USE', startOffset: -600, durationMinutes: 240, overdue: true },
+  {
+    name: '공학용 계산기 (시험용)',
+    category: 'ELECTRONICS',
+    price: 1000,
+    status: 'IN_USE',
+    startOffset: -300,
+    durationMinutes: 120,
+    overdue: true,
+  },
+  {
+    name: '실험복',
+    category: 'HOME_LIVING',
+    price: 0,
+    status: 'IN_USE',
+    startOffset: -600,
+    durationMinutes: 240,
+    overdue: true,
+  },
 
   // 반납 확인 대기
-  { name: '멀티탭 3구', category: 'ELECTRONICS', price: 0, status: 'RETURN_PENDING', startOffset: -240, durationMinutes: 180 },
+  {
+    name: '멀티탭 3구',
+    category: 'ELECTRONICS',
+    price: 0,
+    status: 'RETURN_PENDING',
+    startOffset: -240,
+    durationMinutes: 180,
+  },
 
   // 반납 완료
-  { name: '접이식 의자', category: 'HOME_LIVING', price: 1000, status: 'COMPLETED', startOffset: -2880, durationMinutes: 300 },
-  { name: '헤드셋', category: 'ELECTRONICS', price: 2000, status: 'COMPLETED', startOffset: -4320, durationMinutes: 180 },
-  { name: '스캐너', category: 'ELECTRONICS', price: 1000, status: 'COMPLETED', startOffset: -5760, durationMinutes: 120 },
-  { name: '전자사전', category: 'BOOKS_PAPER', price: 500, status: 'COMPLETED', startOffset: -7200, durationMinutes: 240 },
+  {
+    name: '접이식 의자',
+    category: 'HOME_LIVING',
+    price: 1000,
+    status: 'COMPLETED',
+    startOffset: -2880,
+    durationMinutes: 300,
+  },
+  {
+    name: '헤드셋',
+    category: 'ELECTRONICS',
+    price: 2000,
+    status: 'COMPLETED',
+    startOffset: -4320,
+    durationMinutes: 180,
+  },
+  {
+    name: '스캐너',
+    category: 'ELECTRONICS',
+    price: 1000,
+    status: 'COMPLETED',
+    startOffset: -5760,
+    durationMinutes: 120,
+  },
+  {
+    name: '전자사전',
+    category: 'BOOKS_PAPER',
+    price: 500,
+    status: 'COMPLETED',
+    startOffset: -7200,
+    durationMinutes: 240,
+  },
 
   // 취소
-  { name: '보드게임 세트', category: 'HOME_LIVING', price: 0, status: 'CANCELLED', startOffset: -1440, durationMinutes: 300 },
+  {
+    name: '보드게임 세트',
+    category: 'HOME_LIVING',
+    price: 0,
+    status: 'CANCELLED',
+    startOffset: -1440,
+    durationMinutes: 300,
+  },
 ];
 
 export const rentals: RentalDetail[] = RENTAL_SEEDS.map((seed, i) => {
@@ -344,8 +675,7 @@ export const myProfile: MyProfile = {
 
 /* ─────────────────── 임팩트 ─────────────────── */
 
-export const DISCLAIMER =
-  '탄소 수치는 대체율 0.65를 가정한 예상 절감량입니다.';
+export const DISCLAIMER = '탄소 수치는 대체율 0.65를 가정한 예상 절감량입니다.';
 
 export const myImpact: MyImpact = {
   saved_amount: 47000,

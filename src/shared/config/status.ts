@@ -22,12 +22,7 @@
 
 /** 뱃지 색상 계열. index.css 의 --color-tone-* 와 1:1 대응 */
 export type StatusTone =
-  | 'neutral'
-  | 'info'
-  | 'brand'
-  | 'warning'
-  | 'danger'
-  | 'done';
+  'neutral' | 'info' | 'brand' | 'warning' | 'danger' | 'done';
 
 export interface StatusMeta {
   label: string;

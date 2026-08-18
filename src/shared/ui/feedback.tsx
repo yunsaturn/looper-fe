@@ -49,7 +49,12 @@ export function ErrorState({
         </p>
       )}
       {onRetry && (
-        <Button variant="secondary" size="sm" className="mt-4" onClick={onRetry}>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="mt-4"
+          onClick={onRetry}
+        >
           다시 시도
         </Button>
       )}

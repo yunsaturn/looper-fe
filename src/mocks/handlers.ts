@@ -1,6 +1,11 @@
 import { http, HttpResponse, delay } from 'msw';
 
 import type { UpdateProfileRequest } from '@/entities/user/types';
+import type {
+  AcceptApplicationRequest,
+  UpdateTradeRequest,
+} from '@/entities/trade/types';
+import type { UpdateRentalRequest } from '@/entities/rental/types';
 
 import { CATEGORY } from '@/shared/config/categories';
 import {
@@ -63,6 +68,21 @@ function notFound() {
       requested_action: null,
     },
     { status: 404 },
+  );
+}
+
+/** 검증 실패 — 서버는 field 를 camelCase 로 준다 (Spring BindingResult) */
+function validationError(fieldErrors: { field: string; message: string }[]) {
+  return HttpResponse.json(
+    {
+      code: 'INVALID_REQUEST',
+      message: '잘못된 요청입니다.',
+      field_errors: fieldErrors,
+      current_status: null,
+      allowed_statuses: null,
+      requested_action: null,
+    },
+    { status: 400 },
   );
 }
 
@@ -185,7 +205,11 @@ export const handlers = [
     const user = users.find((u) => u.id === params.userId);
     if (!user) {
       return HttpResponse.json(
-        { code: 'RESOURCE_NOT_FOUND', message: '사용자를 찾을 수 없습니다.', field_errors: [] },
+        {
+          code: 'RESOURCE_NOT_FOUND',
+          message: '사용자를 찾을 수 없습니다.',
+          field_errors: [],
+        },
         { status: 404 },
       );
     }
@@ -218,8 +242,18 @@ export const handlers = [
           email_domains: ['xx.ac.kr'],
           email_verification_enabled: true,
           campuses: [
-            { id: DEMO_CAMPUS_ID, name: '본교 캠퍼스', region_name: '서울특별시', address: null },
-            { id: 'campus-2', name: '제2캠퍼스', region_name: '경기도', address: null },
+            {
+              id: DEMO_CAMPUS_ID,
+              name: '본교 캠퍼스',
+              region_name: '서울특별시',
+              address: null,
+            },
+            {
+              id: 'campus-2',
+              name: '제2캠퍼스',
+              region_name: '경기도',
+              address: null,
+            },
           ],
         },
       ],
@@ -298,28 +332,35 @@ export const handlers = [
     return HttpResponse.json(created, { status: 201 });
   }),
 
-  http.post(`${BASE}/trades/:tradeId/applications`, async ({ params, request }) => {
-    await delay(LATENCY_MS);
-    const trade = trades.find((t) => t.id === params.tradeId);
-    if (!trade) return notFound();
+  http.post(
+    `${BASE}/trades/:tradeId/applications`,
+    async ({ params, request }) => {
+      await delay(LATENCY_MS);
+      const trade = trades.find((t) => t.id === params.tradeId);
+      if (!trade) return notFound();
 
-    if (trade.status !== TRADE_STATUS.AVAILABLE) {
-      return invalidState(trade.status, [TRADE_STATUS.AVAILABLE], 'APPLY_TRADE');
-    }
+      if (trade.status !== TRADE_STATUS.AVAILABLE) {
+        return invalidState(
+          trade.status,
+          [TRADE_STATUS.AVAILABLE],
+          'APPLY_TRADE',
+        );
+      }
 
-    const { message } = (await request.json()) as { message: string };
-    const application = {
-      id: `app-${applications.length + 1}`,
-      trade_id: trade.id,
-      applicant: users[0],
-      message,
-      status: APPLICATION_STATUS.PENDING,
-      created_at: new Date().toISOString(),
-    };
-    applications.push(application);
+      const { message } = (await request.json()) as { message: string };
+      const application = {
+        id: `app-${applications.length + 1}`,
+        trade_id: trade.id,
+        applicant: users[0],
+        message,
+        status: APPLICATION_STATUS.PENDING,
+        created_at: new Date().toISOString(),
+      };
+      applications.push(application);
 
-    return HttpResponse.json(application, { status: 201 });
-  }),
+      return HttpResponse.json(application, { status: 201 });
+    },
+  ),
 
   http.get(`${BASE}/trades/:tradeId/applications`, async ({ params }) => {
     await delay(LATENCY_MS);
@@ -330,7 +371,7 @@ export const handlers = [
 
   http.post(
     `${BASE}/trades/:tradeId/applications/:applicationId/accept`,
-    async ({ params }) => {
+    async ({ params, request }) => {
       await delay(LATENCY_MS);
       const trade = trades.find((t) => t.id === params.tradeId);
       if (!trade) return notFound();
@@ -341,6 +382,14 @@ export const handlers = [
           [TRADE_STATUS.AVAILABLE],
           'ACCEPT_APPLICATION',
         );
+      }
+
+      // 수락은 거래 약속 확정과 한 번에 일어난다. 서버가 본문을 필수로 받는다
+      const body = (await request.json()) as AcceptApplicationRequest;
+      if (!body?.meeting_at || !body?.pickup_zone_id) {
+        return validationError([
+          { field: 'meetingAt', message: '거래 시각을 선택해주세요.' },
+        ]);
       }
 
       // 한 건만 수락하고 나머지는 자동 마감 — 서버가 강제하는 규칙
@@ -354,73 +403,133 @@ export const handlers = [
         });
 
       trade.status = TRADE_STATUS.RESERVED;
+      const zone =
+        pickupZones.find((z) => z.id === body.pickup_zone_id) ?? pickupZones[0];
+      return HttpResponse.json({
+        trade_id: trade.id,
+        status: trade.status,
+        reserved_at: new Date().toISOString(),
+        meeting: {
+          meeting_at: body.meeting_at,
+          pickup_zone: zone,
+          message: body.message ?? null,
+        },
+      });
+    },
+  ),
+
+  // 거래 수정 — AVAILABLE 에서만, 보낸 필드만 반영
+  http.patch(`${BASE}/trades/:tradeId`, async ({ params, request }) => {
+    await delay(LATENCY_MS);
+    const trade = trades.find((t) => t.id === params.tradeId);
+    if (!trade) return notFound();
+
+    if (trade.status !== TRADE_STATUS.AVAILABLE) {
+      return invalidState(
+        trade.status,
+        [TRADE_STATUS.AVAILABLE],
+        'UPDATE_TRADE',
+      );
+    }
+
+    const body = (await request.json()) as UpdateTradeRequest;
+    if (body.title !== undefined) trade.title = body.title;
+    if (body.description !== undefined) trade.description = body.description;
+    if (body.price !== undefined) trade.price = body.price;
+    if (body.available_date !== undefined) {
+      trade.available_date = body.available_date;
+    }
+    if (body.pickup_zone_id !== undefined) {
+      const zone = pickupZones.find((z) => z.id === body.pickup_zone_id);
+      if (!zone) return notFound();
+      trade.pickup_zone = zone;
+    }
+
+    return HttpResponse.json({
+      id: trade.id,
+      title: trade.title,
+      price: trade.price,
+      available_date: trade.available_date,
+      status: trade.status,
+      updated_at: new Date().toISOString(),
+    });
+  }),
+
+  http.post(
+    `${BASE}/trades/:tradeId/reservation/cancel`,
+    async ({ params }) => {
+      await delay(LATENCY_MS);
+      const trade = trades.find((t) => t.id === params.tradeId);
+      if (!trade) return notFound();
+
+      if (trade.status !== TRADE_STATUS.RESERVED) {
+        return invalidState(
+          trade.status,
+          [TRADE_STATUS.RESERVED],
+          'CANCEL_RESERVATION',
+        );
+      }
+
+      // 예약이 취소되면 게시물은 다시 거래 가능으로 돌아간다
+      trade.status = TRADE_STATUS.AVAILABLE;
+      applications
+        .filter((a) => a.trade_id === trade.id)
+        .forEach((a) => {
+          a.status = APPLICATION_STATUS.CANCELLED;
+        });
+
       return HttpResponse.json({ status: trade.status });
     },
   ),
 
-  http.post(`${BASE}/trades/:tradeId/reservation/cancel`, async ({ params }) => {
-    await delay(LATENCY_MS);
-    const trade = trades.find((t) => t.id === params.tradeId);
-    if (!trade) return notFound();
+  http.post(
+    `${BASE}/trades/:tradeId/completion/request`,
+    async ({ params }) => {
+      await delay(LATENCY_MS);
+      const trade = trades.find((t) => t.id === params.tradeId);
+      if (!trade) return notFound();
 
-    if (trade.status !== TRADE_STATUS.RESERVED) {
-      return invalidState(
-        trade.status,
-        [TRADE_STATUS.RESERVED],
-        'CANCEL_RESERVATION',
+      if (trade.status !== TRADE_STATUS.RESERVED) {
+        return invalidState(
+          trade.status,
+          [TRADE_STATUS.RESERVED],
+          'REQUEST_COMPLETION',
+        );
+      }
+
+      trade.status = TRADE_STATUS.COMPLETION_PENDING;
+      return HttpResponse.json({ status: trade.status });
+    },
+  ),
+
+  http.post(
+    `${BASE}/trades/:tradeId/completion/confirm`,
+    async ({ params }) => {
+      await delay(LATENCY_MS);
+      const trade = trades.find((t) => t.id === params.tradeId);
+      if (!trade) return notFound();
+
+      if (trade.status !== TRADE_STATUS.COMPLETION_PENDING) {
+        return invalidState(
+          trade.status,
+          [TRADE_STATUS.COMPLETION_PENDING],
+          'CONFIRM_COMPLETION',
+        );
+      }
+
+      // 양측 확인이 끝나야 완료. 완료 시점에 절감량이 1회만 반영된다.
+      trade.status = TRADE_STATUS.COMPLETED;
+      myImpact.trade_completed_count += 1;
+      myImpact.estimated_carbon_saved_kg_co2e = Number(
+        (
+          myImpact.estimated_carbon_saved_kg_co2e +
+          (trade.weight_kg ?? 1) * 1.93
+        ).toFixed(1),
       );
-    }
 
-    // 예약이 취소되면 게시물은 다시 거래 가능으로 돌아간다
-    trade.status = TRADE_STATUS.AVAILABLE;
-    applications
-      .filter((a) => a.trade_id === trade.id)
-      .forEach((a) => {
-        a.status = APPLICATION_STATUS.CANCELLED;
-      });
-
-    return HttpResponse.json({ status: trade.status });
-  }),
-
-  http.post(`${BASE}/trades/:tradeId/completion/request`, async ({ params }) => {
-    await delay(LATENCY_MS);
-    const trade = trades.find((t) => t.id === params.tradeId);
-    if (!trade) return notFound();
-
-    if (trade.status !== TRADE_STATUS.RESERVED) {
-      return invalidState(
-        trade.status,
-        [TRADE_STATUS.RESERVED],
-        'REQUEST_COMPLETION',
-      );
-    }
-
-    trade.status = TRADE_STATUS.COMPLETION_PENDING;
-    return HttpResponse.json({ status: trade.status });
-  }),
-
-  http.post(`${BASE}/trades/:tradeId/completion/confirm`, async ({ params }) => {
-    await delay(LATENCY_MS);
-    const trade = trades.find((t) => t.id === params.tradeId);
-    if (!trade) return notFound();
-
-    if (trade.status !== TRADE_STATUS.COMPLETION_PENDING) {
-      return invalidState(
-        trade.status,
-        [TRADE_STATUS.COMPLETION_PENDING],
-        'CONFIRM_COMPLETION',
-      );
-    }
-
-    // 양측 확인이 끝나야 완료. 완료 시점에 절감량이 1회만 반영된다.
-    trade.status = TRADE_STATUS.COMPLETED;
-    myImpact.trade_completed_count += 1;
-    myImpact.estimated_carbon_saved_kg_co2e = Number(
-      (myImpact.estimated_carbon_saved_kg_co2e + (trade.weight_kg ?? 1) * 1.93).toFixed(1),
-    );
-
-    return HttpResponse.json({ status: trade.status });
-  }),
+      return HttpResponse.json({ status: trade.status });
+    },
+  ),
 
   /* ─────────────────── 대여 ─────────────────── */
 
@@ -544,6 +653,49 @@ export const handlers = [
     });
   }),
 
+  // 대여 수정 — RECRUITING 에서만. 시간이 바뀌면 반납 예정 시각을 다시 계산한다
+  http.patch(`${BASE}/rentals/:rentalId`, async ({ params, request }) => {
+    await delay(LATENCY_MS);
+    const rental = rentals.find((r) => r.id === params.rentalId);
+    if (!rental) return notFound();
+
+    if (rental.status !== RENTAL_STATUS.RECRUITING) {
+      return invalidState(
+        rental.status,
+        [RENTAL_STATUS.RECRUITING],
+        'UPDATE_RENTAL',
+      );
+    }
+
+    const body = (await request.json()) as UpdateRentalRequest;
+    if (body.description !== undefined) rental.description = body.description;
+    if (body.offered_price !== undefined) {
+      rental.offered_price = body.offered_price;
+    }
+
+    // start_at 이나 duration 이 오면 due_at 을 서버가 다시 계산한다
+    const previousMinutes = Math.round(
+      (new Date(rental.due_at).getTime() -
+        new Date(rental.start_at).getTime()) /
+        60_000,
+    );
+    const minutes = body.duration_minutes ?? previousMinutes;
+    if (body.start_at !== undefined) rental.start_at = body.start_at;
+    rental.due_at = new Date(
+      new Date(rental.start_at).getTime() + minutes * 60_000,
+    ).toISOString();
+
+    return HttpResponse.json({
+      id: rental.id,
+      start_at: rental.start_at,
+      duration_minutes: minutes,
+      due_at: rental.due_at,
+      offered_price: rental.offered_price,
+      status: rental.status,
+      updated_at: new Date().toISOString(),
+    });
+  }),
+
   http.post(
     `${BASE}/rentals/:rentalId/offers/:offerId/select`,
     async ({ params }) => {
@@ -563,7 +715,9 @@ export const handlers = [
         .filter((o) => o.rental_id === rental.id)
         .forEach((o) => {
           o.status =
-            o.id === params.offerId ? OFFER_STATUS.SELECTED : OFFER_STATUS.CLOSED;
+            o.id === params.offerId
+              ? OFFER_STATUS.SELECTED
+              : OFFER_STATUS.CLOSED;
         });
 
       rental.status = RENTAL_STATUS.CONFIRMED;
@@ -594,7 +748,11 @@ export const handlers = [
     if (!rental) return notFound();
 
     if (rental.status !== RENTAL_STATUS.IN_USE) {
-      return invalidState(rental.status, [RENTAL_STATUS.IN_USE], 'REQUEST_RETURN');
+      return invalidState(
+        rental.status,
+        [RENTAL_STATUS.IN_USE],
+        'REQUEST_RETURN',
+      );
     }
 
     rental.status = RENTAL_STATUS.RETURN_PENDING;
@@ -657,7 +815,11 @@ export const handlers = [
         analysis_id: null,
         ai_status: 'LOW_CONFIDENCE',
         candidates: [
-          { item_name: '알 수 없는 물품', category: CATEGORY.HOME_LIVING, confidence: 0.31 },
+          {
+            item_name: '알 수 없는 물품',
+            category: CATEGORY.HOME_LIVING,
+            confidence: 0.31,
+          },
         ],
         image_tags: ['object'],
         description_draft: null,
@@ -671,9 +833,21 @@ export const handlers = [
       analysis_id: 'analysis-mock-1',
       ai_status: 'SUCCESS',
       candidates: [
-        { item_name: 'C타입 충전기', category: CATEGORY.ELECTRONICS, confidence: 0.92 },
-        { item_name: 'USB-C 어댑터', category: CATEGORY.ELECTRONICS, confidence: 0.74 },
-        { item_name: '멀티 케이블', category: CATEGORY.ELECTRONICS, confidence: 0.51 },
+        {
+          item_name: 'C타입 충전기',
+          category: CATEGORY.ELECTRONICS,
+          confidence: 0.92,
+        },
+        {
+          item_name: 'USB-C 어댑터',
+          category: CATEGORY.ELECTRONICS,
+          confidence: 0.74,
+        },
+        {
+          item_name: '멀티 케이블',
+          category: CATEGORY.ELECTRONICS,
+          confidence: 0.51,
+        },
       ],
       image_tags: ['charger', 'cable', 'electronics'],
       description_draft:
@@ -724,13 +898,36 @@ export const handlers = [
       formula: 'weight_kg × avoidance_factor_kg_co2e_per_kg',
       substitution_rate: 0.65,
       sectors: [
-        { sector: 'HOME_LIVING', avoidance_factor_kg_co2e_per_kg: 1.93, production_stage_ratio: 0.687, sample_count: 312 },
-        { sector: 'ELECTRONICS', avoidance_factor_kg_co2e_per_kg: 17.94, production_stage_ratio: 0.607, sample_count: 274 },
-        { sector: 'BOOKS_PAPER', avoidance_factor_kg_co2e_per_kg: 0.5, production_stage_ratio: 0.946, sample_count: 88 },
+        {
+          sector: 'HOME_LIVING',
+          avoidance_factor_kg_co2e_per_kg: 1.93,
+          production_stage_ratio: 0.687,
+          sample_count: 312,
+        },
+        {
+          sector: 'ELECTRONICS',
+          avoidance_factor_kg_co2e_per_kg: 17.94,
+          production_stage_ratio: 0.607,
+          sample_count: 274,
+        },
+        {
+          sector: 'BOOKS_PAPER',
+          avoidance_factor_kg_co2e_per_kg: 0.5,
+          production_stage_ratio: 0.946,
+          sample_count: 88,
+        },
       ],
       sources: [
-        { name: 'The Carbon Catalogue', published_year: 2022, product_count: 866 },
-        { name: 'WRAP reuse displacement research', published_year: 2025, reported_substitution_rate: 0.646 },
+        {
+          name: 'The Carbon Catalogue',
+          published_year: 2022,
+          product_count: 866,
+        },
+        {
+          name: 'WRAP reuse displacement research',
+          published_year: 2025,
+          reported_substitution_rate: 0.646,
+        },
       ],
       reference_date: '2026-08-11',
       notice: '모든 탄소 수치는 실측값이 아닌 예상 절감량입니다.',

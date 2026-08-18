@@ -22,7 +22,10 @@ import { ApiError, type ApiErrorBody } from './errors';
  * 둘 중 어느 형태로 넣어도 동작하도록 뒤쪽 `/api/v1` 과 슬래시를 떼어낸다.
  */
 function normalizeBaseUrl(raw: string): string {
-  return raw.trim().replace(/\/+$/, '').replace(/\/api\/v\d+$/, '');
+  return raw
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/api\/v\d+$/, '');
 }
 
 const BASE_URL = normalizeBaseUrl(
@@ -100,7 +103,10 @@ api.interceptors.response.use(
       );
     }
 
-    const apiError = new ApiError(error.response.status, error.response.data ?? {});
+    const apiError = new ApiError(
+      error.response.status,
+      error.response.data ?? {},
+    );
 
     if (apiError.isUnauthorized) {
       setAccessToken(null);

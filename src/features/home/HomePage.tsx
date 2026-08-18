@@ -75,7 +75,10 @@ export function HomePage() {
         </button>
 
         <div className="mt-3 flex gap-2">
-          <Button onClick={() => navigate(ROUTES.TRADE_NEW)} className="flex-1 md:flex-none">
+          <Button
+            onClick={() => navigate(ROUTES.TRADE_NEW)}
+            className="flex-1 md:flex-none"
+          >
             게시물 등록
           </Button>
           <Button
@@ -103,9 +106,7 @@ export function HomePage() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
           <ImpactStatCard
             label="내 절약 금액"
-            value={
-              impact.data ? formatPrice(impact.data.saved_amount) : '—'
-            }
+            value={impact.data ? formatPrice(impact.data.saved_amount) : '—'}
             caption="내 완료 활동 기준"
           />
           <ImpactStatCard
@@ -126,9 +127,7 @@ export function HomePage() {
             label="캠퍼스 누적 절감 (추정)"
             value={
               campusImpact.data
-                ? formatCarbon(
-                    campusImpact.data.estimated_carbon_saved_kg_co2e,
-                  )
+                ? formatCarbon(campusImpact.data.estimated_carbon_saved_kg_co2e)
                 : '—'
             }
             caption="전체 완료 활동 기준 · 추정치"

@@ -77,12 +77,7 @@ export function buildPath(
 
 /** 아이콘은 shared/ui/icons 의 키. 렌더링 측에서 매핑한다. */
 export type NavIconName =
-  | 'home'
-  | 'search'
-  | 'plus'
-  | 'handshake'
-  | 'leaf'
-  | 'user';
+  'home' | 'search' | 'plus' | 'handshake' | 'leaf' | 'user';
 
 export interface NavItem {
   key: string;

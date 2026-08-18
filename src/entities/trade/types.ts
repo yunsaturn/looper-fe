@@ -56,6 +56,45 @@ export interface TradeApplication {
   created_at: string;
 }
 
+/**
+ * PATCH /api/v1/trades/{tradeId} — AVAILABLE 상태에서만 가능.
+ * 보낸 필드만 바뀐다. 카테고리·상품 상태·무게·사진은 수정 대상이 아니다
+ * (무게가 탄소 계산의 입력이라 등록 시점 값으로 고정한다).
+ */
+export interface UpdateTradeRequest {
+  title?: string;
+  description?: string;
+  price?: number;
+  available_date?: string;
+  pickup_zone_id?: string;
+}
+
+export interface UpdatedTrade {
+  id: string;
+  title: string;
+  price: number;
+  available_date: string;
+  status: TradeStatus;
+  updated_at: string;
+}
+
+/**
+ * 신청 수락 시 거래 약속을 함께 확정한다.
+ * BE 가 `@RequestBody` 를 필수로 받으므로 본문 없이 호출하면 400 이다.
+ */
+export interface AcceptApplicationRequest {
+  /** ISO 8601. 서버가 @Future 로 검증하므로 과거 시각은 거절된다 */
+  meeting_at: string;
+  pickup_zone_id: string;
+  message?: string;
+}
+
+export interface TradeMeeting {
+  meeting_at: string;
+  pickup_zone: PickupZone;
+  message: string | null;
+}
+
 export interface TradeListFilters {
   keyword?: string;
   trade_type?: TradeType;

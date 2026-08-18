@@ -67,7 +67,11 @@ export function MyProfilePage() {
           .join(' · ')}
         action={
           !editing && (
-            <Button variant="secondary" size="sm" onClick={() => setEditing(true)}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setEditing(true)}
+            >
               수정
             </Button>
           )
@@ -89,8 +93,16 @@ export function MyProfilePage() {
 
       <ProfileStats
         items={[
-          { label: '거래 완료', value: profile.trade_completed_count, unit: '건' },
-          { label: '대여 완료', value: profile.rental_completed_count, unit: '건' },
+          {
+            label: '거래 완료',
+            value: profile.trade_completed_count,
+            unit: '건',
+          },
+          {
+            label: '대여 완료',
+            value: profile.rental_completed_count,
+            unit: '건',
+          },
         ]}
       />
 
@@ -173,7 +185,11 @@ function ProfileEditForm({
   onCancel,
   onSaved,
 }: {
-  initial: { nickname: string; department: string | null; main_building: string | null };
+  initial: {
+    nickname: string;
+    department: string | null;
+    main_building: string | null;
+  };
   onCancel: () => void;
   onSaved: () => void;
 }) {
