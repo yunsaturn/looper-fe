@@ -195,7 +195,11 @@ export function HomePage() {
         </div>
 
         {rentals.isPending ? (
-          <CardSkeletonGrid count={3} className={LAYOUT.rentalGrid} />
+          <CardSkeletonGrid
+            count={3}
+            className={LAYOUT.rentalGrid}
+            withMedia={false}
+          />
         ) : rentals.data?.content.length ? (
           <div className={LAYOUT.rentalGrid}>
             {rentals.data.content.map((item) => (

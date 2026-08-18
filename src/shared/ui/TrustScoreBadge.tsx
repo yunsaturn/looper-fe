@@ -38,8 +38,14 @@ export function UserInline({
   className?: string;
 }) {
   return (
-    <span className={cn('inline-flex items-center gap-1.5 text-xs', className)}>
-      <span className="font-medium text-ink-700">{nickname}</span>
+    <span
+      className={cn(
+        'inline-flex min-w-0 items-center gap-1.5 text-xs',
+        className,
+      )}
+    >
+      {/* 좁은 카드에서는 닉네임이 두 줄로 접히는 대신 말줄임된다 */}
+      <span className="truncate font-medium text-ink-700">{nickname}</span>
       {suffix && <span className="text-ink-400">· {suffix}</span>}
       <TrustScoreBadge score={trustScore} />
     </span>

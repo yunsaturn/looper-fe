@@ -100,7 +100,11 @@ export function RentalListPage() {
       </div>
 
       {rentals.isPending ? (
-        <CardSkeletonGrid count={3} className={LAYOUT.rentalGrid} />
+        <CardSkeletonGrid
+          count={3}
+          className={LAYOUT.rentalGrid}
+          withMedia={false}
+        />
       ) : rentals.isError ? (
         <ErrorState error={rentals.error} onRetry={() => rentals.refetch()} />
       ) : rentals.data.content.length ? (

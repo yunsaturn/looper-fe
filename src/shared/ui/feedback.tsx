@@ -68,25 +68,44 @@ export function Skeleton({ className }: { className?: string }) {
   );
 }
 
-/** 목록 로딩 자리표시자 */
+/**
+ * 목록 로딩 자리표시자.
+ *
+ * 자리표시자의 목적은 '곧 여기에 무엇이 온다'를 미리 알려주는 것이므로
+ * 실제 카드와 모양이 어긋나면 오히려 화면이 튄다. `ItemCard` 가 모바일에서
+ * 가로형, 데스크톱에서 세로형이라 이 컴포넌트도 같은 규칙을 따른다.
+ *
+ * 대여 카드에는 썸네일이 없으므로 `withMedia={false}` 로 이미지 칸을 뺀다.
+ */
 export function CardSkeletonGrid({
   count = 4,
   className,
+  withMedia = true,
 }: {
   count?: number;
   className?: string;
+  /** 카드에 썸네일이 있는지 (거래 O · 대여 X) */
+  withMedia?: boolean;
 }) {
   return (
     <div className={className}>
       {Array.from({ length: count }, (_, i) => (
         <div
           key={i}
-          className="rounded-card border border-ink-100 p-4"
+          className={cn(
+            'rounded-card border border-ink-100',
+            withMedia ? 'flex gap-3 p-3 md:flex-col md:gap-0 md:p-0' : 'p-4',
+          )}
           aria-hidden="true"
         >
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="mt-3 h-4 w-3/4" />
-          <Skeleton className="mt-2 h-4 w-1/3" />
+          {withMedia && (
+            <Skeleton className="h-24 w-24 shrink-0 md:aspect-4/3 md:h-auto md:w-full md:rounded-none" />
+          )}
+          <div className={cn('grow', withMedia && 'md:p-3.5')}>
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="mt-2 h-4 w-1/3" />
+            <Skeleton className="mt-2 h-3 w-1/2" />
+          </div>
         </div>
       ))}
     </div>
