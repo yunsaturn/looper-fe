@@ -255,7 +255,6 @@ export const handlers = [
       // 나눔은 서버가 가격을 0 으로 고정한다
       price: body.trade_type === 'SHARE' ? 0 : (body.price as number),
       pickup_zone: zone,
-      carbon_sector: body.category,
       status: TRADE_STATUS.AVAILABLE,
       author: users[0],
       my_application_status: null,
@@ -699,7 +698,7 @@ export const handlers = [
       ],
       sources: [
         { name: 'The Carbon Catalogue', published_year: 2022, product_count: 866 },
-        { name: 'WRAP reuse displacement research', published_year: 2025, substitution_rate: 0.646 },
+        { name: 'WRAP reuse displacement research', published_year: 2025, reported_substitution_rate: 0.646 },
       ],
       reference_date: '2026-08-11',
       notice: '모든 탄소 수치는 실측값이 아닌 예상 절감량입니다.',

@@ -10,6 +10,7 @@ import {
 } from '@/shared/config/navigation';
 import { useAuthStore } from '@/shared/store/authStore';
 import { LoopIcon, NavIcon, SearchIcon } from '@/shared/ui/icons';
+import { RouteErrorBoundary } from '@/app/ErrorBoundary';
 
 /**
  * 메인 레이아웃 — Figma 와이어프레임 기준.
@@ -20,6 +21,8 @@ import { LoopIcon, NavIcon, SearchIcon } from '@/shared/ui/icons';
  * 반응형 분기는 `md`(768px) 하나만 쓴다.
  */
 export function MainLayout() {
+  const { pathname } = useLocation();
+
   return (
     <div className="min-h-dvh bg-white">
       <TopHeader />
@@ -28,7 +31,10 @@ export function MainLayout() {
         <DesktopSidebar />
 
         <main className="min-w-0 grow px-4 py-5 pb-tabbar md:px-0 md:py-8">
-          <Outlet />
+          {/* 한 화면이 터져도 내비게이션은 살아 있어야 다른 곳으로 이동할 수 있다 */}
+          <RouteErrorBoundary pathname={pathname}>
+            <Outlet />
+          </RouteErrorBoundary>
         </main>
       </div>
 

@@ -33,7 +33,6 @@ export interface TradeDetail {
   title: string;
   description: string;
   category: Category;
-  carbon_sector: Category;
   condition: ItemCondition;
   price: number;
   weight_kg: number | null;
@@ -51,7 +50,6 @@ export interface TradeDetail {
 
 export interface TradeApplication {
   id: string;
-  trade_id: string;
   applicant: UserSummary;
   message: string | null;
   status: ApplicationStatus;
@@ -83,3 +81,10 @@ export interface CreateTradeRequest {
   image_urls: string[];
   ai_analysis_id?: string | null;
 }
+
+/**
+ * 목업 전용. BE 응답에는 `trade_id` 가 없지만(어느 게시물의 신청 목록인지는
+ * 경로가 이미 알려준다), 목업 스토어는 한 배열에 전부 담아 두므로
+ * 소속을 알 필드가 필요하다. 화면 코드는 이 타입을 쓰지 않는다.
+ */
+export type SeededTradeApplication = TradeApplication & { trade_id: string };
