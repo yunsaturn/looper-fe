@@ -96,6 +96,21 @@ export class ApiError extends Error {
     );
   }
 
+  /**
+   * 서버에 그 엔드포인트가 아직 없는지.
+   *
+   * 404 는 "리소스가 없다"와 "경로가 없다"를 구분하지 못하지만, 서버가
+   * 살아 있는데 405(Method Not Allowed)나 코드 없는 404 가 오면 대개
+   * 미구현이다. 화면에서 "삭제할 수 없어요" 대신 사유를 정확히 알리는 데
+   * 쓴다 — 아직 붙지 않은 기능과 진짜 실패를 섞으면 원인을 못 찾는다.
+   */
+  get isNotImplemented(): boolean {
+    return (
+      this.status === 405 ||
+      (this.status === 404 && this.code === ERROR_CODE.INTERNAL_SERVER_ERROR)
+    );
+  }
+
   /** 인증이 풀린 상황인지 */
   get isUnauthorized(): boolean {
     return this.status === 401;

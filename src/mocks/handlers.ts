@@ -86,6 +86,21 @@ function validationError(fieldErrors: { field: string; message: string }[]) {
   );
 }
 
+/** 권한 없음 — 작성자·요청자가 아닌 사람이 수정·삭제를 시도한 경우 */
+function forbidden() {
+  return HttpResponse.json(
+    {
+      code: 'FORBIDDEN',
+      message: '요청을 수행할 권한이 없습니다.',
+      field_errors: [],
+      current_status: null,
+      allowed_statuses: null,
+      requested_action: null,
+    },
+    { status: 403 },
+  );
+}
+
 function invalidState(
   currentStatus: string,
   allowed: string[],
@@ -622,6 +637,30 @@ export const handlers = [
     },
   ),
 
+  /*
+   * 게시물 삭제.
+   * BE 에는 아직 이 엔드포인트가 없다. 목업은 요청한 규격대로 구현해 둬
+   * 화면을 미리 검증하고, 서버가 붙으면 그대로 동작하게 한다.
+   */
+  http.delete(`${BASE}/trades/:tradeId`, async ({ params }) => {
+    await delay(LATENCY_MS);
+    const index = trades.findIndex((t) => t.id === params.tradeId);
+    if (index < 0) return notFound();
+
+    const trade = trades[index];
+    if (trade.author.id !== DEMO_ME_ID) return forbidden();
+    if (trade.status !== TRADE_STATUS.AVAILABLE) {
+      return invalidState(
+        trade.status,
+        [TRADE_STATUS.AVAILABLE],
+        'DELETE_TRADE',
+      );
+    }
+
+    trades.splice(index, 1);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   // 거래 수정 — AVAILABLE 에서만, 보낸 필드만 반영
   http.patch(`${BASE}/trades/:tradeId`, async ({ params, request }) => {
     await delay(LATENCY_MS);
@@ -937,6 +976,26 @@ export const handlers = [
       });
     },
   ),
+
+  // 대여 요청 삭제 — 거래와 같은 이유로 목업이 먼저 있다
+  http.delete(`${BASE}/rentals/:rentalId`, async ({ params }) => {
+    await delay(LATENCY_MS);
+    const index = rentals.findIndex((r) => r.id === params.rentalId);
+    if (index < 0) return notFound();
+
+    const rental = rentals[index];
+    if (rental.requester.id !== DEMO_ME_ID) return forbidden();
+    if (rental.status !== RENTAL_STATUS.RECRUITING) {
+      return invalidState(
+        rental.status,
+        [RENTAL_STATUS.RECRUITING],
+        'DELETE_RENTAL',
+      );
+    }
+
+    rentals.splice(index, 1);
+    return new HttpResponse(null, { status: 204 });
+  }),
 
   // 대여 수정 — RECRUITING 에서만. 시간이 바뀌면 반납 예정 시각을 다시 계산한다
   http.patch(`${BASE}/rentals/:rentalId`, async ({ params, request }) => {

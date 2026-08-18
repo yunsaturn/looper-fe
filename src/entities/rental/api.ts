@@ -27,6 +27,16 @@ export const rentalApi = {
   create: (body: CreateRentalRequest) =>
     api.post<CreatedRental>(BASE, body).then((r) => r.data),
 
+  /**
+   * 대여 요청 삭제.
+   *
+   * ⚠️ 거래와 마찬가지로 아직 BE 에 없다.
+   *    요청한 규격: DELETE /api/v1/rentals/{rentalId} → 204,
+   *    요청자만 가능(403), RECRUITING 이 아니면 409.
+   */
+  remove: (rentalId: string) =>
+    api.delete<void>(`${BASE}/${rentalId}`).then(() => undefined),
+
   /** RECRUITING 상태에서만 가능. 시간을 바꾸면 서버가 반납 예정 시각을 다시 계산한다 */
   update: (rentalId: string, body: UpdateRentalRequest) =>
     api.patch<UpdatedRental>(`${BASE}/${rentalId}`, body).then((r) => r.data),

@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import {
   Link,
   NavLink,
@@ -15,9 +16,11 @@ import {
   ROUTES,
 } from '@/shared/config/navigation';
 import { RouteErrorBoundary } from '@/app/ErrorBoundary';
-import { useAuthStore } from '@/shared/store/authStore';
 import { NavIcon, SearchIcon } from '@/shared/ui/icons';
 import { BrandLogo } from '@/shared/ui/BrandLogo';
+import { Avatar } from '@/shared/ui/Avatar';
+import { userApi } from '@/entities/user/api';
+import { queryKeys } from '@/shared/api/queryKeys';
 
 /**
  * 메인 레이아웃 — Figma 와이어프레임 기준.
@@ -52,7 +55,14 @@ export function MainLayout() {
 
 function TopHeader() {
   const navigate = useNavigate();
-  const nickname = useAuthStore((s) => s.nickname);
+
+  /*
+   * 아바타는 authStore 가 아니라 서버 프로필을 읽는다.
+   * 로그인 응답에는 프로필 사진이 없어서 authStore 만 보면 사진을 바꿔도
+   * 헤더가 그대로다. 프로필 수정 후 queryKeys.me 를 무효화하면 이 쿼리도
+   * 같이 갱신되므로 두 화면이 어긋나지 않는다. (기획서 R5)
+   */
+  const me = useQuery({ queryKey: queryKeys.me, queryFn: userApi.me });
 
   return (
     <header className="sticky top-0 z-30 border-b border-ink-100 bg-white/95 backdrop-blur">
@@ -90,9 +100,13 @@ function TopHeader() {
         <Link
           to={ROUTES.ME}
           aria-label="마이프로필"
-          className="ml-auto flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-700 md:ml-0"
+          className="ml-auto md:ml-0"
         >
-          {nickname?.[0] ?? '?'}
+          <Avatar
+            nickname={me.data?.nickname}
+            imageUrl={me.data?.profile_image_url}
+            className="h-9 w-9 text-sm"
+          />
         </Link>
       </div>
     </header>

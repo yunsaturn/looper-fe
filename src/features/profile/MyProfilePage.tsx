@@ -22,10 +22,11 @@ import { formatCarbon } from '@/shared/lib/carbon';
 import { formatDate } from '@/shared/lib/format';
 import { Button } from '@/shared/ui/Button';
 import { Field, Input, Select, Textarea } from '@/shared/ui/Field';
+import { Avatar } from '@/shared/ui/Avatar';
 import { ErrorState, Skeleton } from '@/shared/ui/feedback';
 import { useToast } from '@/shared/ui/useToast';
 
-import { Avatar, ProfileStats, ProfileSummary } from './ProfileSummary';
+import { ProfileStats, ProfileSummary } from './ProfileSummary';
 import { WithdrawSheet } from './WithdrawSheet';
 
 /**
