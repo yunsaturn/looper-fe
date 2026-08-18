@@ -107,6 +107,12 @@ function invalidState(
 export const handlers = [
   /* ─────────────────── 인증 ─────────────────── */
 
+  // 로그아웃 — 멱등이라 어떤 토큰이 와도 204 다
+  http.post(`${BASE}/auth/logout`, async () => {
+    await delay(LATENCY_MS);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   http.post(`${BASE}/auth/login`, async () => {
     await delay(LATENCY_MS);
     return HttpResponse.json({

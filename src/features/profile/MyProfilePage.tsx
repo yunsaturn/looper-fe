@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import { impactApi } from '@/entities/impact/api';
 import { userApi } from '@/entities/user/api';
 import { ApiError } from '@/shared/api/errors';
 import { queryKeys } from '@/shared/api/queryKeys';
+import { useLogout } from '@/shared/hooks/useLogout';
 import { ROUTES } from '@/shared/config/navigation';
 import { formatCarbon } from '@/shared/lib/carbon';
-import { useAuthStore } from '@/shared/store/authStore';
 import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Field';
 import { ErrorState, Skeleton } from '@/shared/ui/feedback';
@@ -27,17 +27,16 @@ import { ProfileStats, ProfileSummary } from './ProfileSummary';
  * 학교와 캠퍼스는 가입할 때 이메일 도메인으로 정해지므로 바꿀 수 없다.
  */
 export function MyProfilePage() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const toast = useToast();
-  const signOut = useAuthStore((s) => s.signOut);
+  const logout = useLogout();
 
   const [editing, setEditing] = useState(false);
 
   const me = useQuery({ queryKey: queryKeys.me, queryFn: userApi.me });
   const impact = useQuery({
-    queryKey: queryKeys.impact.me,
-    queryFn: impactApi.me,
+    queryKey: queryKeys.impact.me(),
+    queryFn: () => impactApi.me(),
   });
 
   if (me.isPending) {
@@ -140,10 +139,8 @@ export function MyProfilePage() {
       <Button
         variant="ghost"
         fullWidth
-        onClick={() => {
-          signOut();
-          navigate(ROUTES.LOGIN, { replace: true });
-        }}
+        loading={logout.isPending}
+        onClick={() => logout.mutate()}
       >
         로그아웃
       </Button>

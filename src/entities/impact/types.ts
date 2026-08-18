@@ -4,7 +4,14 @@ import type { Category } from '@/shared/config/categories';
  * ⚠️ BE 는 Jackson `default-property-inclusion: non_null` 이다.
  *    null 인 필드는 응답에서 **아예 빠진다**. 배열도 마찬가지이므로
  *    화면에서 `?? []` 로 받아야 렌더링 중 크래시가 나지 않는다.
+ *    같은 이유로 객체 필드도 전부 optional 로 둔다.
  */
+
+export interface MonthlyTrendPoint {
+  /** 'YYYY-MM' */
+  month: string;
+  estimated_carbon_saved_kg_co2e: number;
+}
 
 /** 예상 절감량을 스마트폰 완전 충전 횟수로 환산한 참고 정보 */
 export interface CarbonEquivalent {
@@ -13,10 +20,32 @@ export interface CarbonEquivalent {
   source: string;
 }
 
-export interface MonthlyTrendPoint {
-  /** 'YYYY-MM' */
-  month: string;
-  estimated_carbon_saved_kg_co2e: number;
+/**
+ * 도시 묘목 1그루가 10년간 흡수하는 양으로 환산한 값.
+ * 실제 식재 수가 아니라 흡수 효과의 환산이므로 화면에서 '약 N그루'로만 쓴다.
+ */
+export interface TreeEquivalent {
+  tree_count: number;
+  basis_kg_co2e_per_tree: number;
+  growth_period_years: number;
+  source: string;
+}
+
+/** '나의 순환숲' — 누적 탄소를 나무 그루 수와 다음 그루까지의 진행도로 */
+export interface ForestProgress {
+  current_trees: number;
+  carbon_toward_next_tree_kg_co2e: number;
+  next_tree_threshold_kg_co2e: number;
+  /** 0~1 */
+  progress_to_next_tree: number;
+}
+
+/** 이번 달과 지난달 비교 */
+export interface MonthOverMonth {
+  this_month_kg_co2e: number;
+  last_month_kg_co2e: number;
+  /** 0.18 = 18% 증가. 지난달이 0이면 응답에서 빠진다 */
+  change_ratio?: number;
 }
 
 /**
@@ -34,6 +63,9 @@ export interface MyImpact {
   rental_completed_count: number;
   monthly_trend?: MonthlyTrendPoint[];
   equivalent?: CarbonEquivalent;
+  tree_equivalent?: TreeEquivalent;
+  forest?: ForestProgress;
+  month_over_month?: MonthOverMonth;
   disclaimer: string;
 }
 
@@ -49,16 +81,48 @@ export interface CategoryBreakdown {
   ratio: number;
 }
 
+export interface CampusRankItem {
+  /** 동률은 같은 순위 */
+  rank: number;
+  campus_id: string;
+  display_name: string;
+  estimated_carbon_saved_kg_co2e: number;
+  /** 로그인 사용자의 소속 캠퍼스 여부 */
+  mine: boolean;
+}
+
+export interface CampusRanking {
+  /** 누적 절감량 상위 캠퍼스 (최대 3개) */
+  top_campuses?: CampusRankItem[];
+  my_campus?: CampusRankItem;
+  /** 바로 위 순위까지 남은 양. 이미 1위면 응답에서 빠진다 */
+  carbon_to_next_rank_kg_co2e?: number;
+}
+
 /** GET /api/v1/impact/campuses/{campusId} — 개인 실명·거래 상세는 공개하지 않는다 */
 export interface CampusImpact {
   campus: CampusSummary;
   estimated_carbon_saved_kg_co2e: number;
+  saved_amount: number;
+  waste_reduced_kg: number;
+  trade_completed_count: number;
+  sharing_count: number;
+  rental_completed_count: number;
   participant_count: number;
   completed_activity_count: number;
   category_breakdown?: CategoryBreakdown[];
   /** 전체 캠퍼스 중 누적 절감 순위 */
   campus_rank: number;
+  ranking?: CampusRanking;
+  tree_equivalent?: TreeEquivalent;
   disclaimer: string;
+}
+
+/** 기간 필터 — 없으면 전체 기간 */
+export interface ImpactPeriodParams {
+  /** 'YYYY-MM-DD' */
+  from?: string;
+  to?: string;
 }
 
 export interface CarbonSectorReference {

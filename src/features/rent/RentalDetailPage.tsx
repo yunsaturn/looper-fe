@@ -57,7 +57,7 @@ export function RentalDetailPage() {
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.rentals.all });
-    queryClient.invalidateQueries({ queryKey: queryKeys.impact.me });
+    queryClient.invalidateQueries({ queryKey: queryKeys.impact.all });
   };
 
   const onMutationError = (error: unknown) => {

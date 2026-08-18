@@ -1,13 +1,20 @@
 import { api } from '@/shared/api/client';
 
-import type { CampusImpact, CarbonReferences, MyImpact } from './types';
+import type {
+  CampusImpact,
+  CarbonReferences,
+  ImpactPeriodParams,
+  MyImpact,
+} from './types';
 
 export const impactApi = {
-  me: () => api.get<MyImpact>('/api/v1/impact/me').then((r) => r.data),
+  /** 기간을 주면 그 구간의 완료 활동만 합산한다. 없으면 전체 기간 */
+  me: (params: ImpactPeriodParams = {}) =>
+    api.get<MyImpact>('/api/v1/impact/me', { params }).then((r) => r.data),
 
-  campus: (campusId: string) =>
+  campus: (campusId: string, params: ImpactPeriodParams = {}) =>
     api
-      .get<CampusImpact>(`/api/v1/impact/campuses/${campusId}`)
+      .get<CampusImpact>(`/api/v1/impact/campuses/${campusId}`, { params })
       .then((r) => r.data),
 
   carbonReferences: () =>

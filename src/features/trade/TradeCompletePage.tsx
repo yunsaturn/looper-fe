@@ -34,8 +34,8 @@ export function TradeCompletePage() {
   });
 
   const impact = useQuery({
-    queryKey: queryKeys.impact.me,
-    queryFn: impactApi.me,
+    queryKey: queryKeys.impact.me(),
+    queryFn: () => impactApi.me(),
   });
 
   const campus = useQuery({

@@ -31,8 +31,11 @@ export const queryKeys = {
   },
 
   impact: {
-    me: ['impact', 'me'] as const,
-    campus: (campusId: string) => ['impact', 'campus', campusId] as const,
+    all: ['impact'] as const,
+    /* 기간이 키에 들어가야 필터를 바꿨을 때 다시 조회된다 */
+    me: (period: object = {}) => ['impact', 'me', period] as const,
+    campus: (campusId: string, period: object = {}) =>
+      ['impact', 'campus', campusId, period] as const,
   },
 
   carbonReferences: ['carbon', 'references'] as const,

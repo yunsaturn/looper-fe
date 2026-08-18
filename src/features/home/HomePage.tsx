@@ -35,8 +35,8 @@ export function HomePage() {
   const [tradeType, setTradeType] = useState<TradeType | undefined>();
 
   const impact = useQuery({
-    queryKey: queryKeys.impact.me,
-    queryFn: impactApi.me,
+    queryKey: queryKeys.impact.me(),
+    queryFn: () => impactApi.me(),
   });
 
   const campusImpact = useQuery({
