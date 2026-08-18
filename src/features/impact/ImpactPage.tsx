@@ -166,6 +166,30 @@ export function ImpactPage() {
         )}
       </section>
 
+      {/* ── 캠퍼스 데이터 상태 ─────────────────────────
+          로딩·오류·campusId 누락을 조용히 숨기지 않고 안내한다.
+          데이터가 있을 때만 아래 두 캠퍼스 섹션이 그려진다. */}
+      {!campusId ? (
+        <section className="grid gap-3">
+          <h2 className="text-base font-bold text-ink-900">캠퍼스 임팩트</h2>
+          <div className="rounded-card border border-dashed border-ink-200 px-6 py-10 text-center text-sm text-ink-500">
+            캠퍼스 정보가 없어 캠퍼스 순위를 불러올 수 없어요.
+            <br />
+            프로필에서 학교·캠퍼스를 설정하면 순위가 표시돼요.
+          </div>
+        </section>
+      ) : campus.isPending ? (
+        <section className="grid gap-3">
+          <h2 className="text-base font-bold text-ink-900">캠퍼스 임팩트</h2>
+          <CardRowSkeleton />
+        </section>
+      ) : campus.isError ? (
+        <section className="grid gap-3">
+          <h2 className="text-base font-bold text-ink-900">캠퍼스 임팩트</h2>
+          <ErrorState error={campus.error} onRetry={() => campus.refetch()} />
+        </section>
+      ) : null}
+
       {/* ── 캠퍼스 전체 임팩트 ──────────────────────── */}
       {campus.data && (
         <section className="grid gap-3">
