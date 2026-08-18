@@ -21,6 +21,7 @@ import { BrandLogo } from '@/shared/ui/BrandLogo';
 import { Avatar } from '@/shared/ui/Avatar';
 import { userApi } from '@/entities/user/api';
 import { queryKeys } from '@/shared/api/queryKeys';
+import { notificationApi } from '@/entities/notification/api';
 
 /**
  * 메인 레이아웃 — Figma 와이어프레임 기준.
@@ -97,11 +98,9 @@ function TopHeader() {
           게시물 등록
         </Link>
 
-        <Link
-          to={ROUTES.ME}
-          aria-label="마이프로필"
-          className="ml-auto md:ml-0"
-        >
+        <NotificationBell />
+
+        <Link to={ROUTES.ME} aria-label="마이프로필">
           <Avatar
             nickname={me.data?.nickname}
             imageUrl={me.data?.profile_image_url}
@@ -170,5 +169,54 @@ function MobileTabBar() {
         })}
       </ul>
     </nav>
+  );
+}
+
+/**
+ * 알림 벨.
+ *
+ * 미읽음 수만 따로 조회한다 — 목록보다 가벼워서 화면마다 붙여도 부담이 없다.
+ * 알림을 읽으면 queryKeys.notifications 트리가 통째로 무효화되므로 배지도
+ * 함께 줄어든다.
+ */
+function NotificationBell() {
+  const unread = useQuery({
+    queryKey: queryKeys.notifications.unreadCount,
+    queryFn: notificationApi.unreadCount,
+  });
+  const count = unread.data?.count ?? 0;
+
+  return (
+    <Link
+      to={ROUTES.NOTIFICATIONS}
+      aria-label={count > 0 ? `알림 ${count}건 안 읽음` : '알림'}
+      className="relative ml-auto flex h-9 w-9 items-center justify-center rounded-full text-ink-600 hover:bg-ink-50 md:ml-0"
+    >
+      <BellIcon className="h-5 w-5" />
+      {count > 0 && (
+        <span className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-chip bg-danger-500 px-1 text-[10px] font-bold text-white tabular-nums">
+          {count > 99 ? '99+' : count}
+        </span>
+      )}
+    </Link>
+  );
+}
+
+function BellIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M18 16v-5a6 6 0 1 0-12 0v5l-1.5 2.5h15L18 16Z M10 20a2 2 0 0 0 4 0"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

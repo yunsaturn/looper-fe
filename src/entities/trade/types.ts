@@ -50,6 +50,8 @@ export interface TradeDetail {
   impact?: RecordedImpact;
   /** 내가 낸 신청의 상태. 신청한 적 없으면 null */
   my_application_status?: ApplicationStatus | null;
+  /** 내 최근 신청 UUID — 취소 API 호출에 쓴다. 이력이 없으면 빠진다 */
+  my_application_id?: string;
   /** 서버가 판단한 신청 가능 여부. 버튼 활성화는 이 값을 따른다 */
   can_apply: boolean;
   created_at: string;

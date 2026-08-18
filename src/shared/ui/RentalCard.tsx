@@ -17,17 +17,11 @@ import { UserInline } from './TrustScoreBadge';
  * 대여 요청 카드.
  *
  * Figma 모바일 목록에 '한 장씩 보기 / 한눈에 보기' 토글이 있어서
- * 두 가지 밀도를 지원한다.
- *   - detailed: 설명까지 보여주는 큰 카드
- *   - compact:  한 줄 요약 위주
+ * 밀도 변형은 두지 않는다. 예전에는 '한 장씩 보기 / 한눈에 보기' 두 가지가
+ * 있었지만 실제 차이가 사용 시간 한 줄뿐이라 토글이 값을 하지 못했다.
+ * 정보가 더 많은 쪽(시작~반납 전체 구간)으로 통일했다.
  */
-export function RentalCard({
-  item,
-  variant = 'compact',
-}: {
-  item: RentalListItem;
-  variant?: 'compact' | 'detailed';
-}) {
+export function RentalCard({ item }: { item: RentalListItem }) {
   return (
     <Link
       to={buildPath(ROUTES.RENTAL_DETAIL, { rentalId: item.id })}
@@ -57,9 +51,7 @@ export function RentalCard({
         <div className="flex gap-1.5">
           <dt className="text-ink-400">사용</dt>
           <dd>
-            {variant === 'detailed'
-              ? `${formatDateTime(item.start_at)} ~ ${formatTime(item.due_at)}`
-              : `${formatDateTime(item.start_at)}부터`}
+            {formatDateTime(item.start_at)} ~ {formatTime(item.due_at)}
           </dd>
         </div>
         <div className="flex gap-1.5">

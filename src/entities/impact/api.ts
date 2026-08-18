@@ -3,6 +3,7 @@ import { api } from '@/shared/api/client';
 import type {
   CampusImpact,
   CarbonReferences,
+  ImpactActivityDetail,
   ImpactPeriodParams,
   MyImpact,
 } from './types';
@@ -15,6 +16,12 @@ export const impactApi = {
   campus: (campusId: string, params: ImpactPeriodParams = {}) =>
     api
       .get<CampusImpact>(`/api/v1/impact/campuses/${campusId}`, { params })
+      .then((r) => r.data),
+
+  /** 완료된 활동 하나의 계산 근거 (기획서 R3 — 검증 가능한 투명성) */
+  activity: (activityId: string) =>
+    api
+      .get<ImpactActivityDetail>(`/api/v1/impact/activities/${activityId}`)
       .then((r) => r.data),
 
   carbonReferences: () =>

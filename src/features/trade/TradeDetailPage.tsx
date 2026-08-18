@@ -12,6 +12,7 @@ import {
 } from '@/shared/config/categories';
 import { buildPath, ROUTES } from '@/shared/config/navigation';
 import {
+  APPLICATION_STATUS,
   APPLICATION_STATUS_META,
   TRADE_STATUS,
   TRADE_STATUS_META,
@@ -51,7 +52,11 @@ export function TradeDetailPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [confirmAction, setConfirmAction] = useState<
-    'complete-request' | 'complete-confirm' | 'cancel-reservation' | null
+    | 'complete-request'
+    | 'complete-confirm'
+    | 'cancel-reservation'
+    | 'cancel-application'
+    | null
   >(null);
 
   const trade = useQuery({
@@ -105,6 +110,18 @@ export function TradeDetailPage() {
     );
   };
 
+  /** 대기 중인 내 신청 취소. 수락된 뒤에는 예약 취소로 넘어간다 */
+  const cancelApplication = useMutation({
+    mutationFn: () =>
+      tradeApi.cancelApplication(tradeId, data?.my_application_id ?? ''),
+    onSuccess: () => {
+      setConfirmAction(null);
+      invalidate();
+      toast.show('신청을 취소했어요.', 'success');
+    },
+    onError: onMutationError,
+  });
+
   const apply = useMutation({
     mutationFn: () => tradeApi.apply(tradeId, message),
     onSuccess: () => {
@@ -155,6 +172,13 @@ export function TradeDetailPage() {
 
   const data = trade.data;
   const isAuthor = data.author.id === myId;
+  /*
+   * 예약 이후의 버튼(완료 요청·확인, 예약 취소)은 **당사자만** 볼 수 있어야
+   * 한다. 예전에는 상태만 보고 그려서 지나가던 사람에게도 '예약 취소'가
+   * 보였다. 눌러도 서버가 403 을 주지만, 애초에 남의 거래를 취소할 수 있는
+   * 것처럼 보이는 화면이 잘못이다.
+   */
+  const isParticipant = isAuthor || data.counterparty?.id === myId;
   const meta = TRADE_STATUS_META[data.status];
 
   return (
@@ -302,6 +326,14 @@ export function TradeDetailPage() {
                 {CARBON_DISCLAIMER} · {formatDateTime(data.impact.completed_at)}{' '}
                 완료
               </p>
+              <Link
+                to={buildPath(ROUTES.IMPACT_ACTIVITY, {
+                  activityId: data.impact.activity_id,
+                })}
+                className="mt-2 inline-block text-xs font-semibold text-brand-700 underline"
+              >
+                이 숫자는 어떻게 나왔나요?
+              </Link>
             </section>
           )}
 
@@ -361,7 +393,7 @@ export function TradeDetailPage() {
                 </Button>
               )}
 
-              {data.status === TRADE_STATUS.RESERVED && (
+              {isParticipant && data.status === TRADE_STATUS.RESERVED && (
                 <>
                   <Button
                     fullWidth
@@ -379,14 +411,28 @@ export function TradeDetailPage() {
                 </>
               )}
 
-              {data.status === TRADE_STATUS.COMPLETION_PENDING && (
-                <Button
-                  fullWidth
-                  onClick={() => setConfirmAction('complete-confirm')}
-                >
-                  거래 완료 확인
-                </Button>
-              )}
+              {isParticipant &&
+                data.status === TRADE_STATUS.COMPLETION_PENDING && (
+                  <Button
+                    fullWidth
+                    onClick={() => setConfirmAction('complete-confirm')}
+                  >
+                    거래 완료 확인
+                  </Button>
+                )}
+
+              {/* 신청 취소 — 아직 수락되지 않은 내 신청만 거둬들일 수 있다 */}
+              {!isAuthor &&
+                data.my_application_id &&
+                data.my_application_status === APPLICATION_STATUS.PENDING && (
+                  <Button
+                    variant="secondary"
+                    fullWidth
+                    onClick={() => setConfirmAction('cancel-application')}
+                  >
+                    신청 취소
+                  </Button>
+                )}
             </div>
 
             {!isAuthor && !data.can_apply && !data.my_application_status && (
@@ -435,6 +481,16 @@ export function TradeDetailPage() {
         title="게시물을 삭제할까요?"
         description="삭제하면 되돌릴 수 없어요. 신청자가 있었다면 더 이상 이 글을 볼 수 없게 됩니다."
         confirmLabel="삭제하기"
+      />
+
+      <ConfirmDialog
+        open={confirmAction === 'cancel-application'}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={() => cancelApplication.mutate()}
+        loading={cancelApplication.isPending}
+        title="신청을 취소할까요?"
+        description="취소하면 작성자의 신청자 목록에서 사라져요. 다시 신청할 수 있습니다."
+        confirmLabel="신청 취소"
       />
 
       <ConfirmDialog

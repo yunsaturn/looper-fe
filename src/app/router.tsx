@@ -83,6 +83,18 @@ const ImpactMethodPage = lazyPage(
   () => import('@/features/impact/ImpactMethodPage'),
   'ImpactMethodPage',
 );
+const NotificationsPage = lazyPage(
+  () => import('@/features/notification/NotificationsPage'),
+  'NotificationsPage',
+);
+const SearchPage = lazyPage(
+  () => import('@/features/search/SearchPage'),
+  'SearchPage',
+);
+const ImpactActivityPage = lazyPage(
+  () => import('@/features/impact/ImpactActivityPage'),
+  'ImpactActivityPage',
+);
 const MyProfilePage = lazyPage(
   () => import('@/features/profile/MyProfilePage'),
   'MyProfilePage',
@@ -151,7 +163,7 @@ export function AppRouter() {
           }
         >
           <Route path={ROUTES.HOME} element={<HomePage />} />
-          <Route path={ROUTES.SEARCH} element={<TradeListPage />} />
+          <Route path={ROUTES.SEARCH} element={<SearchPage />} />
           <Route path={ROUTES.TRADE_LIST} element={<TradeListPage />} />
           <Route path={ROUTES.RENTAL_LIST} element={<RentalListPage />} />
           <Route path={ROUTES.IMPACT} element={<ImpactPage />} />
@@ -188,6 +200,11 @@ export function AppRouter() {
 
           {/* 임팩트 */}
           <Route path={ROUTES.IMPACT_METHOD} element={<ImpactMethodPage />} />
+          <Route
+            path={ROUTES.IMPACT_ACTIVITY}
+            element={<ImpactActivityPage />}
+          />
+          <Route path={ROUTES.NOTIFICATIONS} element={<NotificationsPage />} />
           <Route
             path={ROUTES.IMPACT_CAMPUS}
             element={<PlaceholderPage title="캠퍼스 대시보드" />}

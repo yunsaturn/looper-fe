@@ -27,6 +27,7 @@ import {
   trades,
   users,
   myProfile,
+  notifications,
 } from './seed';
 
 /**
@@ -1267,6 +1268,134 @@ export const handlers = [
       carbon_sector: CATEGORY.ELECTRONICS,
       fallback_required: false,
       message: null,
+    });
+  }),
+
+  /* ─────────────────── 알림 ─────────────────── */
+
+  http.get(`${BASE}/notifications`, async ({ request }) => {
+    await delay(LATENCY_MS);
+    const unreadOnly =
+      new URL(request.url).searchParams.get('unread_only') === 'true';
+    const content = unreadOnly
+      ? notifications.filter((n) => !n.read)
+      : notifications;
+    return HttpResponse.json({
+      content,
+      page: 0,
+      size: content.length,
+      total_elements: content.length,
+      has_next: false,
+    });
+  }),
+
+  http.get(`${BASE}/notifications/unread-count`, async () => {
+    await delay(LATENCY_MS);
+    return HttpResponse.json({
+      count: notifications.filter((n) => !n.read).length,
+    });
+  }),
+
+  http.patch(
+    `${BASE}/notifications/:notificationId/read`,
+    async ({ params }) => {
+      await delay(LATENCY_MS);
+      const item = notifications.find((n) => n.id === params.notificationId);
+      if (!item) return notFound();
+      item.read = true;
+      item.read_at = new Date().toISOString();
+      return HttpResponse.json({
+        notification_id: item.id,
+        read_at: item.read_at,
+      });
+    },
+  ),
+
+  http.patch(`${BASE}/notifications/read-all`, async () => {
+    await delay(LATENCY_MS);
+    const now = new Date().toISOString();
+    let updated = 0;
+    notifications.forEach((n) => {
+      if (!n.read) {
+        n.read = true;
+        n.read_at = now;
+        updated += 1;
+      }
+    });
+    return HttpResponse.json({ updated_count: updated, read_at: now });
+  }),
+
+  /* ─────────────────── 통합 검색 ─────────────────── */
+
+  http.get(`${BASE}/search`, async ({ request }) => {
+    await delay(LATENCY_MS);
+    const url = new URL(request.url);
+    const query = (url.searchParams.get('query') ?? '').trim();
+    const scope = url.searchParams.get('scope') ?? 'ALL';
+    const page = Number(url.searchParams.get('page') ?? 0);
+    const size = Number(url.searchParams.get('size') ?? 20);
+
+    const needle = query.toLowerCase();
+    const tradeHits =
+      scope === 'RENTAL'
+        ? []
+        : trades
+            .filter((t) => t.title.toLowerCase().includes(needle))
+            .map((t) => ({
+              resource_type: 'TRADE' as const,
+              id: t.id,
+              title: t.title,
+              thumbnail_url: t.image_urls[0],
+              score: 0.9,
+            }));
+    const rentalHits =
+      scope === 'TRADE'
+        ? []
+        : rentals
+            .filter((r) => r.item_name.toLowerCase().includes(needle))
+            .map((r) => ({
+              resource_type: 'RENTAL' as const,
+              id: r.id,
+              title: r.item_name,
+              score: 0.8,
+            }));
+
+    const all = [...tradeHits, ...rentalHits];
+    const start = page * size;
+
+    return HttpResponse.json({
+      original_query: query,
+      normalized_query: query,
+      expanded_terms: [],
+      results: all.slice(start, start + size),
+      page,
+      size,
+      total_elements: all.length,
+      // 결과가 없을 때만 추천을 준다
+      suggestions: all.length === 0 ? ['계산기', '우산', '텐트'] : [],
+    });
+  }),
+
+  /* ─────────────────── 임팩트 계산 근거 ─────────────────── */
+
+  http.get(`${BASE}/impact/activities/:activityId`, async ({ params }) => {
+    await delay(LATENCY_MS);
+    return HttpResponse.json({
+      activity_id: params.activityId,
+      activity_type: 'TRADE',
+      weight_kg: 1.4,
+      carbon_sector: CATEGORY.BOOKS_PAPER,
+      sector_carbon_intensity: 0.81,
+      production_stage_ratio: 0.946,
+      substitution_rate: 0.65,
+      reported_substitution_rate: 0.646,
+      avoidance_factor_kg_co2e_per_kg: 0.5,
+      estimated_carbon_saved_kg_co2e: 0.7,
+      formula: 'weight_kg × avoidance_factor_kg_co2e_per_kg',
+      reference_date: '2026-08-11',
+      calculated_at: new Date(Date.now() - 3_600_000).toISOString(),
+      calculation_method: 'IQR 제거 후 섹터 중앙값',
+      is_estimate: true,
     });
   }),
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { rentalApi } from '@/entities/rental/api';
 import { queryKeys } from '@/shared/api/queryKeys';
@@ -8,6 +8,7 @@ import { ApiError } from '@/shared/api/errors';
 import { CATEGORY_LABEL } from '@/shared/config/categories';
 import { buildPath, ROUTES } from '@/shared/config/navigation';
 import {
+  OFFER_STATUS,
   OFFER_STATUS_META,
   RENTAL_STATUS,
   RENTAL_STATUS_META,
@@ -49,13 +50,34 @@ export function RentalDetailPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [confirmAction, setConfirmAction] = useState<
-    'pickup' | 'return-request' | 'return-confirm' | 'cancel' | null
+    | 'pickup'
+    | 'return-request'
+    | 'return-confirm'
+    | 'cancel'
+    | 'cancel-offer'
+    | null
   >(null);
 
   const rental = useQuery({
     queryKey: queryKeys.rentals.detail(rentalId),
     queryFn: () => rentalApi.detail(rentalId),
     enabled: Boolean(rentalId),
+  });
+
+  /** 선택 전 내 지원 취소 */
+  const cancelOffer = useMutation({
+    mutationFn: () =>
+      rentalApi.cancelOffer(rentalId, rental.data?.my_offer_id ?? ''),
+    onSuccess: () => {
+      setConfirmAction(null);
+      queryClient.invalidateQueries({ queryKey: queryKeys.rentals.all });
+      toast.show('지원을 취소했어요.', 'success');
+    },
+    onError: (error) => {
+      setConfirmAction(null);
+      const apiError = error instanceof ApiError ? error : null;
+      toast.show(apiError?.message ?? '취소하지 못했어요.', 'error');
+    },
   });
 
   const invalidate = () => {
@@ -151,6 +173,13 @@ export function RentalDetailPage() {
 
   const data = rental.data;
   const isRequester = data.requester.id === myId;
+  /*
+   * 상태 전이 버튼은 당사자에게만 보여야 한다.
+   *   대여 취소     요청자만 (서버도 요청자만 허용한다)
+   *   반납 확인     선택된 제공자만 — !isRequester 로만 걸러서
+   *                 지나가던 사람에게도 보이고 있었다
+   */
+  const isSelectedOfferer = data.selected_offerer?.id === myId;
   const meta = RENTAL_STATUS_META[data.status];
   const remaining = formatRemaining(data.due_at);
 
@@ -254,6 +283,14 @@ export function RentalDetailPage() {
             <p className="mt-3 text-[11px] text-ink-400">
               {CARBON_DISCLAIMER} · 대여는 절약 금액을 0원으로 계산해요.
             </p>
+            <Link
+              to={buildPath(ROUTES.IMPACT_ACTIVITY, {
+                activityId: data.impact.activity_id,
+              })}
+              className="mt-2 inline-block text-xs font-semibold text-brand-700 underline"
+            >
+              이 숫자는 어떻게 나왔나요?
+            </Link>
           </section>
         )}
 
@@ -340,25 +377,40 @@ export function RentalDetailPage() {
               </Button>
             )}
 
-            {!isRequester && data.status === RENTAL_STATUS.RETURN_PENDING && (
-              <Button
-                fullWidth
-                onClick={() => setConfirmAction('return-confirm')}
-              >
-                반납 확인했어요
-              </Button>
-            )}
+            {isSelectedOfferer &&
+              data.status === RENTAL_STATUS.RETURN_PENDING && (
+                <Button
+                  fullWidth
+                  onClick={() => setConfirmAction('return-confirm')}
+                >
+                  반납 확인했어요
+                </Button>
+              )}
 
-            {(data.status === RENTAL_STATUS.RECRUITING ||
-              data.status === RENTAL_STATUS.CONFIRMED) && (
-              <Button
-                variant="secondary"
-                fullWidth
-                onClick={() => setConfirmAction('cancel')}
-              >
-                대여 취소
-              </Button>
-            )}
+            {isRequester &&
+              (data.status === RENTAL_STATUS.RECRUITING ||
+                data.status === RENTAL_STATUS.CONFIRMED) && (
+                <Button
+                  variant="secondary"
+                  fullWidth
+                  onClick={() => setConfirmAction('cancel')}
+                >
+                  대여 취소
+                </Button>
+              )}
+
+            {/* 지원 취소 — 아직 선택되지 않은 내 지원만 거둬들일 수 있다 */}
+            {!isRequester &&
+              data.my_offer_id &&
+              data.my_offer_status === OFFER_STATUS.PENDING && (
+                <Button
+                  variant="secondary"
+                  fullWidth
+                  onClick={() => setConfirmAction('cancel-offer')}
+                >
+                  지원 취소
+                </Button>
+              )}
           </div>
         </section>
       </div>
@@ -390,6 +442,16 @@ export function RentalDetailPage() {
           />
         </div>
       </Sheet>
+
+      <ConfirmDialog
+        open={confirmAction === 'cancel-offer'}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={() => cancelOffer.mutate()}
+        loading={cancelOffer.isPending}
+        title="지원을 취소할까요?"
+        description="취소하면 요청자의 지원자 목록에서 사라져요. 다시 지원할 수 있습니다."
+        confirmLabel="지원 취소"
+      />
 
       <ConfirmDialog
         open={deleteOpen}

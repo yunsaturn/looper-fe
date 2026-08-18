@@ -230,7 +230,7 @@ export function ImpactPage() {
       )}
 
       {/* ── 캠퍼스 순환 랭킹 ────────────────────────── */}
-      {campus.data?.ranking && (
+      {campus.data && (
         <section className="grid gap-3">
           <div>
             <h2 className="text-base font-bold text-ink-900">
@@ -240,7 +240,7 @@ export function ImpactPage() {
               전체 캠퍼스 중 누적 절감량 기준
             </p>
           </div>
-          <CampusRankingSection ranking={campus.data.ranking} />
+          <CampusRankingSection campus={campus.data} />
         </section>
       )}
 
