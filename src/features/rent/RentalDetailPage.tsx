@@ -84,7 +84,9 @@ export function RentalDetailPage() {
   });
 
   const step = useMutation({
-    mutationFn: (action: 'pickup' | 'return-request' | 'return-confirm' | 'cancel') => {
+    mutationFn: (
+      action: 'pickup' | 'return-request' | 'return-confirm' | 'cancel',
+    ) => {
       if (action === 'pickup') return rentalApi.confirmPickup(rentalId);
       if (action === 'return-request') return rentalApi.requestReturn(rentalId);
       if (action === 'return-confirm') return rentalApi.confirmReturn(rentalId);
@@ -197,14 +199,30 @@ export function RentalDetailPage() {
 
           <div className="mt-4 grid gap-2">
             {isRequester && data.status === RENTAL_STATUS.RECRUITING && (
-              <Button
-                fullWidth
-                onClick={() =>
-                  navigate(buildPath(ROUTES.RENTAL_OFFERS, { rentalId: data.id }))
-                }
-              >
-                지원자 목록 보기
-              </Button>
+              <>
+                <Button
+                  fullWidth
+                  onClick={() =>
+                    navigate(
+                      buildPath(ROUTES.RENTAL_OFFERS, { rentalId: data.id }),
+                    )
+                  }
+                >
+                  지원자 목록 보기
+                </Button>
+                {/* 모집 중일 때만 수정할 수 있다. 서버 규칙과 같다 */}
+                <Button
+                  variant="secondary"
+                  fullWidth
+                  onClick={() =>
+                    navigate(
+                      buildPath(ROUTES.RENTAL_EDIT, { rentalId: data.id }),
+                    )
+                  }
+                >
+                  요청 수정
+                </Button>
+              </>
             )}
 
             {!isRequester && data.can_offer && (

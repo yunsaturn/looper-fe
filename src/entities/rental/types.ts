@@ -47,6 +47,30 @@ export interface RentalOffer {
   created_at: string;
 }
 
+/**
+ * PATCH /api/v1/rentals/{rentalId} — RECRUITING 상태에서만 가능.
+ * 물품명·카테고리·픽업존·무게는 수정 대상이 아니다.
+ * 시작 시각이나 사용 시간을 바꾸면 서버가 반납 예정 시각을 다시 계산한다.
+ */
+export interface UpdateRentalRequest {
+  description?: string;
+  start_at?: string;
+  /** 1 ~ 10080 (7일) */
+  duration_minutes?: number;
+  offered_price?: number;
+}
+
+export interface UpdatedRental {
+  id: string;
+  start_at: string;
+  duration_minutes: number;
+  /** 서버가 start_at + duration_minutes 로 다시 계산해 내려준다 */
+  due_at: string;
+  offered_price: number;
+  status: RentalStatus;
+  updated_at: string;
+}
+
 export interface RentalListFilters {
   keyword?: string;
   category?: Category;

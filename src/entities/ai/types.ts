@@ -1,4 +1,8 @@
-import type { AiStatus, Category, ItemCondition } from '@/shared/config/categories';
+import type {
+  AiStatus,
+  Category,
+  ItemCondition,
+} from '@/shared/config/categories';
 
 /** 이미지 분류 모델이 제시한 품목 후보 (최대 3개, 신뢰도 내림차순) */
 export interface AiCandidate {

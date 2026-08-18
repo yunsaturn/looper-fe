@@ -98,7 +98,8 @@ export function SignupPage() {
     },
   });
 
-  const active = step === 'email' ? sendCode : step === 'code' ? confirmCode : signup;
+  const active =
+    step === 'email' ? sendCode : step === 'code' ? confirmCode : signup;
   const error = active.error instanceof ApiError ? active.error : null;
 
   const passwordValid = PASSWORD_RULE.test(password);
@@ -146,7 +147,12 @@ export function SignupPage() {
               hint="가입 가능한 학교 이메일이어야 해요."
               error={error?.fieldError('email')}
             />
-            <Button type="submit" size="lg" fullWidth loading={sendCode.isPending}>
+            <Button
+              type="submit"
+              size="lg"
+              fullWidth
+              loading={sendCode.isPending}
+            >
               인증번호 받기
             </Button>
           </form>
@@ -255,7 +261,9 @@ export function SignupPage() {
                 value: c.id,
                 label: c.region_name ? `${c.name} (${c.region_name})` : c.name,
               }))}
-              placeholder={schoolId ? '캠퍼스를 선택하세요' : '학교를 먼저 선택하세요'}
+              placeholder={
+                schoolId ? '캠퍼스를 선택하세요' : '학교를 먼저 선택하세요'
+              }
               disabled={!schoolId}
               required
               error={error?.fieldError('campus_id')}
@@ -288,7 +296,10 @@ export function SignupPage() {
 
         <p className="mt-6 text-center text-sm text-ink-500">
           이미 계정이 있나요?{' '}
-          <Link to={ROUTES.LOGIN} className="font-semibold text-brand-700 underline">
+          <Link
+            to={ROUTES.LOGIN}
+            className="font-semibold text-brand-700 underline"
+          >
             로그인
           </Link>
         </p>

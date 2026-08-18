@@ -13,19 +13,16 @@ import {
 } from '@/shared/config/categories';
 import { buildPath, ROUTES } from '@/shared/config/navigation';
 import { useAuthStore } from '@/shared/store/authStore';
-import { formatDateTime, formatDuration } from '@/shared/lib/format';
+import {
+  formatDateTime,
+  formatDuration,
+  toLocalInputValue,
+} from '@/shared/lib/format';
+import { RENTAL_DURATION_OPTIONS } from '@/shared/config/rental';
 import { Button } from '@/shared/ui/Button';
 import { Input, Select, Textarea } from '@/shared/ui/Field';
 import { useToast } from '@/shared/ui/useToast';
 import { PageTitle } from '@/app/layouts/StackLayout';
-
-const DURATION_OPTIONS = [30, 60, 120, 180, 360, 720, 1440, 2880];
-
-/** 로컬 시각을 datetime-local 입력값으로 (타임존 보정) */
-function toLocalInputValue(date: Date): string {
-  const offsetMs = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
-}
 
 /**
  * 대여 요청 등록.
@@ -139,7 +136,9 @@ export function RentalNewPage() {
             value: z.id,
             label: z.name,
           }))}
-          placeholder={zones.isPending ? '불러오는 중...' : '픽업존을 선택하세요'}
+          placeholder={
+            zones.isPending ? '불러오는 중...' : '픽업존을 선택하세요'
+          }
           required
           error={error?.fieldError('pickup_zone_id')}
         />
@@ -157,7 +156,7 @@ export function RentalNewPage() {
           label="사용 시간"
           value={String(durationMinutes)}
           onChange={(e) => setDurationMinutes(Number(e.target.value))}
-          options={DURATION_OPTIONS.map((m) => ({
+          options={RENTAL_DURATION_OPTIONS.map((m) => ({
             value: String(m),
             label: formatDuration(m),
           }))}
@@ -166,7 +165,8 @@ export function RentalNewPage() {
 
         {dueAtPreview && (
           <p className="rounded-btn bg-brand-50 px-3 py-2.5 text-sm text-brand-700">
-            반납 예정 시간은 <strong>{formatDateTime(dueAtPreview.toISOString())}</strong>{' '}
+            반납 예정 시간은{' '}
+            <strong>{formatDateTime(dueAtPreview.toISOString())}</strong>{' '}
             입니다. 이 시간을 넘기면 반납 지연으로 표시돼요.
           </p>
         )}

@@ -6,6 +6,8 @@ import type {
   RentalListFilters,
   RentalListItem,
   RentalOffer,
+  UpdatedRental,
+  UpdateRentalRequest,
 } from './types';
 
 const BASE = '/api/v1/rentals';
@@ -21,6 +23,10 @@ export const rentalApi = {
 
   create: (body: CreateRentalRequest) =>
     api.post<RentalDetail>(BASE, body).then((r) => r.data),
+
+  /** RECRUITING 상태에서만 가능. 시간을 바꾸면 서버가 반납 예정 시각을 다시 계산한다 */
+  update: (rentalId: string, body: UpdateRentalRequest) =>
+    api.patch<UpdatedRental>(`${BASE}/${rentalId}`, body).then((r) => r.data),
 
   /* 지원 */
   offer: (rentalId: string, message: string) =>

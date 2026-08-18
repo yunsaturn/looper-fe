@@ -1,11 +1,14 @@
 import { api, type PageResponse } from '@/shared/api/client';
 
 import type {
+  AcceptApplicationRequest,
   CreateTradeRequest,
   TradeApplication,
   TradeDetail,
   TradeListFilters,
   TradeListItem,
+  UpdatedTrade,
+  UpdateTradeRequest,
 } from './types';
 
 const BASE = '/api/v1/trades';
@@ -22,6 +25,10 @@ export const tradeApi = {
   create: (body: CreateTradeRequest) =>
     api.post<TradeDetail>(BASE, body).then((r) => r.data),
 
+  /** AVAILABLE 상태에서만 가능. 보낸 필드만 반영된다 */
+  update: (tradeId: string, body: UpdateTradeRequest) =>
+    api.patch<UpdatedTrade>(`${BASE}/${tradeId}`, body).then((r) => r.data),
+
   /* 신청 */
   apply: (tradeId: string, message: string) =>
     api
@@ -35,9 +42,14 @@ export const tradeApi = {
       )
       .then((r) => r.data.applications),
 
-  acceptApplication: (tradeId: string, applicationId: string) =>
+  /** 수락과 거래 약속 확정이 한 번에 일어난다. 본문은 필수다 */
+  acceptApplication: (
+    tradeId: string,
+    applicationId: string,
+    body: AcceptApplicationRequest,
+  ) =>
     api
-      .post(`${BASE}/${tradeId}/applications/${applicationId}/accept`)
+      .post(`${BASE}/${tradeId}/applications/${applicationId}/accept`, body)
       .then((r) => r.data),
 
   cancelApplication: (tradeId: string, applicationId: string) =>

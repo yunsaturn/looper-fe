@@ -95,7 +95,9 @@ export function ImpactMethodPage() {
                   <span className="font-medium text-ink-800">
                     {source.name}
                   </span>
-                  <span className="text-ink-400">({source.published_year})</span>
+                  <span className="text-ink-400">
+                    ({source.published_year})
+                  </span>
                   {source.reported_substitution_rate != null && (
                     <span className="text-ink-400">
                       · 대체율 {source.reported_substitution_rate}

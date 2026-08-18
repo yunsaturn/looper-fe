@@ -1,4 +1,10 @@
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Link,
+  NavLink,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 
 import { cn } from '@/shared/lib/cn';
 import {

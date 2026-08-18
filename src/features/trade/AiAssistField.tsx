@@ -3,11 +3,12 @@ import { useMutation } from '@tanstack/react-query';
 
 import { aiApi } from '@/entities/ai/api';
 import type { AiCandidate, ListingAssistResponse } from '@/entities/ai/types';
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES } from '@/entities/storage/api';
 import {
-  ALLOWED_IMAGE_TYPES,
-  MAX_IMAGE_BYTES,
-} from '@/entities/storage/api';
-import { AI_STATUS, CATEGORY_LABEL, type ItemCondition } from '@/shared/config/categories';
+  AI_STATUS,
+  CATEGORY_LABEL,
+  type ItemCondition,
+} from '@/shared/config/categories';
 import { cn } from '@/shared/lib/cn';
 import { Button } from '@/shared/ui/Button';
 import { Field } from '@/shared/ui/Field';
@@ -73,7 +74,11 @@ export function AiAssistField({
     }
 
     // 서버가 거절할 파일은 올리기 전에 걸러 준다
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type as (typeof ALLOWED_IMAGE_TYPES)[number])) {
+    if (
+      !ALLOWED_IMAGE_TYPES.includes(
+        file.type as (typeof ALLOWED_IMAGE_TYPES)[number],
+      )
+    ) {
       setLocalError('JPG, PNG, WEBP 이미지만 올릴 수 있어요.');
       return;
     }
@@ -177,7 +182,8 @@ export function AiAssistField({
         {data && data.candidates.length > 0 && (
           <div className="grid gap-2">
             <p className="text-xs font-medium text-ink-600">
-              추천 상품명 {data.ai_status === AI_STATUS.LOW_CONFIDENCE && '(신뢰도 낮음)'}
+              추천 상품명{' '}
+              {data.ai_status === AI_STATUS.LOW_CONFIDENCE && '(신뢰도 낮음)'}
             </p>
             <ul className="grid gap-1.5">
               {data.candidates.slice(0, 3).map((candidate) => (
@@ -206,7 +212,8 @@ export function AiAssistField({
               ))}
             </ul>
             <p className="text-xs text-ink-400">
-              AI 추천이라 정확하지 않을 수 있어요. 눌러서 채운 뒤 직접 고치셔도 됩니다.
+              AI 추천이라 정확하지 않을 수 있어요. 눌러서 채운 뒤 직접 고치셔도
+              됩니다.
             </p>
           </div>
         )}
@@ -214,8 +221,7 @@ export function AiAssistField({
         {/* 저신뢰·장애 — 직접 입력으로 전환 안내 */}
         {needsFallback && (
           <div className="rounded-btn bg-tone-warning-bg px-3 py-2.5 text-sm text-tone-warning-fg">
-            {data?.message ??
-              'AI 분석을 사용할 수 없어 직접 입력이 필요해요.'}
+            {data?.message ?? 'AI 분석을 사용할 수 없어 직접 입력이 필요해요.'}
             <span className="mt-0.5 block text-xs">
               아래 항목을 직접 채우시면 등록에는 문제가 없어요.
             </span>

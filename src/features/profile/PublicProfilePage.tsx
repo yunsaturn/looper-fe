@@ -57,7 +57,11 @@ export function PublicProfilePage() {
       <ProfileStats
         items={[
           { label: '거래 완료', value: data.trade_completed_count, unit: '건' },
-          { label: '대여 완료', value: data.rental_completed_count, unit: '건' },
+          {
+            label: '대여 완료',
+            value: data.rental_completed_count,
+            unit: '건',
+          },
         ]}
       />
 

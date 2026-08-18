@@ -91,7 +91,9 @@ export class ApiError extends Error {
    */
   unshownFieldErrors(shown: string[]): FieldError[] {
     const keys = new Set(shown.map(normalizeFieldName));
-    return this.fieldErrors.filter((e) => !keys.has(normalizeFieldName(e.field)));
+    return this.fieldErrors.filter(
+      (e) => !keys.has(normalizeFieldName(e.field)),
+    );
   }
 
   /** 인증이 풀린 상황인지 */

@@ -30,7 +30,10 @@ export function FilterChips<T extends string>({
   return (
     <div className={cn('flex flex-wrap gap-2', className)}>
       {allLabel !== null && (
-        <Chip selected={value === undefined} onClick={() => onChange(undefined)}>
+        <Chip
+          selected={value === undefined}
+          onClick={() => onChange(undefined)}
+        >
           {allLabel}
         </Chip>
       )}
@@ -40,7 +43,9 @@ export function FilterChips<T extends string>({
           selected={value === o.value}
           onClick={() =>
             // 필수 선택 모드(전체 칩 없음)에서는 선택 해제를 허용하지 않는다
-            onChange(value === o.value && allLabel !== null ? undefined : o.value)
+            onChange(
+              value === o.value && allLabel !== null ? undefined : o.value,
+            )
           }
         >
           {o.label}

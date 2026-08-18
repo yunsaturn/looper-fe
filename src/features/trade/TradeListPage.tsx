@@ -17,11 +17,7 @@ import { Button } from '@/shared/ui/Button';
 import { FilterChips } from '@/shared/ui/FilterChips';
 import { Input } from '@/shared/ui/Field';
 import { ItemCard } from '@/shared/ui/ItemCard';
-import {
-  CardSkeletonGrid,
-  EmptyState,
-  ErrorState,
-} from '@/shared/ui/feedback';
+import { CardSkeletonGrid, EmptyState, ErrorState } from '@/shared/ui/feedback';
 
 /** 물품 탐색 — 통합검색 + 거래유형·카테고리 필터 */
 export function TradeListPage() {
@@ -47,7 +43,9 @@ export function TradeListPage() {
   return (
     <div className="grid gap-5">
       <div>
-        <h1 className="text-xl font-bold text-ink-900 md:text-2xl">물품 탐색</h1>
+        <h1 className="text-xl font-bold text-ink-900 md:text-2xl">
+          물품 탐색
+        </h1>
         <p className="mt-1 text-sm text-ink-500">
           같은 캠퍼스 구성원이 올린 물건을 찾아보세요
         </p>

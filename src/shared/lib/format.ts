@@ -72,7 +72,9 @@ export function formatRemaining(
 
 /** 상대 시간. '10분 전', '2시간 전', '3일 전' */
 export function formatRelative(iso: string, now: Date = new Date()): string {
-  const diffMinutes = Math.floor((now.getTime() - new Date(iso).getTime()) / 60_000);
+  const diffMinutes = Math.floor(
+    (now.getTime() - new Date(iso).getTime()) / 60_000,
+  );
 
   if (diffMinutes < 1) return '방금 전';
   if (diffMinutes < 60) return `${diffMinutes}분 전`;
@@ -89,4 +91,15 @@ export function formatDuration(minutes: number): string {
   const m = minutes % 60;
   if (h === 0) return `${m}분`;
   return m === 0 ? `${h}시간` : `${h}시간 ${m}분`;
+}
+
+/**
+ * Date -> `<input type="datetime-local">` 이 요구하는 'YYYY-MM-DDTHH:mm'.
+ *
+ * toISOString() 은 UTC 라 그대로 넣으면 한국 기준 9시간이 밀린다.
+ * 거래 약속·대여 시각 입력이 전부 이 변환을 쓰므로 한곳에 둔다.
+ */
+export function toLocalInputValue(date: Date): string {
+  const offsetMs = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
 }

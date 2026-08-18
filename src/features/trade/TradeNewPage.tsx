@@ -222,7 +222,9 @@ export function TradeNewPage() {
             onChange={(e) => setPrice(e.target.value)}
             placeholder="0"
             required={!isWanted}
-            hint={isWanted ? '구합니다는 희망 가격을 비워둘 수 있어요.' : undefined}
+            hint={
+              isWanted ? '구합니다는 희망 가격을 비워둘 수 있어요.' : undefined
+            }
             error={error?.fieldError('price')}
           />
         )}
@@ -265,7 +267,9 @@ export function TradeNewPage() {
             value: z.id,
             label: z.name,
           }))}
-          placeholder={zones.isPending ? '불러오는 중...' : '픽업존을 선택하세요'}
+          placeholder={
+            zones.isPending ? '불러오는 중...' : '픽업존을 선택하세요'
+          }
           required
           hint="교내 지정 픽업존에서만 물건을 주고받아요."
           error={error?.fieldError('pickup_zone_id')}

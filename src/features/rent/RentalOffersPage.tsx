@@ -66,7 +66,10 @@ export function RentalOffersPage() {
       ) : offers.data.length ? (
         <ul className="grid max-w-2xl gap-3">
           {offers.data.map((offer) => (
-            <li key={offer.id} className="rounded-card border border-ink-200 p-4">
+            <li
+              key={offer.id}
+              className="rounded-card border border-ink-200 p-4"
+            >
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">
                   {offer.offerer.nickname[0]}

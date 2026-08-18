@@ -16,7 +16,11 @@ function createQueryClient() {
         refetchOnWindowFocus: false,
         retry: (failureCount, error) => {
           // 4xx 는 재시도해도 결과가 같다. 네트워크 오류만 한 번 더 시도한다.
-          if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+          if (
+            error instanceof ApiError &&
+            error.status >= 400 &&
+            error.status < 500
+          ) {
             return false;
           }
           return failureCount < 1;
