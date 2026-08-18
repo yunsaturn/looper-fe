@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { metaApi } from '@/entities/meta/api';
+import { PickupZoneSelector } from '@/entities/meta/PickupZoneSelector';
+import type { PickupZoneItem } from '@/entities/meta/types';
 import { tradeApi } from '@/entities/trade/api';
 import { ApiError } from '@/shared/api/errors';
 import { queryKeys } from '@/shared/api/queryKeys';
@@ -12,7 +14,7 @@ import { TRADE_STATUS } from '@/shared/config/status';
 import { toLocalDateValue } from '@/shared/lib/format';
 import { useAuthStore } from '@/shared/store/authStore';
 import { Button } from '@/shared/ui/Button';
-import { Input, Select, Textarea } from '@/shared/ui/Field';
+import { Field, Input, Textarea } from '@/shared/ui/Field';
 import { EmptyState, ErrorState, Skeleton } from '@/shared/ui/feedback';
 import { useToast } from '@/shared/ui/useToast';
 import { PageTitle } from '@/app/layouts/StackLayout';
@@ -85,8 +87,10 @@ export function TradeEditPage() {
   return (
     <TradeEditForm
       trade={data}
-      zones={(zones.data ?? []).map((z) => ({ value: z.id, label: z.name }))}
+      zones={zones.data ?? []}
       zonesLoading={zones.isPending}
+      zonesError={zones.isError}
+      onZonesRetry={() => zones.refetch()}
       onSaved={() => {
         toast.show('게시물을 수정했어요.', 'success');
         // 목록·상세가 모두 바뀌므로 거래 트리 전체를 무효화한다 (R5)
@@ -104,6 +108,8 @@ function TradeEditForm({
   trade,
   zones,
   zonesLoading,
+  zonesError,
+  onZonesRetry,
   onSaved,
   onCancel,
 }: {
@@ -116,8 +122,10 @@ function TradeEditForm({
     available_date: string;
     pickup_zone: { id: string };
   };
-  zones: { value: string; label: string }[];
+  zones: PickupZoneItem[];
   zonesLoading: boolean;
+  zonesError: boolean;
+  onZonesRetry: () => void;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -205,15 +213,24 @@ function TradeEditForm({
           error={error?.fieldError('available_date')}
         />
 
-        <Select
+        <Field
           label="픽업존"
-          value={pickupZoneId}
-          onChange={(e) => setPickupZoneId(e.target.value)}
-          options={zones}
-          placeholder={zonesLoading ? '불러오는 중...' : '픽업존을 선택하세요'}
           required
-          error={error?.fieldError('pickup_zone_id')}
-        />
+          hint="지도 마커나 목록에서 픽업존을 고르세요."
+        >
+          <PickupZoneSelector
+            zones={zones}
+            value={pickupZoneId}
+            onChange={setPickupZoneId}
+            loading={zonesLoading}
+            error={
+              zonesError
+                ? '픽업존을 불러오지 못했어요.'
+                : error?.fieldError('pickup_zone_id')
+            }
+            onRetry={zonesError ? onZonesRetry : undefined}
+          />
+        </Field>
 
         <p className="rounded-card bg-ink-50 px-4 py-3 text-xs leading-relaxed text-ink-500">
           카테고리·상품 상태·무게·사진은 수정할 수 없어요. 무게는 탄소 절감량

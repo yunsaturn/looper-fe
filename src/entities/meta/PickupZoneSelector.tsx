@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cn } from '@/shared/lib/cn';
 import { Button } from '@/shared/ui/Button';
@@ -13,7 +13,7 @@ import {
   resolveMapCenter,
   sanitizeSelectedZoneId,
 } from './pickupZone';
-import type { PickupZoneItem } from './types';
+import type { LocatedPickupZone, PickupZoneItem } from './types';
 
 /**
  * 거래·대여 등록에서 공용으로 쓰는 픽업존 선택 컴포넌트.
@@ -26,6 +26,39 @@ import type { PickupZoneItem } from './types';
  * 이후 거래 수정·대여 수정 화면에서도 재사용할 수 있도록, 데이터 조회는
  * 하지 않고 zones 를 통째로 받는다.
  */
+
+/* ── 커스텀 마커 SVG (인라인 Data URI) ── */
+
+const MARKER_SIZE = { w: 28, h: 40 } as const;
+
+/** 기본(비선택) 마커 — 회색 */
+const DEFAULT_MARKER_SVG = `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="${MARKER_SIZE.w}" height="${MARKER_SIZE.h}" viewBox="0 0 28 40">` +
+    `<path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="#6B7280"/>` +
+    `<circle cx="14" cy="14" r="6" fill="#fff"/>` +
+    `</svg>`,
+)}`;
+
+/** 선택된 마커 — 브랜드 컬러 */
+const SELECTED_MARKER_SVG = `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="${MARKER_SIZE.w}" height="${MARKER_SIZE.h}" viewBox="0 0 28 40">` +
+    `<path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="#2563EB"/>` +
+    `<circle cx="14" cy="14" r="6" fill="#fff"/>` +
+    `</svg>`,
+)}`;
+
+/** InfoWindow 안에 들어갈 HTML 을 생성한다. */
+function buildInfoContent(zone: LocatedPickupZone): string {
+  const desc = zone.description
+    ? `<p style="margin:2px 0 0;font-size:11px;color:#6B7280;">${zone.description}</p>`
+    : '';
+  return (
+    `<div style="padding:6px 10px;min-width:120px;max-width:200px;font-family:sans-serif;">` +
+    `<p style="margin:0;font-size:13px;font-weight:600;color:#1F2937;">${zone.name}</p>` +
+    desc +
+    `</div>`
+  );
+}
 export interface PickupZoneSelectorProps {
   zones: PickupZoneItem[];
   value: string;
@@ -54,6 +87,9 @@ export function PickupZoneSelector({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<KakaoMap | null>(null);
   const markersRef = useRef<KakaoMarker[]>([]);
+  const infoWindowRef = useRef<KakaoInfoWindow | null>(null);
+  /** 마커 id → KakaoMarker 맵. 선택 시 이미지 교체에 쓴다 */
+  const markerMapRef = useRef<Map<string, KakaoMarker>>(new Map());
   /** 마커 클릭 핸들러가 항상 최신 onChange 를 부르도록 */
   const onChangeRef = useRef(onChange);
 
@@ -74,6 +110,18 @@ export function PickupZoneSelector({
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
+
+  /** SDK 기반 MarkerImage 생성 — sdk 가 준비된 뒤에만 호출 */
+  const makeMarkerImage = useCallback(
+    (selected: boolean) => {
+      if (!sdk) return undefined;
+      const src = selected ? SELECTED_MARKER_SVG : DEFAULT_MARKER_SVG;
+      const size = new sdk.maps.Size(MARKER_SIZE.w, MARKER_SIZE.h);
+      const offset = new sdk.maps.Point(MARKER_SIZE.w / 2, MARKER_SIZE.h);
+      return new sdk.maps.MarkerImage(src, size, { offset });
+    },
+    [sdk],
+  );
 
   /* 선택된 존이 사라지거나 비활성화되면 잘못된 id 를 들고 있지 않게 초기화 */
   useEffect(() => {
@@ -123,41 +171,101 @@ export function PickupZoneSelector({
     const map = mapRef.current;
     if (!sdk || !map || mapStatus !== 'ready') return;
 
+    // 기존 정리
     markersRef.current.forEach((marker) => marker.setMap(null));
     markersRef.current = [];
+    markerMapRef.current.clear();
+    if (infoWindowRef.current) {
+      infoWindowRef.current.close();
+      infoWindowRef.current = null;
+    }
 
     const bounds = new sdk.maps.LatLngBounds();
+    const defaultImage = makeMarkerImage(false);
+    const selectedImage = makeMarkerImage(true);
+
     locatedZones.forEach((zone) => {
       const position = new sdk.maps.LatLng(zone.latitude, zone.longitude);
+      const isSelected = zone.id === value;
       const marker = new sdk.maps.Marker({
         position,
         map,
         title: zone.name,
+        image: isSelected ? selectedImage : defaultImage,
       });
-      sdk.maps.event.addListener(marker, 'click', () =>
-        onChangeRef.current(zone.id),
-      );
+
+      sdk.maps.event.addListener(marker, 'click', () => {
+        onChangeRef.current(zone.id);
+      });
+
       markersRef.current.push(marker);
+      markerMapRef.current.set(zone.id, marker);
       bounds.extend(position);
     });
 
     if (locatedZones.length > 0) map.setBounds(bounds);
 
+    // 선택된 마커가 있으면 InfoWindow 바로 열기
+    const selectedZone = locatedZones.find((z) => z.id === value);
+    if (selectedZone) {
+      const selectedMarker = markerMapRef.current.get(selectedZone.id);
+      if (selectedMarker) {
+        const iw = new sdk.maps.InfoWindow({
+          content: buildInfoContent(selectedZone),
+          removable: false,
+        });
+        iw.open(map, selectedMarker);
+        infoWindowRef.current = iw;
+      }
+    }
+
     return () => {
       markersRef.current.forEach((marker) => marker.setMap(null));
       markersRef.current = [];
+      markerMapRef.current.clear();
+      if (infoWindowRef.current) {
+        infoWindowRef.current.close();
+        infoWindowRef.current = null;
+      }
     };
-  }, [sdk, mapStatus, markerKey, locatedZones]);
+  }, [sdk, mapStatus, markerKey, locatedZones, value, makeMarkerImage]);
 
-  /* 선택이 바뀌면 해당 좌표로 지도 중심 이동 */
+  /* 선택이 바뀌면 마커 이미지 교체 + InfoWindow 이동 + 지도 중심 이동 */
   useEffect(() => {
     const map = mapRef.current;
     if (!sdk || !map || mapStatus !== 'ready') return;
+
+    const defaultImage = makeMarkerImage(false);
+    const selectedImage = makeMarkerImage(true);
+
+    // 모든 마커를 기본 이미지로 리셋
+    markerMapRef.current.forEach((marker) => {
+      if (defaultImage) marker.setImage(defaultImage);
+    });
+
+    // InfoWindow 닫기
+    if (infoWindowRef.current) {
+      infoWindowRef.current.close();
+      infoWindowRef.current = null;
+    }
+
+    // 선택된 마커 강조 + InfoWindow
     const target = locatedZones.find((zone) => zone.id === value);
     if (target) {
-      map.setCenter(new sdk.maps.LatLng(target.latitude, target.longitude));
+      const marker = markerMapRef.current.get(target.id);
+      if (marker) {
+        if (selectedImage) marker.setImage(selectedImage);
+        map.setCenter(new sdk.maps.LatLng(target.latitude, target.longitude));
+
+        const iw = new sdk.maps.InfoWindow({
+          content: buildInfoContent(target),
+          removable: false,
+        });
+        iw.open(map, marker);
+        infoWindowRef.current = iw;
+      }
     }
-  }, [sdk, mapStatus, value, locatedZones]);
+  }, [sdk, mapStatus, value, locatedZones, makeMarkerImage]);
 
   /* ── 렌더 ── */
 
@@ -207,6 +315,12 @@ export function PickupZoneSelector({
         ))}
 
       {/* 선택 목록 — 좌표 유무와 관계없이 모든 활성 픽업존을 담는다 */}
+      {hasZones && locatedZones.length > 0 && (
+        <p className="text-xs text-ink-500">
+          교내 지정 픽업존에서만 물건을 주고받아요. 지도 마커나 목록에서
+          고르세요.
+        </p>
+      )}
       {hasZones ? (
         <ul className="grid gap-2">
           {activeZones.map((zone) => {
