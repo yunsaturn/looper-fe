@@ -11,6 +11,13 @@ export interface PickupZone {
   name: string;
 }
 
+export interface RecordedImpact {
+  saved_amount: number;
+  waste_reduced_kg: number;
+  estimated_carbon_saved_kg_co2e: number;
+  completed_at: string;
+}
+
 /** 목록 아이템 (GET /api/v1/trades) */
 export interface TradeListItem {
   id: string;
@@ -18,7 +25,8 @@ export interface TradeListItem {
   title: string;
   thumbnail_url: string | null;
   category: Category;
-  price: number;
+  /** WANTED에서 희망 가격을 생략하면 BE non_null 설정으로 필드가 빠진다 */
+  price?: number | null;
   available_date: string;
   pickup_zone_name: string;
   status: TradeStatus;
@@ -34,15 +42,20 @@ export interface TradeDetail {
   description: string;
   category: Category;
   condition: ItemCondition;
-  price: number;
-  weight_kg: number | null;
+  price?: number | null;
+  weight_kg: number;
   available_date: string;
   pickup_zone: PickupZone;
   image_urls: string[];
   status: TradeStatus;
   author: UserSummary;
+  counterparty?: UserSummary;
+  meeting?: TradeMeeting;
+  reserved_at?: string;
+  completed_at?: string;
+  impact?: RecordedImpact;
   /** 내가 낸 신청의 상태. 신청한 적 없으면 null */
-  my_application_status: ApplicationStatus | null;
+  my_application_status?: ApplicationStatus | null;
   /** 서버가 판단한 신청 가능 여부. 버튼 활성화는 이 값을 따른다 */
   can_apply: boolean;
   created_at: string;
@@ -72,7 +85,7 @@ export interface UpdateTradeRequest {
 export interface UpdatedTrade {
   id: string;
   title: string;
-  price: number;
+  price?: number | null;
   available_date: string;
   status: TradeStatus;
   updated_at: string;
@@ -87,6 +100,11 @@ export interface AcceptApplicationRequest {
   meeting_at: string;
   pickup_zone_id: string;
   message?: string;
+}
+
+/** BE는 취소 사유가 선택이어도 JSON 요청 본문 자체는 필수로 받는다. */
+export interface TradeCancellationRequest {
+  reason?: string;
 }
 
 export interface TradeMeeting {
@@ -113,12 +131,29 @@ export interface CreateTradeRequest {
   description: string;
   category: Category;
   condition: ItemCondition;
-  price: number;
-  weight_kg: number | null;
+  price?: number | null;
+  weight_kg: number;
   available_date: string;
   pickup_zone_id: string;
   image_urls: string[];
   ai_analysis_id?: string | null;
+}
+
+/** POST /api/v1/trades 생성 직후 응답 */
+export interface CreatedTrade {
+  id: string;
+  trade_type: TradeType;
+  title: string;
+  description: string;
+  category: Category;
+  carbon_sector: Category;
+  condition: ItemCondition;
+  price?: number | null;
+  weight_kg: number;
+  available_date: string;
+  pickup_zone: PickupZone;
+  status: TradeStatus;
+  created_at: string;
 }
 
 /**

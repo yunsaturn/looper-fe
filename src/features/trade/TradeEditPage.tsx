@@ -111,7 +111,7 @@ function TradeEditForm({
     trade_type: string;
     title: string;
     description: string;
-    price: number;
+    price?: number | null;
     available_date: string;
     pickup_zone: { id: string };
   };

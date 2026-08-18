@@ -605,6 +605,7 @@ export const rentals: RentalDetail[] = RENTAL_SEEDS.map((seed, i) => {
     is_overdue: Boolean(seed.overdue),
     overdue_at: seed.overdue ? dueAt : null,
     requester,
+    offer_count: 0,
     my_offer_status: null,
     can_offer:
       RENTAL_STATUS[seed.status] === RENTAL_STATUS.RECRUITING &&

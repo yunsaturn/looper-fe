@@ -45,6 +45,7 @@ export function RentalNewPage() {
   );
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [price, setPrice] = useState('0');
+  const [weight, setWeight] = useState('');
 
   const zones = useQuery({
     queryKey: queryKeys.pickupZones(campusId ?? ''),
@@ -62,6 +63,7 @@ export function RentalNewPage() {
         start_at: new Date(startAt).toISOString(),
         duration_minutes: durationMinutes,
         offered_price: Number(price || 0),
+        weight_kg: Number(weight),
       }),
     onSuccess: (created) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.rentals.all });
@@ -180,6 +182,19 @@ export function RentalNewPage() {
           hint="0원이면 무료로 표시돼요."
         />
 
+        <Input
+          label="물품 무게 (kg)"
+          type="number"
+          min={0.1}
+          step={0.1}
+          value={weight}
+          onChange={(e) => setWeight(e.target.value)}
+          placeholder="0.5"
+          required
+          hint="탄소 절감량 계산에 쓰이며 0보다 커야 해요."
+          error={error?.fieldError('weight_kg')}
+        />
+
         <div className="flex gap-2 pt-2">
           <Button
             type="button"
@@ -193,7 +208,7 @@ export function RentalNewPage() {
             type="submit"
             fullWidth
             loading={create.isPending}
-            disabled={!pickupZoneId}
+            disabled={!pickupZoneId || !Number(weight)}
           >
             요청 등록하기
           </Button>
