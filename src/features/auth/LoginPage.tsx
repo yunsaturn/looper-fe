@@ -80,7 +80,16 @@ export function LoginPage() {
           </Button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-ink-500">
+        <p className="mt-4 text-center text-sm">
+          <Link
+            to={ROUTES.PASSWORD_RESET}
+            className="text-ink-500 underline hover:text-ink-700"
+          >
+            비밀번호를 잊으셨나요?
+          </Link>
+        </p>
+
+        <p className="mt-3 text-center text-sm text-ink-500">
           아직 계정이 없나요?{' '}
           <Link
             to={ROUTES.LANDING}

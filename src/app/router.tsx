@@ -19,6 +19,10 @@ import { LoginPage } from '@/features/auth/LoginPage';
 import { HomePage } from '@/features/home/HomePage';
 import { NotFoundPage, PlaceholderPage } from '@/features/misc/PlaceholderPage';
 
+const PasswordResetPage = lazyPage(
+  () => import('@/features/auth/PasswordResetPage'),
+  'PasswordResetPage',
+);
 const SignupPage = lazyPage(
   () => import('@/features/auth/SignupPage'),
   'SignupPage',
@@ -135,6 +139,7 @@ export function AppRouter() {
         {/* 공개 */}
         <Route path={ROUTES.LANDING} element={<LandingPage />} />
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+        <Route path={ROUTES.PASSWORD_RESET} element={<PasswordResetPage />} />
         <Route path={ROUTES.SIGNUP} element={<SignupPage />} />
 
         {/* 탭이 있는 메인 화면 */}

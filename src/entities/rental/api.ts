@@ -30,8 +30,10 @@ export const rentalApi = {
   /**
    * 대여 요청 삭제.
    *
-   * ⚠️ 거래와 마찬가지로 아직 BE 에 없다.
-   *    요청한 규격: DELETE /api/v1/rentals/{rentalId} → 204,
+   * ⚠️ 거래는 DELETE 가 생겼지만 대여는 **아직 BE 에 없다**.
+   *    실서버에서는 405 가 돌아오고 화면이 "아직 준비되지 않았어요" 로
+   *    안내한다. 요청한 규격은 거래와 동일하다 —
+   *    DELETE /api/v1/rentals/{rentalId} → 204,
    *    요청자만 가능(403), RECRUITING 이 아니면 409.
    */
   remove: (rentalId: string) =>

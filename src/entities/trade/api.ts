@@ -30,10 +30,8 @@ export const tradeApi = {
   /**
    * 게시물 삭제.
    *
-   * ⚠️ 아직 BE 에 이 엔드포인트가 없다. 서버가 추가되기 전까지 실서버에서는
-   *    404/405 가 돌아온다. 화면은 그 경우를 구분해 안내한다.
-   *    요청한 규격: DELETE /api/v1/trades/{tradeId} → 204,
-   *    작성자만 가능(403), AVAILABLE 이 아니면 409.
+   * 작성자만, AVAILABLE 상태에서만 가능하다. 대기 중이던 신청은 서버가
+   * 함께 제거한다. 예약·완료 상태는 상대방과 이력이 걸려 있어 409 다.
    */
   remove: (tradeId: string) =>
     api.delete<void>(`${BASE}/${tradeId}`).then(() => undefined),

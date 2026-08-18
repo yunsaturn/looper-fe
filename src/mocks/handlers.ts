@@ -122,6 +122,34 @@ function invalidState(
 export const handlers = [
   /* ─────────────────── 인증 ─────────────────── */
 
+  // 토큰 갱신 — 실서버는 Refresh Token 을 회전시킨다
+  http.post(`${BASE}/auth/token/refresh`, async () => {
+    await delay(LATENCY_MS);
+    return HttpResponse.json({
+      access_token: 'mock-access-token',
+      refresh_token: 'mock-refresh-token',
+      access_token_expires_in: 3600,
+    });
+  }),
+
+  // 비밀번호 재설정 — 가입과 같은 인증번호 흐름을 쓴다
+  http.post(`${BASE}/auth/password/reset-code`, async () => {
+    await delay(LATENCY_MS);
+    return HttpResponse.json(
+      {
+        verification_id: 'mock-reset-verification',
+        expires_in_seconds: 300,
+        message: '인증번호를 발송했습니다. (목업: 000000)',
+      },
+      { status: 202 },
+    );
+  }),
+
+  http.post(`${BASE}/auth/password/reset`, async () => {
+    await delay(LATENCY_MS);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   // 로그아웃 — 멱등이라 어떤 토큰이 와도 204 다
   http.post(`${BASE}/auth/logout`, async () => {
     await delay(LATENCY_MS);

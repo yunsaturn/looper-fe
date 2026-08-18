@@ -1,4 +1,8 @@
-import axios, { AxiosError, type AxiosInstance } from 'axios';
+import axios, {
+  AxiosError,
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
+} from 'axios';
 
 import { ApiError, type ApiErrorBody } from './errors';
 
@@ -110,9 +114,46 @@ export function setUnauthorizedHandler(handler: () => void): void {
   onUnauthorized = handler;
 }
 
+/* ─────────────────── 토큰 자동 갱신 ─────────────────── */
+
+/**
+ * Access Token 은 1시간이면 만료된다(BE `JWT_ACCESS_TOKEN_TTL=PT1H`).
+ * 갱신이 없으면 시연 도중 갑자기 로그인 화면으로 튕긴다.
+ *
+ * 401 을 받으면 Refresh Token 으로 한 번 갱신하고 원래 요청을 재시도한다.
+ * 갱신도 실패하면 그때 로그아웃 처리한다.
+ *
+ * 동시에 여러 요청이 401 을 받을 수 있으므로 갱신은 **한 번만** 수행하고
+ * 나머지는 같은 Promise 를 기다린다. 안 그러면 Refresh Token 이 회전되면서
+ * 뒤늦은 요청이 이미 폐기된 토큰을 쓰게 된다.
+ */
+let refreshing: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return null;
+
+  try {
+    // 인터셉터를 타지 않는 별도 인스턴스로 보낸다. 갱신 요청이 401 을 받으면
+    // 다시 갱신을 시도하는 무한 루프가 된다.
+    const { data } = await axios.post<{
+      access_token: string;
+      refresh_token: string;
+      access_token_expires_in: number;
+    }>(`${BASE_URL}/api/v1/auth/token/refresh`, {
+      refresh_token: refreshToken,
+    });
+    setAccessToken(data.access_token);
+    setRefreshToken(data.refresh_token);
+    return data.access_token;
+  } catch {
+    return null;
+  }
+}
+
 api.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<ApiErrorBody>) => {
+  async (error: AxiosError<ApiErrorBody>) => {
     // 응답을 받지 못한 경우(네트워크 장애·타임아웃)는 status 0 으로 정규화한다.
     if (!error.response) {
       return Promise.reject(
@@ -129,6 +170,22 @@ api.interceptors.response.use(
     );
 
     if (apiError.isUnauthorized) {
+      const original = error.config as
+        (InternalAxiosRequestConfig & { _retried?: boolean }) | undefined;
+
+      // 재시도는 요청당 한 번뿐이다. 갱신 직후 또 401 이면 진짜 만료다.
+      if (original && !original._retried) {
+        original._retried = true;
+        refreshing ??= refreshAccessToken().finally(() => {
+          refreshing = null;
+        });
+        const token = await refreshing;
+        if (token) {
+          original.headers.Authorization = `Bearer ${token}`;
+          return api(original);
+        }
+      }
+
       clearTokens();
       onUnauthorized?.();
     }
