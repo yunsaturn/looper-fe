@@ -59,6 +59,8 @@ interface KakaoInfoWindowOptions {
 interface KakaoMap {
   setCenter(latlng: KakaoLatLng): void;
   setBounds(bounds: KakaoLatLngBounds): void;
+  getLevel(): number;
+  setLevel(level: number): void;
   relayout(): void;
 }
 
