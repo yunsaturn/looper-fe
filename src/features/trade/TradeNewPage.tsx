@@ -37,8 +37,8 @@ const TODAY = new Date().toISOString().slice(0, 10);
  * 흐름: 이미지 업로드 → AI 가 상품명·카테고리 후보 제시 → 사용자가 확인·수정
  *       → 가격·상태·거래 날짜·픽업존 입력 → 등록
  *
- * AI 는 보조일 뿐이라 사진 없이도 끝까지 등록할 수 있어야 한다. (기획서 R4)
- * 그래서 이미지·AI 는 폼의 선택 항목이고, 아래 입력들이 항상 기본 경로다.
+ * AI 는 보조일 뿐이라 분석에 실패해도 직접 입력으로 등록할 수 있어야 한다.
+ * 사진은 서버 계약상 1~5장이 필수이고 첫 번째 사진만 AI 분석에 사용한다.
  */
 export function TradeNewPage() {
   const navigate = useNavigate();
@@ -57,7 +57,7 @@ export function TradeNewPage() {
   const [weight, setWeight] = useState('');
   const [availableDate, setAvailableDate] = useState(TODAY);
   const [pickupZoneId, setPickupZoneId] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [analysisId, setAnalysisId] = useState<string | null>(null);
 
   /** AI 후보를 고르면 폼을 채운다. 이후 사용자가 자유롭게 고칠 수 있다. */
@@ -84,13 +84,13 @@ export function TradeNewPage() {
       // ⚠️ 서버는 image_urls 를 @NotEmpty 로 강제한다. 업로드가 실패했을 때
       //    빈 배열로 그냥 보내면 400 이 떨어지는데, 화면에는 "잘못된 요청"
       //    이라고만 떠서 원인을 알 수 없다. 그래서 여기서 먼저 끊는다.
-      if (!imageFile) {
+      if (imageFiles.length === 0) {
         throw new Error('사진을 한 장 이상 첨부해주세요.');
       }
 
       let imageUrls: string[];
       try {
-        imageUrls = [await storageApi.upload(imageFile)];
+        imageUrls = await Promise.all(imageFiles.map(storageApi.upload));
       } catch {
         throw new Error(
           '사진 업로드에 실패했어요. 잠시 뒤 다시 시도하거나 다른 사진으로 바꿔보세요.',
@@ -162,7 +162,7 @@ export function TradeNewPage() {
           userTitle={title}
           condition={condition}
           onApply={applyAiResult}
-          onFileChange={setImageFile}
+          onFilesChange={setImageFiles}
         />
 
         <Field label="거래 유형" required>
@@ -320,7 +320,9 @@ export function TradeNewPage() {
             type="submit"
             fullWidth
             loading={create.isPending}
-            disabled={!pickupZoneId || !imageFile || !Number(weight)}
+            disabled={
+              !pickupZoneId || imageFiles.length === 0 || !Number(weight)
+            }
           >
             등록하기
           </Button>

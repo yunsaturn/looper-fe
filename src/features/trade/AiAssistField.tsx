@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 
 import { aiApi } from '@/entities/ai/api';
@@ -12,6 +12,8 @@ import {
 import { cn } from '@/shared/lib/cn';
 import { Button } from '@/shared/ui/Button';
 import { Field } from '@/shared/ui/Field';
+
+const MAX_IMAGE_COUNT = 5;
 
 /**
  * 이미지 업로드 → AI 상품명·카테고리 추천 → 사용자 확정.
@@ -38,20 +40,27 @@ interface Props {
   condition: ItemCondition;
   /** 후보를 고르면 상위 폼의 상품명·카테고리·설명을 채운다 */
   onApply: (result: AiAssistResult) => void;
-  /** 업로드한 이미지 파일. 등록 시 스토리지로 올린다 */
-  onFileChange: (file: File | null) => void;
+  /** 업로드한 이미지 파일들. 등록 시 선택 순서대로 스토리지에 올린다 */
+  onFilesChange: (files: File[]) => void;
 }
 
 export function AiAssistField({
   userTitle,
   condition,
   onApply,
-  onFileChange,
+  onFilesChange,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [localError, setLocalError] = useState<string | null>(null);
   const [appliedName, setAppliedName] = useState<string | null>(null);
+
+  useEffect(
+    () => () => {
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+    },
+    [previewUrls],
+  );
 
   const assist = useMutation({
     mutationFn: (file: File) =>
@@ -62,37 +71,51 @@ export function AiAssistField({
       }),
   });
 
-  const pickFile = (file: File | null) => {
+  const pickFiles = (files: File[]) => {
     setLocalError(null);
+
+    if (files.length > MAX_IMAGE_COUNT) {
+      setLocalError(`사진은 최대 ${MAX_IMAGE_COUNT}장까지 올릴 수 있어요.`);
+      if (inputRef.current) inputRef.current.value = '';
+      return;
+    }
+
+    const unsupportedFile = files.find(
+      (file) =>
+        !ALLOWED_IMAGE_TYPES.includes(
+          file.type as (typeof ALLOWED_IMAGE_TYPES)[number],
+        ),
+    );
+    if (unsupportedFile) {
+      setLocalError(
+        `${unsupportedFile.name}: JPG, PNG, WEBP 이미지만 올릴 수 있어요.`,
+      );
+      if (inputRef.current) inputRef.current.value = '';
+      return;
+    }
+
+    const oversizedFile = files.find((file) => file.size > MAX_IMAGE_BYTES);
+    if (oversizedFile) {
+      setLocalError(
+        `${oversizedFile.name}: 이미지 용량은 10MB 이하만 가능해요.`,
+      );
+      if (inputRef.current) inputRef.current.value = '';
+      return;
+    }
+
     setAppliedName(null);
     assist.reset();
 
-    if (!file) {
-      setPreviewUrl(null);
-      onFileChange(null);
+    if (files.length === 0) {
+      setPreviewUrls([]);
+      onFilesChange([]);
       return;
     }
 
-    // 서버가 거절할 파일은 올리기 전에 걸러 준다
-    if (
-      !ALLOWED_IMAGE_TYPES.includes(
-        file.type as (typeof ALLOWED_IMAGE_TYPES)[number],
-      )
-    ) {
-      setLocalError('JPG, PNG, WEBP 이미지만 올릴 수 있어요.');
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setLocalError('이미지 용량은 10MB 이하만 가능해요.');
-      return;
-    }
-
-    setPreviewUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return URL.createObjectURL(file);
-    });
-    onFileChange(file);
-    assist.mutate(file);
+    setPreviewUrls(files.map((file) => URL.createObjectURL(file)));
+    onFilesChange(files);
+    // 첫 번째 사진을 대표 이미지이자 AI 분석 대상으로 사용한다.
+    assist.mutate(files[0]);
   };
 
   const applyCandidate = (candidate: AiCandidate) => {
@@ -110,42 +133,57 @@ export function AiAssistField({
   const needsFallback = Boolean(data?.fallback_required) || assist.isError;
 
   return (
-    <Field label="대표 이미지" required>
+    <Field label="상품 사진 (최대 5장)" required>
       <div className="grid gap-3">
         <input
           ref={inputRef}
           type="file"
           accept={ALLOWED_IMAGE_TYPES.join(',')}
+          multiple
           className="sr-only"
-          onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
+          onChange={(e) => pickFiles(Array.from(e.target.files ?? []))}
         />
 
-        {previewUrl ? (
-          <div className="flex items-start gap-3">
-            <img
-              src={previewUrl}
-              alt="업로드한 대표 이미지 미리보기"
-              className="h-24 w-24 shrink-0 rounded-card border border-ink-200 object-cover"
-            />
-            <div className="grid gap-2">
+        {previewUrls.length > 0 ? (
+          <div className="grid gap-3">
+            <ul className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+              {previewUrls.map((url, index) => (
+                <li key={url} className="relative aspect-square min-w-0">
+                  <img
+                    src={url}
+                    alt={`업로드한 상품 사진 ${index + 1} 미리보기`}
+                    className="h-full w-full rounded-card border border-ink-200 object-cover"
+                  />
+                  {index === 0 && (
+                    <span className="absolute left-1.5 top-1.5 rounded-chip bg-ink-900/80 px-2 py-0.5 text-[10px] font-semibold text-white">
+                      대표
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-ink-400">
+              첫 번째 사진을 대표 이미지와 AI 분석에 사용해요.
+            </p>
+            <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
                 variant="secondary"
                 size="sm"
                 onClick={() => inputRef.current?.click()}
               >
-                다른 사진 선택
+                사진 다시 선택
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  pickFile(null);
+                  pickFiles([]);
                   if (inputRef.current) inputRef.current.value = '';
                 }}
               >
-                선택 취소
+                전체 선택 취소
               </Button>
             </div>
           </div>
@@ -156,13 +194,17 @@ export function AiAssistField({
             className="flex h-28 w-full flex-col items-center justify-center gap-1 rounded-card border border-dashed border-ink-300 text-sm text-ink-500 transition-colors hover:border-brand-400 hover:text-brand-700"
           >
             <span className="text-lg">＋</span>
-            사진 선택하기
+            사진 여러 장 선택하기
             <span className="text-xs text-ink-400">
-              등록에 사진이 꼭 필요해요 · 올리면 상품명·카테고리를 추천해 드려요
-              · JPG PNG WEBP · 10MB 이하
+              1~5장 · JPG PNG WEBP · 장당 10MB 이하
             </span>
           </button>
         )}
+
+        <p className="rounded-btn bg-brand-50 px-3 py-2.5 text-xs leading-relaxed text-brand-800">
+          촬영 안내: 물건이 배경과 뚜렷하게 구별되도록 하고, 사진 한 장에는 물건
+          하나만 선명하게 보이도록 촬영해주세요.
+        </p>
 
         {localError && (
           <p className="text-xs text-tone-danger-fg">{localError}</p>
