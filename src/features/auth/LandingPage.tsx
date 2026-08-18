@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import { ROUTES } from '@/shared/config/navigation';
+import { BrandLogo } from '@/shared/ui/BrandLogo';
 
 /**
  * 서비스 소개 화면 (로그인 전).
@@ -19,13 +20,7 @@ export function LandingPage() {
     <div className="flex min-h-dvh flex-col px-5 py-10">
       <div className="mx-auto flex w-full max-w-sm grow flex-col">
         <header className="pt-6 pb-8 text-center">
-          <img
-            src="/logo.png"
-            alt="루퍼"
-            className="mx-auto h-12 w-auto"
-            width={180}
-            height={48}
-          />
+          <BrandLogo size="lg" />
           <p className="mt-5 text-sm text-ink-600">
             캠퍼스에서 필요한 물건을 편리하게 나누고 받으세요
           </p>

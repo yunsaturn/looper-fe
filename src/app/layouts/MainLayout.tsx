@@ -17,6 +17,7 @@ import {
 import { RouteErrorBoundary } from '@/app/ErrorBoundary';
 import { useAuthStore } from '@/shared/store/authStore';
 import { NavIcon, SearchIcon } from '@/shared/ui/icons';
+import { BrandLogo } from '@/shared/ui/BrandLogo';
 
 /**
  * 메인 레이아웃 — Figma 와이어프레임 기준.
@@ -66,11 +67,7 @@ function TopHeader() {
           className="flex items-center text-lg font-bold text-brand-700"
           aria-label="루퍼 홈"
         >
-          <img
-            src="/logo.png"
-            alt="Looper 로고"
-            className="h-9 w-9 shrink-0 md:h-15 md:w-30"
-          />
+          <BrandLogo size="sm" className="shrink-0" />
         </Link>
 
         {/* 데스크톱에만 헤더 검색창을 둔다. 모바일은 검색 탭이 따로 있다. */}

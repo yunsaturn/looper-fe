@@ -12,7 +12,7 @@ import { Button } from '@/shared/ui/Button';
 import { Input, Select } from '@/shared/ui/Field';
 import { userApi } from '@/entities/user/api';
 import { STUDENT_YEAR_MAX, STUDENT_YEAR_MIN } from '@/entities/user/types';
-import { LoopIcon } from '@/shared/ui/icons';
+import { BrandLogo } from '@/shared/ui/BrandLogo';
 
 /**
  * 학교 이메일 회원가입 — 3단계.
@@ -142,7 +142,7 @@ export function SignupPage() {
     <div className="flex min-h-dvh flex-col justify-center px-5 py-10">
       <div className="mx-auto w-full max-w-sm">
         <div className="mb-7 text-center">
-          <LoopIcon className="mx-auto h-9 w-9 text-brand-600" />
+          <BrandLogo size="sm" />
           <h1 className="mt-3 text-xl font-bold text-ink-900">회원가입</h1>
           <p className="mt-1.5 text-sm text-ink-500">
             학교 이메일로 같은 캠퍼스 구성원임을 확인해요
