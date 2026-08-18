@@ -15,14 +15,19 @@ export function BrandLogo({
   size = 'md',
   className,
 }: {
-  /** sm 인증 화면 · md 로그인 · lg 랜딩 히어로 */
+  /** sm 헤더 · md 로그인·회원가입 · lg 랜딩 히어로 */
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }) {
+  /*
+   * 헤더만 작다 — 헤더 높이가 56/64px 이라 로고가 그 안에 들어가야 한다.
+   * 나머지는 화면의 주인공이므로 시원하게 키운다. 특히 랜딩은 Figma 에서
+   * 카드 너비의 40% 남짓을 차지한다.
+   */
   const height = {
-    sm: 'h-8',
-    md: 'h-10 md:h-12',
-    lg: 'h-12 md:h-14',
+    sm: 'h-9 md:h-10',
+    md: 'h-12 md:h-14',
+    lg: 'h-20 md:h-24',
   }[size];
 
   return (
