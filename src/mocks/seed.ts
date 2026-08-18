@@ -6,12 +6,13 @@ import {
   TRADE_STATUS,
 } from '@/shared/config/status';
 import type {
-  TradeApplication,
+  SeededTradeApplication,
   TradeDetail,
   TradeListItem,
 } from '@/entities/trade/types';
-import type { RentalDetail, RentalOffer } from '@/entities/rental/types';
+import type { RentalDetail, SeededRentalOffer } from '@/entities/rental/types';
 import type { UserSummary } from '@/entities/user/types';
+import type { CampusImpact, MyImpact } from '@/entities/impact/types';
 import type { PickupZone } from '@/entities/trade/types';
 
 /**
@@ -139,7 +140,6 @@ export const trades: TradeDetail[] = TRADE_SEEDS.map((seed, i) => {
     title: seed.title,
     description: `${seed.title} 입니다. 캠퍼스 픽업존에서 직접 전달드려요. 상태는 사진으로 확인해주세요.`,
     category: CATEGORY[seed.category],
-    carbon_sector: CATEGORY[seed.category],
     condition:
       i % 4 === 0
         ? ITEM_CONDITION.LIKE_NEW
@@ -162,7 +162,7 @@ export const trades: TradeDetail[] = TRADE_SEEDS.map((seed, i) => {
 });
 
 /** 신청 대기 상태를 만들기 위한 신청 건들 */
-export const applications: TradeApplication[] = [
+export const applications: SeededTradeApplication[] = [
   // 내 게시물(trade-1)에 들어온 신청 3건 — 신청자 목록·수락 시연용
   {
     id: 'app-1',
@@ -281,7 +281,7 @@ export const rentals: RentalDetail[] = RENTAL_SEEDS.map((seed, i) => {
   };
 });
 
-export const offers: RentalOffer[] = [
+export const offers: SeededRentalOffer[] = [
   // 내 요청(rental-1)에 들어온 지원 3건 — 지원자 선택 시연용
   {
     id: 'offer-1',
@@ -331,7 +331,7 @@ export const offers: RentalOffer[] = [
 export const DISCLAIMER =
   '탄소 수치는 대체율 0.65를 가정한 예상 절감량입니다.';
 
-export const myImpact = {
+export const myImpact: MyImpact = {
   saved_amount: 47000,
   waste_reduced_kg: 8.3,
   estimated_carbon_saved_kg_co2e: 42.6,
@@ -346,22 +346,17 @@ export const myImpact = {
   disclaimer: DISCLAIMER,
 };
 
-export const campusImpact = {
-  campus_id: DEMO_CAMPUS_ID,
-  campus_name: 'XX대학교 본교 캠퍼스',
+export const campusImpact: CampusImpact = {
+  campus: { id: DEMO_CAMPUS_ID, name: 'XX대학교 본교 캠퍼스' },
   estimated_carbon_saved_kg_co2e: 2480,
   participant_count: 428,
   completed_activity_count: 680,
-  category_shares: [
+  category_breakdown: [
     { category: CATEGORY.HOME_LIVING, ratio: 0.52 },
     { category: CATEGORY.ELECTRONICS, ratio: 0.31 },
     { category: CATEGORY.BOOKS_PAPER, ratio: 0.17 },
   ],
-  ranking: [
-    { campus_id: DEMO_CAMPUS_ID, campus_name: 'XX대학교 본교', estimated_carbon_saved_kg_co2e: 2480 },
-    { campus_id: 'campus-2', campus_name: 'XX대학교 제2캠퍼스', estimated_carbon_saved_kg_co2e: 1830 },
-    { campus_id: 'campus-3', campus_name: 'YY대학교 본교', estimated_carbon_saved_kg_co2e: 1210 },
-  ],
+  campus_rank: 1,
   disclaimer: DISCLAIMER,
 };
 

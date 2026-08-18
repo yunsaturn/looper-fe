@@ -41,7 +41,6 @@ export interface RentalDetail {
 
 export interface RentalOffer {
   id: string;
-  rental_id: string;
   offerer: UserSummary;
   message: string | null;
   status: OfferStatus;
@@ -69,3 +68,6 @@ export interface CreateRentalRequest {
   duration_minutes: number;
   offered_price: number;
 }
+
+/** 목업 전용. BE 응답에는 `rental_id` 가 없다. (사유는 SeededTradeApplication 참고) */
+export type SeededRentalOffer = RentalOffer & { rental_id: string };

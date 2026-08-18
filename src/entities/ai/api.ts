@@ -19,7 +19,8 @@ export const aiApi = {
       .post<ListingAssistResponse>('/api/v1/ai/listing-assist', form, {
         headers: { 'Content-Type': undefined },
         // 이미지 업로드 + 모델 추론 + LLM 호출이 이어지므로 기본 15초로는 짧다
-        timeout: 30_000,
+        // 콜드 스타트 + 모델 추론 + LLM 호출이 겹칠 수 있다
+        timeout: 90_000,
       })
       .then((r) => r.data);
   },

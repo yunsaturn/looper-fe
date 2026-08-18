@@ -30,8 +30,10 @@ export const tradeApi = {
 
   applications: (tradeId: string) =>
     api
-      .get<{ content: TradeApplication[] }>(`${BASE}/${tradeId}/applications`)
-      .then((r) => r.data.content),
+      .get<{ applications: TradeApplication[] }>(
+        `${BASE}/${tradeId}/applications`,
+      )
+      .then((r) => r.data.applications),
 
   acceptApplication: (tradeId: string, applicationId: string) =>
     api

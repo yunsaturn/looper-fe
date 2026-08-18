@@ -14,8 +14,11 @@ export function LoginPage() {
   const navigate = useNavigate();
   const signIn = useAuthStore((s) => s.signIn);
 
-  const [email, setEmail] = useState('demo@xx.ac.kr');
-  const [password, setPassword] = useState('password');
+  // 목업 모드에서만 데모 계정을 미리 채운다. 실서버에는 시드 계정이 없어
+  // 이 값을 남겨두면 첫 로그인이 반드시 401 로 실패한다.
+  const isMock = import.meta.env.VITE_USE_MOCK === 'true';
+  const [email, setEmail] = useState(isMock ? 'demo@xx.ac.kr' : '');
+  const [password, setPassword] = useState(isMock ? 'password' : '');
 
   const login = useMutation({
     mutationFn: () => userApi.login({ email, password }),
@@ -88,10 +91,11 @@ export function LoginPage() {
           </Link>
         </p>
 
-        <p className="mt-8 rounded-card bg-ink-50 px-4 py-3 text-xs leading-relaxed text-ink-500">
-          목업 모드에서는 아무 값으로나 로그인됩니다. 학교 이메일 인증
-          회원가입은 실제 서버 연결 후 동작합니다.
-        </p>
+        {isMock && (
+          <p className="mt-8 rounded-card bg-ink-50 px-4 py-3 text-xs leading-relaxed text-ink-500">
+            목업 모드입니다. 아무 값으로나 로그인됩니다.
+          </p>
+        )}
       </div>
     </div>
   );

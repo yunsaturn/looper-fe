@@ -151,20 +151,57 @@ Spring Boot 의 `/api/v1/ai/...` 를 부릅니다)
 BE 는 Jackson SNAKE_CASE 이므로 요청·응답 필드가 모두 snake_case 이고,
 프론트 타입도 변환 없이 snake_case 를 그대로 씁니다.
 
+## 배포 (Vercel)
+
+`vercel.json` 이 세 가지를 처리합니다. JSON 은 주석을 지원하지 않아 이유를 여기 적어둡니다.
+
+**SPA 폴백** — `rewrites` 가 모든 경로를 `index.html` 로 보냅니다.
+라우트가 25개라 `/trades/trade-1` 같은 주소로 직접 들어오면 정적 호스팅은 404 를 냅니다.
+Vercel 은 rewrite 보다 **실제 파일을 먼저** 찾으므로 `assets/` 와
+`mockServiceWorker.js` 는 이 규칙에 걸리지 않고 그대로 나갑니다.
+
+**서비스워커 캐시 차단** — `mockServiceWorker.js` 가 캐시되면
+`VITE_USE_MOCK` 을 `false` 로 바꿔 재배포해도 옛 워커가 요청을 계속 가로챕니다.
+
+**번들 영구 캐시** — `assets/` 의 파일명에는 해시가 붙으므로 `immutable` 로 둡니다.
+
+### 환경변수
+
+`VITE_` 로 시작하는 값은 **빌드 시점에 코드에 박힙니다.** 런타임 설정이 아니라서
+값을 바꾸면 반드시 재배포해야 합니다.
+
+Vercel → Settings → Environment Variables 에 등록합니다.
+
+| 키 | 값 |
+| --- | --- |
+| `VITE_API_BASE_URL` | BE 서버 주소 |
+| `VITE_USE_MOCK` | `false` (목업으로 시연할 때만 `true`) |
+
+BE 가 아직 배포 전이면 `VITE_USE_MOCK=true` 로 먼저 올려 FE 주소를 확보한 뒤,
+그 주소를 BE 의 `CORS_ALLOWED_ORIGINS` 에 추가해달라고 요청하면 됩니다.
+
 ## 진행 상황
 
-- [x] 프로젝트 스캐폴딩 (Vite · TS · Tailwind v4 · ESLint · Prettier)
-- [x] 디자인 토큰 (`src/index.css`) — Figma 값 도착 시 교체 예정
-- [x] 거래·대여 상태 규격 (`src/shared/config/status.ts`)
-- [x] 카테고리 · 픽업존 · 탄소 계수 상수
-- [x] 공통 UI 컴포넌트 (`src/shared/ui/`)
-- [x] API 클라이언트 + entities 레이어
-- [x] MSW 목업 + 시드 데이터 (데모 필수 9개 상태 포함)
-- [x] 라우터 + 핵심 화면 (로그인 · 홈 · 거래 · 대여 · 임팩트)
-- [ ] 남은 화면 — 회원가입(학교 이메일 인증), 마이프로필, 게시물/요청 수정,
-      사용자 프로필, 나의 거래 목록, 캠퍼스 대시보드
-- [ ] 관리자 화면 (BE 에 API 가 없어 목업으로만, 우선순위 P3)
-- [ ] 실제 Spring Boot 서버 연동 (`VITE_USE_MOCK=false` 전체 재검증)
+**기반**
 
-미구현 화면도 라우트는 전부 선언돼 있고 `PlaceholderPage` 로 연결됩니다.
-그래서 링크를 눌러도 깨지지 않습니다.
+- [x] 스캐폴딩 (Vite · TS strict · Tailwind v4 · ESLint · Prettier)
+- [x] 디자인 토큰 (`src/index.css`)
+- [x] 거래·대여 상태 규격 (`src/shared/config/status.ts`) — BE Java enum 과 1:1 대조
+- [x] 공통 UI 컴포넌트 14종
+- [x] API 클라이언트 + entities 레이어
+- [x] MSW 목업 + 시드 데이터 (9개 시연 상태 전부)
+- [x] 반응형 레이아웃 + 라우터 25개
+- [x] Codespaces · Vercel 설정
+
+**화면**
+
+- [x] 로그인
+- [x] 홈 피드
+- [x] 거래 — 목록 · 상세 · 등록 · 신청자 · 완료
+- [x] 대여 — 목록 · 상세 · 등록 · 지원자 · 완료
+- [x] 임팩트 대시보드 · 계산식 공개
+- [x] AI 이미지 추천 (성공 / 저신뢰 / 장애 폴백)
+- [x] 회원가입 3단계 (이메일 인증)
+- [ ] 마이프로필 · 상대방 프로필
+- [ ] 알림 · 통합검색 · 게시물 수정
+- [ ] 관리자 (BE 에 해당 API 없음)

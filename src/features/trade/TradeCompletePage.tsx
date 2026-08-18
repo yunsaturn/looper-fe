@@ -55,7 +55,7 @@ export function TradeCompletePage() {
 
   const thisActivityKg =
     trade.data && trade.data.weight_kg
-      ? calculateAvoidedCarbon(trade.data.weight_kg, trade.data.carbon_sector)
+      ? calculateAvoidedCarbon(trade.data.weight_kg, trade.data.category)
       : null;
 
   // 각주는 서버가 준 문구를 우선 쓰고, 없을 때만 상수로 폴백한다.
