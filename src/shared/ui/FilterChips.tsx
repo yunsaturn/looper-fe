@@ -6,8 +6,13 @@ export interface ChipOption<T extends string> {
 }
 
 /**
- * 단일 선택 필터 칩. `전체`(=선택 해제)를 항상 맨 앞에 둔다.
- * Figma 홈 피드의 전체/판매/나눔/구합니다 칩이 이 컴포넌트다.
+ * 단일 선택 칩.
+ *
+ * 기본은 필터용이라 맨 앞에 `전체`(=선택 해제) 칩이 붙는다.
+ * Figma 홈 피드의 전체/판매/나눔/구합니다 칩이 이 형태다.
+ *
+ * `allLabel={null}` 을 주면 `전체` 칩 없이 옵션만 렌더링한다.
+ * 거래 유형처럼 반드시 하나를 골라야 하는 입력에 쓴다.
  */
 export function FilterChips<T extends string>({
   options,
@@ -19,19 +24,24 @@ export function FilterChips<T extends string>({
   options: ReadonlyArray<ChipOption<T>>;
   value: T | undefined;
   onChange: (next: T | undefined) => void;
-  allLabel?: string;
+  allLabel?: string | null;
   className?: string;
 }) {
   return (
     <div className={cn('flex flex-wrap gap-2', className)}>
-      <Chip selected={value === undefined} onClick={() => onChange(undefined)}>
-        {allLabel}
-      </Chip>
+      {allLabel !== null && (
+        <Chip selected={value === undefined} onClick={() => onChange(undefined)}>
+          {allLabel}
+        </Chip>
+      )}
       {options.map((o) => (
         <Chip
           key={o.value}
           selected={value === o.value}
-          onClick={() => onChange(value === o.value ? undefined : o.value)}
+          onClick={() =>
+            // 필수 선택 모드(전체 칩 없음)에서는 선택 해제를 허용하지 않는다
+            onChange(value === o.value && allLabel !== null ? undefined : o.value)
+          }
         >
           {o.label}
         </Chip>
