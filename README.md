@@ -11,8 +11,6 @@
 ## 시작하기
 
 ```bash
-npm install
-cp .env.example .env
 npm run dev          # http://localhost:5173
 ```
 
