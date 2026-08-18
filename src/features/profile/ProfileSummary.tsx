@@ -1,4 +1,5 @@
 import { cn } from '@/shared/lib/cn';
+import { Avatar } from '@/shared/ui/Avatar';
 import { formatDate } from '@/shared/lib/format';
 import { TrustScoreBadge } from '@/shared/ui/TrustScoreBadge';
 
@@ -67,37 +68,6 @@ export function ProfileSummary({
         </p>
       )}
     </section>
-  );
-}
-
-/** 프로필 사진이 있으면 사진, 없으면 닉네임 첫 글자 */
-export function Avatar({
-  nickname,
-  imageUrl,
-  className,
-}: {
-  nickname: string;
-  imageUrl?: string | null;
-  className?: string;
-}) {
-  const base = cn(
-    'flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-100 text-xl font-bold text-brand-700',
-    className,
-  );
-
-  if (imageUrl) {
-    return (
-      <img
-        src={imageUrl}
-        alt={`${nickname} 프로필 사진`}
-        className={cn(base, 'object-cover')}
-      />
-    );
-  }
-  return (
-    <div aria-hidden className={base}>
-      {nickname.slice(0, 1)}
-    </div>
   );
 }
 

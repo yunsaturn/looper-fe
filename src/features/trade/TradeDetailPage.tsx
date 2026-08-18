@@ -48,6 +48,7 @@ export function TradeDetailPage() {
   const myId = useAuthStore((s) => s.userId);
 
   const [applyOpen, setApplyOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [confirmAction, setConfirmAction] = useState<
     'complete-request' | 'complete-confirm' | 'cancel-reservation' | null
@@ -57,6 +58,33 @@ export function TradeDetailPage() {
     queryKey: queryKeys.trades.detail(tradeId),
     queryFn: () => tradeApi.detail(tradeId),
     enabled: Boolean(tradeId),
+  });
+
+  /**
+   * 게시물 삭제.
+   *
+   * 삭제하면 이 화면의 대상이 사라지므로 상세를 재조회하지 않고 목록으로
+   * 빠져나간다. 남아 있으면 곧바로 404 를 받는다.
+   */
+  const remove = useMutation({
+    mutationFn: () => tradeApi.remove(tradeId),
+    onSuccess: () => {
+      setDeleteOpen(false);
+      queryClient.invalidateQueries({ queryKey: queryKeys.trades.all });
+      toast.show('게시물을 삭제했어요.', 'success');
+      navigate(ROUTES.TRADE_LIST, { replace: true });
+    },
+    onError: (error) => {
+      setDeleteOpen(false);
+      const apiError = error instanceof ApiError ? error : null;
+      // 아직 서버에 삭제 API 가 없는 경우와 진짜 실패를 구분해 알린다
+      toast.show(
+        apiError?.isNotImplemented
+          ? '아직 서버에 삭제 기능이 준비되지 않았어요.'
+          : (apiError?.message ?? '삭제하지 못했어요.'),
+        'error',
+      );
+    },
   });
 
   /** 상태를 바꾸는 요청은 전부 성공 후 재조회한다. 낙관적 업데이트는 쓰지 않는다. */
@@ -305,7 +333,7 @@ export function TradeDetailPage() {
                   >
                     신청자 목록 보기
                   </Button>
-                  {/* 수정은 거래 가능 상태에서만 열어둔다. 서버 규칙과 같다 */}
+                  {/* 수정·삭제는 거래 가능 상태에서만 열어둔다. 서버 규칙과 같다 */}
                   <Button
                     variant="secondary"
                     fullWidth
@@ -316,6 +344,13 @@ export function TradeDetailPage() {
                     }
                   >
                     게시물 수정
+                  </Button>
+                  <Button
+                    variant="danger"
+                    fullWidth
+                    onClick={() => setDeleteOpen(true)}
+                  >
+                    게시물 삭제
                   </Button>
                 </>
               )}
@@ -391,6 +426,16 @@ export function TradeDetailPage() {
           />
         </div>
       </Sheet>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={() => remove.mutate()}
+        loading={remove.isPending}
+        title="게시물을 삭제할까요?"
+        description="삭제하면 되돌릴 수 없어요. 신청자가 있었다면 더 이상 이 글을 볼 수 없게 됩니다."
+        confirmLabel="삭제하기"
+      />
 
       <ConfirmDialog
         open={confirmAction === 'complete-request'}

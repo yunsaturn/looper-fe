@@ -27,6 +27,17 @@ export const tradeApi = {
   create: (body: CreateTradeRequest) =>
     api.post<CreatedTrade>(BASE, body).then((r) => r.data),
 
+  /**
+   * 게시물 삭제.
+   *
+   * ⚠️ 아직 BE 에 이 엔드포인트가 없다. 서버가 추가되기 전까지 실서버에서는
+   *    404/405 가 돌아온다. 화면은 그 경우를 구분해 안내한다.
+   *    요청한 규격: DELETE /api/v1/trades/{tradeId} → 204,
+   *    작성자만 가능(403), AVAILABLE 이 아니면 409.
+   */
+  remove: (tradeId: string) =>
+    api.delete<void>(`${BASE}/${tradeId}`).then(() => undefined),
+
   /** AVAILABLE 상태에서만 가능. 보낸 필드만 반영된다 */
   update: (tradeId: string, body: UpdateTradeRequest) =>
     api.patch<UpdatedTrade>(`${BASE}/${tradeId}`, body).then((r) => r.data),

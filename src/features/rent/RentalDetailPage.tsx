@@ -46,6 +46,7 @@ export function RentalDetailPage() {
   const myId = useAuthStore((s) => s.userId);
 
   const [offerOpen, setOfferOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [confirmAction, setConfirmAction] = useState<
     'pickup' | 'return-request' | 'return-confirm' | 'cancel' | null
@@ -61,6 +62,31 @@ export function RentalDetailPage() {
     queryClient.invalidateQueries({ queryKey: queryKeys.rentals.all });
     queryClient.invalidateQueries({ queryKey: queryKeys.impact.all });
   };
+
+  /**
+   * 대여 요청 삭제.
+   *
+   * 삭제 후 이 화면에 남아 있으면 곧바로 404 를 받으므로 목록으로 나간다.
+   */
+  const remove = useMutation({
+    mutationFn: () => rentalApi.remove(rentalId),
+    onSuccess: () => {
+      setDeleteOpen(false);
+      queryClient.invalidateQueries({ queryKey: queryKeys.rentals.all });
+      toast.show('대여 요청을 삭제했어요.', 'success');
+      navigate(ROUTES.RENTAL_LIST, { replace: true });
+    },
+    onError: (error) => {
+      setDeleteOpen(false);
+      const apiError = error instanceof ApiError ? error : null;
+      toast.show(
+        apiError?.isNotImplemented
+          ? '아직 서버에 삭제 기능이 준비되지 않았어요.'
+          : (apiError?.message ?? '삭제하지 못했어요.'),
+        'error',
+      );
+    },
+  });
 
   const onMutationError = (error: unknown) => {
     const apiError = error instanceof ApiError ? error : null;
@@ -271,7 +297,7 @@ export function RentalDetailPage() {
                 >
                   지원자 목록 보기
                 </Button>
-                {/* 모집 중일 때만 수정할 수 있다. 서버 규칙과 같다 */}
+                {/* 모집 중일 때만 수정·삭제할 수 있다. 서버 규칙과 같다 */}
                 <Button
                   variant="secondary"
                   fullWidth
@@ -282,6 +308,13 @@ export function RentalDetailPage() {
                   }
                 >
                   요청 수정
+                </Button>
+                <Button
+                  variant="danger"
+                  fullWidth
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  요청 삭제
                 </Button>
               </>
             )}
@@ -357,6 +390,16 @@ export function RentalDetailPage() {
           />
         </div>
       </Sheet>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={() => remove.mutate()}
+        loading={remove.isPending}
+        title="대여 요청을 삭제할까요?"
+        description="삭제하면 되돌릴 수 없어요. 지원한 학생이 있었다면 더 이상 이 요청을 볼 수 없게 됩니다."
+        confirmLabel="삭제하기"
+      />
 
       <ConfirmDialog
         open={confirmAction === 'pickup'}
