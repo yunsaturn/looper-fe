@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "typecheck": "tsc --noEmit",
+    "validate": "npm run typecheck && npm run lint && npm run test && npm run build",
     "gen:api": "openapi-typescript docs/api-spec.json -o src/shared/api/schema.d.ts"
   },
   "dependencies": {

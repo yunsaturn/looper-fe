@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
 import { metaApi } from '@/entities/meta/api';
+import { PickupZoneSelector } from '@/entities/meta/PickupZoneSelector';
 import { storageApi } from '@/entities/storage/api';
 import { tradeApi } from '@/entities/trade/api';
 import { queryKeys } from '@/shared/api/queryKeys';
@@ -264,21 +265,24 @@ export function TradeNewPage() {
           error={error?.fieldError('available_date')}
         />
 
-        <Select
+        <Field
           label="픽업존"
-          value={pickupZoneId}
-          onChange={(e) => setPickupZoneId(e.target.value)}
-          options={(zones.data ?? []).map((z) => ({
-            value: z.id,
-            label: z.name,
-          }))}
-          placeholder={
-            zones.isPending ? '불러오는 중...' : '픽업존을 선택하세요'
-          }
           required
-          hint="교내 지정 픽업존에서만 물건을 주고받아요."
-          error={error?.fieldError('pickup_zone_id')}
-        />
+          hint="교내 지정 픽업존에서만 물건을 주고받아요. 지도 마커나 목록에서 고르세요."
+        >
+          <PickupZoneSelector
+            zones={zones.data ?? []}
+            value={pickupZoneId}
+            onChange={setPickupZoneId}
+            loading={zones.isPending}
+            error={
+              zones.isError
+                ? '픽업존을 불러오지 못했어요.'
+                : error?.fieldError('pickup_zone_id')
+            }
+            onRetry={zones.isError ? () => zones.refetch() : undefined}
+          />
+        </Field>
 
         {localError && (
           <p className="rounded-btn bg-tone-danger-bg px-3 py-2.5 text-sm text-tone-danger-fg">

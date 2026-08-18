@@ -17,7 +17,7 @@ import type {
 import type { RentalDetail, SeededRentalOffer } from '@/entities/rental/types';
 import type { MyProfile, UserSummary } from '@/entities/user/types';
 import type { CampusImpact, MyImpact } from '@/entities/impact/types';
-import type { PickupZone } from '@/entities/trade/types';
+import type { PickupZoneItem } from '@/entities/meta/types';
 
 /**
  * 시연용 시드 데이터. 전부 가상이며 실제 개인정보는 없다.
@@ -77,12 +77,57 @@ const userAt = (i: number) => users[i % users.length];
 
 /* ─────────────────── 픽업존 ─────────────────── */
 
-export const pickupZones: PickupZone[] = [
-  { id: 'zone-1', name: '학생회관 앞' },
-  { id: 'zone-2', name: '중앙도서관 입구' },
-  { id: 'zone-3', name: '공학관 로비' },
-  { id: 'zone-4', name: '기숙사 A동 로비' },
-  { id: 'zone-5', name: '정문 게시판 앞' },
+// 좌표는 한국외대 서울캠퍼스 부근 근사값이다. 목업에는 좌표가 있는 픽업존과
+// 좌표가 없는 "교내 장소 협의"(null) 를 함께 두어 지도/목록 폴백을 검증한다.
+export const pickupZones: PickupZoneItem[] = [
+  {
+    id: 'zone-1',
+    name: '학생회관 앞',
+    description: '학생회관 정문 앞 계단',
+    latitude: 37.5969,
+    longitude: 127.0576,
+    active: true,
+  },
+  {
+    id: 'zone-2',
+    name: '학술정보관(중앙도서관)',
+    description: '도서관 1층 출입구',
+    latitude: 37.5974,
+    longitude: 127.0585,
+    active: true,
+  },
+  {
+    id: 'zone-3',
+    name: '공학관 로비',
+    description: '공학관 1층 로비 안내데스크',
+    latitude: 37.5981,
+    longitude: 127.0592,
+    active: true,
+  },
+  {
+    id: 'zone-4',
+    name: '기숙사 A동 로비',
+    description: '생활관 A동 1층 로비',
+    latitude: 37.5989,
+    longitude: 127.0571,
+    active: true,
+  },
+  {
+    id: 'zone-5',
+    name: '정문 게시판 앞',
+    description: '정문 안쪽 게시판 옆',
+    latitude: 37.5959,
+    longitude: 127.0579,
+    active: true,
+  },
+  {
+    id: 'zone-6',
+    name: '교내 장소 협의',
+    description: '상대방과 세부 장소를 협의합니다.',
+    latitude: null,
+    longitude: null,
+    active: true,
+  },
 ];
 
 const zoneAt = (i: number) => pickupZones[i % pickupZones.length];

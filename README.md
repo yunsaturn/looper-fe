@@ -136,6 +136,15 @@ Spring Boot 의 `/api/v1/ai/...` 를 부릅니다)
 캠퍼스, 신뢰도로 한정합니다. API 키와 비밀값은 `.env` 로 분리하며 커밋하지
 않습니다.
 
+> **예외 하나 — Kakao JavaScript 키.** 픽업존 지도에 쓰는
+> `VITE_KAKAO_JAVASCRIPT_KEY` 는 브라우저에서 동작하는 **공개 클라이언트
+> 키**라 비밀값으로 취급하지 않습니다(빌드 결과물에 그대로 노출됩니다).
+> 보안은 값을 숨기는 게 아니라 Kakao Developers 에서 **허용 도메인(localhost
+> 와 실제 배포 도메인)** 을 등록해 다른 사이트에서 못 쓰게 막는 방식으로
+> 겁니다. REST API 키와 Admin 키는 서버 전용이므로 **절대 FE 환경변수에 넣지
+> 않습니다.** 실제 키 값은 저장소에 커밋하지 않습니다(`.env.example` 은 빈
+> 값만 둡니다).
+
 ## BE 연동
 
 프론트는 Spring Boot REST API 하나만 바라봅니다.
@@ -176,6 +185,7 @@ Vercel → Settings → Environment Variables 에 등록합니다.
 | --- | --- |
 | `VITE_API_BASE_URL` | BE 서버 주소 |
 | `VITE_USE_MOCK` | `false` (목업으로 시연할 때만 `true`) |
+| `VITE_KAKAO_JAVASCRIPT_KEY` | Kakao Maps JS 공개 키. 비우면 픽업존은 목록 선택으로 폴백 |
 
 BE 가 아직 배포 전이면 `VITE_USE_MOCK=true` 로 먼저 올려 FE 주소를 확보한 뒤,
 그 주소를 BE 의 `CORS_ALLOWED_ORIGINS` 에 추가해달라고 요청하면 됩니다.

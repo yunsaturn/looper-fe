@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
 import { metaApi } from '@/entities/meta/api';
+import { PickupZoneSelector } from '@/entities/meta/PickupZoneSelector';
 import { rentalApi } from '@/entities/rental/api';
 import { queryKeys } from '@/shared/api/queryKeys';
 import { ApiError } from '@/shared/api/errors';
@@ -20,7 +21,7 @@ import {
 } from '@/shared/lib/format';
 import { RENTAL_DURATION_OPTIONS } from '@/shared/config/rental';
 import { Button } from '@/shared/ui/Button';
-import { Input, Select, Textarea } from '@/shared/ui/Field';
+import { Field, Input, Select, Textarea } from '@/shared/ui/Field';
 import { useToast } from '@/shared/ui/useToast';
 import { PageTitle } from '@/app/layouts/StackLayout';
 
@@ -130,20 +131,24 @@ export function RentalNewPage() {
           error={error?.fieldError('description')}
         />
 
-        <Select
+        <Field
           label="희망 장소"
-          value={pickupZoneId}
-          onChange={(e) => setPickupZoneId(e.target.value)}
-          options={(zones.data ?? []).map((z) => ({
-            value: z.id,
-            label: z.name,
-          }))}
-          placeholder={
-            zones.isPending ? '불러오는 중...' : '픽업존을 선택하세요'
-          }
           required
-          error={error?.fieldError('pickup_zone_id')}
-        />
+          hint="지도 마커나 목록에서 픽업존을 고르세요."
+        >
+          <PickupZoneSelector
+            zones={zones.data ?? []}
+            value={pickupZoneId}
+            onChange={setPickupZoneId}
+            loading={zones.isPending}
+            error={
+              zones.isError
+                ? '픽업존을 불러오지 못했어요.'
+                : error?.fieldError('pickup_zone_id')
+            }
+            onRetry={zones.isError ? () => zones.refetch() : undefined}
+          />
+        </Field>
 
         <Input
           label="시작 시간"

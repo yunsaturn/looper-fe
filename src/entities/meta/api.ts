@@ -1,5 +1,5 @@
 import { api } from '@/shared/api/client';
-import type { PickupZone } from '@/entities/trade/types';
+import type { PickupZoneItem } from './types';
 
 export interface CampusItem {
   id: string;
@@ -26,11 +26,15 @@ export const metaApi = {
       .get<{ schools: SchoolItem[] }>('/api/v1/meta/schools')
       .then((r) => r.data.schools),
 
-  /** 캠퍼스별 픽업존. 거래·대여 등록 시 자유 입력이 아니라 이 목록에서 고른다 */
+  /**
+   * 캠퍼스별 픽업존. 거래·대여 등록 시 자유 입력이 아니라 이 목록에서 고른다.
+   * 목록 응답은 좌표·설명·활성 여부를 담은 PickupZoneItem 이다(상세 응답의
+   * { id, name } 요약형과 구분된다).
+   */
   pickupZones: (campusId: string) =>
     api
-      .get<{ pickup_zones: PickupZone[] }>(
+      .get<{ pickup_zones: PickupZoneItem[] }>(
         `/api/v1/campuses/${campusId}/pickup-zones`,
       )
-      .then((r) => r.data.pickup_zones),
+      .then((r) => r.data.pickup_zones ?? []),
 };
