@@ -45,8 +45,10 @@ export function ImpactPage() {
   }
 
   const data = me.data;
+  // BE 가 non_null 직렬화라 비어 있으면 필드 자체가 빠진다
+  const monthlyTrend = data.monthly_trend ?? [];
   const maxTrend = Math.max(
-    ...data.monthly_trend.map((p) => p.estimated_carbon_saved_kg_co2e),
+    ...monthlyTrend.map((p) => p.estimated_carbon_saved_kg_co2e),
     1,
   );
 
@@ -105,12 +107,12 @@ export function ImpactPage() {
       </section>
 
       {/* 월별 추이 */}
-      {data.monthly_trend.length > 0 && (
+      {monthlyTrend.length > 0 && (
         <section>
           <h2 className="mb-3 text-base font-bold text-ink-900">월별 추이</h2>
           <div className="rounded-card border border-ink-200 p-4">
             <ul className="grid gap-3">
-              {data.monthly_trend.map((point) => (
+              {monthlyTrend.map((point) => (
                 <li key={point.month} className="grid gap-1.5">
                   <div className="flex items-baseline justify-between text-sm">
                     <span className="text-ink-600">{point.month}</span>
@@ -140,7 +142,7 @@ export function ImpactPage() {
           <h2 className="text-base font-bold text-ink-900">캠퍼스 대시보드</h2>
 
           <CarbonHeroCard
-            label={`${campus.data.campus_name} 누적 예상 절감량`}
+            label={`${campus.data.campus.name} 누적 예상 절감량`}
             kgCO2e={campus.data.estimated_carbon_saved_kg_co2e}
             disclaimer={campus.data.disclaimer}
             caption={`참여자 ${campus.data.participant_count.toLocaleString('ko-KR')}명 · 완료 활동 ${campus.data.completed_activity_count.toLocaleString('ko-KR')}건`}
@@ -149,7 +151,7 @@ export function ImpactPage() {
           <div className="rounded-card border border-ink-200 p-4">
             <h3 className="text-sm font-bold text-ink-900">카테고리별 비중</h3>
             <ul className="mt-3 grid gap-2.5">
-              {campus.data.category_shares.map((share) => (
+              {(campus.data.category_breakdown ?? []).map((share) => (
                 <li key={share.category} className="grid gap-1.5">
                   <div className="flex items-baseline justify-between text-sm">
                     <span className="text-ink-600">
@@ -170,26 +172,17 @@ export function ImpactPage() {
             </ul>
           </div>
 
-          <div className="rounded-card border border-ink-200 p-4">
-            <h3 className="text-sm font-bold text-ink-900">캠퍼스 순위</h3>
-            <ol className="mt-3 grid gap-2">
-              {campus.data.ranking.map((entry, i) => (
-                <li
-                  key={entry.campus_id}
-                  className="flex items-center justify-between gap-3 text-sm"
-                >
-                  <span className="flex items-center gap-2.5">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-ink-100 text-xs font-bold text-ink-600">
-                      {i + 1}
-                    </span>
-                    <span className="text-ink-700">{entry.campus_name}</span>
-                  </span>
-                  <span className="font-semibold text-ink-900 tabular-nums">
-                    {formatCarbon(entry.estimated_carbon_saved_kg_co2e)}
-                  </span>
-                </li>
-              ))}
-            </ol>
+          <div className="flex items-center justify-between gap-3 rounded-card border border-ink-200 p-4">
+            <div>
+              <h3 className="text-sm font-bold text-ink-900">캠퍼스 순위</h3>
+              <p className="mt-0.5 text-xs text-ink-500">
+                전체 캠퍼스 중 누적 절감량 기준
+              </p>
+            </div>
+            <p className="text-2xl font-bold text-brand-700 tabular-nums">
+              {campus.data.campus_rank}
+              <span className="ml-0.5 text-base font-semibold">위</span>
+            </p>
           </div>
         </section>
       )}

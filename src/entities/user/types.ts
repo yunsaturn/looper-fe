@@ -5,17 +5,28 @@ export interface UserSummary {
   trust_score: number;
 }
 
+/** BE 는 학교·캠퍼스를 **중첩 객체**로 내려준다. 평평한 필드가 아니다. */
+export interface SchoolSummary {
+  id: string;
+  name: string;
+}
+
+export interface CampusSummary {
+  id: string;
+  name: string;
+}
+
 export interface MyProfile {
   id: string;
-  nickname: string;
   email: string;
-  school_id: string;
-  school_name: string;
-  campus_id: string;
-  campus_name: string;
+  nickname: string;
+  school: SchoolSummary;
+  campus: CampusSummary;
   department: string | null;
   main_building: string | null;
   trust_score: number;
+  trade_completed_count: number;
+  rental_completed_count: number;
 }
 
 /** 공개 프로필 — 이메일 등 계정 정보는 내려오지 않는다 (기획서 R6) */
@@ -24,7 +35,6 @@ export interface PublicProfile {
   nickname: string;
   school_name: string;
   campus_name: string;
-  department: string | null;
   trust_score: number;
   trade_completed_count: number;
   rental_completed_count: number;

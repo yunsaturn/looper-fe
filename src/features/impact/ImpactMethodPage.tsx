@@ -61,7 +61,7 @@ export function ImpactMethodPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {refs.data.sectors.map((s) => (
+                  {(refs.data.sectors ?? []).map((s) => (
                     <tr key={s.sector} className="border-b border-ink-100">
                       <td className="py-2.5">
                         {CATEGORY_LABEL[s.sector as Category] ?? s.sector}
@@ -90,20 +90,15 @@ export function ImpactMethodPage() {
           <section className="rounded-card border border-ink-200 p-4">
             <h2 className="text-sm font-bold text-ink-900">출처</h2>
             <ul className="mt-3 grid gap-2 text-sm text-ink-600">
-              {refs.data.sources.map((source) => (
+              {(refs.data.sources ?? []).map((source) => (
                 <li key={source.name} className="flex flex-wrap gap-1.5">
                   <span className="font-medium text-ink-800">
                     {source.name}
                   </span>
                   <span className="text-ink-400">({source.published_year})</span>
-                  {source.product_count && (
+                  {source.reported_substitution_rate != null && (
                     <span className="text-ink-400">
-                      · 제품 {source.product_count.toLocaleString('ko-KR')}개
-                    </span>
-                  )}
-                  {source.substitution_rate && (
-                    <span className="text-ink-400">
-                      · 대체율 {source.substitution_rate}
+                      · 대체율 {source.reported_substitution_rate}
                     </span>
                   )}
                 </li>

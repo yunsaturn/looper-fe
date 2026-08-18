@@ -1,14 +1,17 @@
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 import { cn } from '@/shared/lib/cn';
 import { LAYOUT } from '@/shared/config/navigation';
 import { ChevronLeftIcon } from '@/shared/ui/icons';
+import { RouteErrorBoundary } from '@/app/ErrorBoundary';
 
 /**
  * 상세·등록처럼 흐름 안으로 들어가는 화면용 레이아웃.
  * 하단 탭 대신 뒤로가기 헤더를 둔다.
  */
 export function StackLayout() {
+  const { pathname } = useLocation();
+
   return (
     <div className="min-h-dvh bg-white">
       <StackHeader />
@@ -18,7 +21,9 @@ export function StackLayout() {
           LAYOUT.contentMaxWidth,
         )}
       >
-        <Outlet />
+        <RouteErrorBoundary pathname={pathname}>
+          <Outlet />
+        </RouteErrorBoundary>
       </main>
     </div>
   );
