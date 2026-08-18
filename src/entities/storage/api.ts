@@ -12,11 +12,13 @@ export interface PresignedUploadResponse {
   required_headers: Record<string, string>;
 }
 
-/** 허용 형식 — BE 가 image/jpeg, image/png, image/webp 만 받는다 */
+/** 허용 형식 — BE 가 image/jpeg, image/png, image/webp, image/heic, image/heif 만 받는다 */
 export const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
   'image/png',
   'image/webp',
+  'image/heic',
+  'image/heif',
 ] as const;
 
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;

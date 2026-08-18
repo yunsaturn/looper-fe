@@ -284,7 +284,7 @@ function ProfileEditForm({
   const pickImage = async (file: File | undefined) => {
     if (!file) return;
     if (!ALLOWED_IMAGE_TYPES.includes(file.type as never)) {
-      toast.show('JPG, PNG, WEBP 이미지만 올릴 수 있어요.', 'error');
+      toast.show('JPG, PNG, WEBP, HEIC 이미지만 올릴 수 있어요.', 'error');
       return;
     }
     if (file.size > MAX_IMAGE_BYTES) {
