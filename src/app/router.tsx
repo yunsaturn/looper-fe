@@ -14,6 +14,7 @@ import { StackLayout } from './layouts/StackLayout';
  * 내려받을 이유가 없다. Render 콜드 스타트를 기다리는 동안 첫 화면이라도
  * 빨리 떠야 시연이 매끄럽다.
  */
+import { LandingPage } from '@/features/auth/LandingPage';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { HomePage } from '@/features/home/HomePage';
 import { NotFoundPage, PlaceholderPage } from '@/features/misc/PlaceholderPage';
@@ -132,6 +133,7 @@ export function AppRouter() {
     <Suspense fallback={<PageFallback />}>
       <Routes>
         {/* 공개 */}
+        <Route path={ROUTES.LANDING} element={<LandingPage />} />
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
         <Route path={ROUTES.SIGNUP} element={<SignupPage />} />
 

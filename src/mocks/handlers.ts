@@ -196,11 +196,21 @@ export const handlers = [
     if (body.main_building !== undefined) {
       myProfile.main_building = body.main_building;
     }
+    if (body.bio !== undefined) myProfile.bio = body.bio;
+    if (body.profile_image_url !== undefined) {
+      myProfile.profile_image_url = body.profile_image_url || null;
+    }
+    if (body.student_year !== undefined) {
+      myProfile.student_year = body.student_year;
+    }
     return HttpResponse.json({
       id: myProfile.id,
       nickname: myProfile.nickname,
       department: myProfile.department,
       main_building: myProfile.main_building,
+      profile_image_url: myProfile.profile_image_url,
+      bio: myProfile.bio,
+      student_year: myProfile.student_year,
       updated_at: new Date().toISOString(),
     });
   }),
@@ -321,9 +331,17 @@ export const handlers = [
       nickname: user.nickname,
       school_name: myProfile.school.name,
       campus_name: myProfile.campus.name,
+      department: '기계공학과',
+      student_year: 2,
+      profile_image_url: null,
+      bio: '기숙사 살아서 픽업존 이동이 빨라요. 소형 가전 위주로 거래합니다.',
+      email_verified: true,
+      joined_at: myProfile.joined_at,
       trust_score: user.trust_score,
       trade_completed_count: 12,
+      sharing_completed_count: 3,
       rental_completed_count: 7,
+      last_completed_at: myProfile.last_completed_at,
     });
   }),
 

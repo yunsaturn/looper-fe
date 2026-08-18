@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 
 import { userApi } from '@/entities/user/api';
 import { queryKeys } from '@/shared/api/queryKeys';
+import { formatDate } from '@/shared/lib/format';
 import { useAuthStore } from '@/shared/store/authStore';
 import { ErrorState, Skeleton } from '@/shared/ui/feedback';
 import { PageTitle } from '@/app/layouts/StackLayout';
@@ -52,11 +53,32 @@ export function PublicProfilePage() {
         nickname={data.nickname}
         trustScore={data.trust_score}
         affiliation={`${data.school_name} · ${data.campus_name}`}
+        meta={[
+          data.department,
+          data.student_year ? `${data.student_year}학년` : null,
+        ]
+          .filter(Boolean)
+          .join(' · ')}
+        bio={data.bio}
+        imageUrl={data.profile_image_url}
+        verified={data.email_verified}
+        joinedAt={data.joined_at}
       />
+
+      {data.last_completed_at && (
+        <p className="-mt-1 text-xs text-ink-500">
+          마지막 활동 {formatDate(data.last_completed_at)}
+        </p>
+      )}
 
       <ProfileStats
         items={[
           { label: '거래 완료', value: data.trade_completed_count, unit: '건' },
+          {
+            label: '나눔',
+            value: data.sharing_completed_count,
+            unit: '건',
+          },
           {
             label: '대여 완료',
             value: data.rental_completed_count,

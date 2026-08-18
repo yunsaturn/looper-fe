@@ -1,20 +1,31 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 
 import { impactApi } from '@/entities/impact/api';
 import { userApi } from '@/entities/user/api';
+import {
+  ALLOWED_IMAGE_TYPES,
+  MAX_IMAGE_BYTES,
+  storageApi,
+} from '@/entities/storage/api';
+import {
+  STUDENT_YEAR_MAX,
+  STUDENT_YEAR_MIN,
+  type MyProfile,
+} from '@/entities/user/types';
 import { ApiError } from '@/shared/api/errors';
 import { queryKeys } from '@/shared/api/queryKeys';
 import { useLogout } from '@/shared/hooks/useLogout';
 import { ROUTES } from '@/shared/config/navigation';
 import { formatCarbon } from '@/shared/lib/carbon';
+import { formatDate } from '@/shared/lib/format';
 import { Button } from '@/shared/ui/Button';
-import { Input } from '@/shared/ui/Field';
+import { Field, Input, Select, Textarea } from '@/shared/ui/Field';
 import { ErrorState, Skeleton } from '@/shared/ui/feedback';
 import { useToast } from '@/shared/ui/useToast';
 
-import { ProfileStats, ProfileSummary } from './ProfileSummary';
+import { Avatar, ProfileStats, ProfileSummary } from './ProfileSummary';
 import { WithdrawSheet } from './WithdrawSheet';
 
 /**
@@ -24,8 +35,9 @@ import { WithdrawSheet } from './WithdrawSheet';
  * 내려오지 않는다(기획서 R6). 서버도 공개 프로필 응답에서 이 필드들을
  * 빼고 주므로 화면에서 가릴 필요가 없다.
  *
- * 수정 가능한 항목은 서버가 허용하는 세 가지(닉네임·학과·주 이용 건물)뿐이다.
- * 학교와 캠퍼스는 가입할 때 이메일 도메인으로 정해지므로 바꿀 수 없다.
+ * 수정 가능한 항목은 서버가 허용하는 여섯 가지다 — 닉네임·학과·주 이용 건물·
+ * 프로필 사진·소개·학년. 학교와 캠퍼스는 가입할 때 이메일 도메인으로
+ * 정해지므로 바꿀 수 없다.
  */
 export function MyProfilePage() {
   const queryClient = useQueryClient();
@@ -63,9 +75,17 @@ export function MyProfilePage() {
         nickname={profile.nickname}
         trustScore={profile.trust_score}
         affiliation={`${profile.school.name} · ${profile.campus.name}`}
-        meta={[profile.department, profile.main_building]
+        meta={[
+          profile.department,
+          profile.student_year ? `${profile.student_year}학년` : null,
+          profile.main_building,
+        ]
           .filter(Boolean)
           .join(' · ')}
+        bio={profile.bio}
+        imageUrl={profile.profile_image_url}
+        verified={Boolean(profile.email_verified_at)}
+        joinedAt={profile.joined_at}
         action={
           !editing && (
             <Button
@@ -100,6 +120,11 @@ export function MyProfilePage() {
             unit: '건',
           },
           {
+            label: '나눔',
+            value: profile.sharing_completed_count,
+            unit: '건',
+          },
+          {
             label: '대여 완료',
             value: profile.rental_completed_count,
             unit: '건',
@@ -115,9 +140,31 @@ export function MyProfilePage() {
           <Row label="캠퍼스" value={profile.campus.name} />
           <Row label="학과" value={profile.department ?? '입력하지 않음'} />
           <Row
+            label="학년"
+            value={
+              profile.student_year
+                ? `${profile.student_year}학년`
+                : '입력하지 않음'
+            }
+          />
+          <Row
             label="주 이용 건물"
             value={profile.main_building ?? '입력하지 않음'}
           />
+          <Row
+            label="학교 이메일 인증"
+            value={
+              profile.email_verified_at
+                ? `${formatDate(profile.email_verified_at)} 완료`
+                : '미완료'
+            }
+          />
+          {profile.last_completed_at && (
+            <Row
+              label="마지막 활동"
+              value={formatDate(profile.last_completed_at)}
+            />
+          )}
         </dl>
       </section>
 
@@ -202,22 +249,59 @@ function LinkCard({
   );
 }
 
+/** 서버가 받는 1~8 을 그대로 선택지로 만든다 */
+const STUDENT_YEAR_OPTIONS = Array.from(
+  { length: STUDENT_YEAR_MAX - STUDENT_YEAR_MIN + 1 },
+  (_, i) => {
+    const year = STUDENT_YEAR_MIN + i;
+    return { value: String(year), label: `${year}학년` };
+  },
+);
+
 function ProfileEditForm({
   initial,
   onCancel,
   onSaved,
 }: {
-  initial: {
-    nickname: string;
-    department: string | null;
-    main_building: string | null;
-  };
+  initial: MyProfile;
   onCancel: () => void;
   onSaved: () => void;
 }) {
+  const toast = useToast();
   const [nickname, setNickname] = useState(initial.nickname);
   const [department, setDepartment] = useState(initial.department ?? '');
   const [mainBuilding, setMainBuilding] = useState(initial.main_building ?? '');
+  const [bio, setBio] = useState(initial.bio ?? '');
+  const [studentYear, setStudentYear] = useState(
+    initial.student_year ? String(initial.student_year) : '',
+  );
+  const [imageUrl, setImageUrl] = useState(initial.profile_image_url);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  /** 사진은 게시물 이미지와 같은 서명 업로드 경로를 그대로 쓴다 */
+  const pickImage = async (file: File | undefined) => {
+    if (!file) return;
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type as never)) {
+      toast.show('JPG, PNG, WEBP 이미지만 올릴 수 있어요.', 'error');
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.show('이미지 용량은 10MB 이하만 가능해요.', 'error');
+      return;
+    }
+    setUploading(true);
+    try {
+      setImageUrl(await storageApi.upload(file));
+    } catch {
+      toast.show(
+        '사진 업로드에 실패했어요. 잠시 뒤 다시 시도해주세요.',
+        'error',
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const save = useMutation({
     mutationFn: () =>
@@ -226,6 +310,10 @@ function ProfileEditForm({
         // 서버는 보낸 필드만 반영한다. 빈 문자열은 지우려는 의도로 보고 그대로 보낸다
         department,
         main_building: mainBuilding,
+        bio,
+        profile_image_url: imageUrl ?? '',
+        // 서버가 1~8만 받는다. 비워두면 아예 보내지 않아 기존 값을 유지한다
+        ...(studentYear ? { student_year: Number(studentYear) } : {}),
       }),
     onSuccess: onSaved,
   });
@@ -257,6 +345,57 @@ function ProfileEditForm({
         placeholder="예: 환경공학과"
         error={error?.fieldError('department')}
       />
+      <Field label="프로필 사진">
+        <div className="flex items-center gap-3">
+          <Avatar nickname={nickname} imageUrl={imageUrl} />
+          <input
+            ref={fileRef}
+            type="file"
+            accept={ALLOWED_IMAGE_TYPES.join(',')}
+            className="hidden"
+            onChange={(e) => void pickImage(e.target.files?.[0])}
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            loading={uploading}
+            onClick={() => fileRef.current?.click()}
+          >
+            {imageUrl ? '사진 변경' : '사진 올리기'}
+          </Button>
+          {imageUrl && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setImageUrl(null)}
+            >
+              삭제
+            </Button>
+          )}
+        </div>
+      </Field>
+
+      <Select
+        label="학년"
+        value={studentYear}
+        onChange={(e) => setStudentYear(e.target.value)}
+        options={STUDENT_YEAR_OPTIONS}
+        placeholder="선택하지 않음"
+        error={error?.fieldError('student_year')}
+      />
+
+      <Textarea
+        label="소개"
+        value={bio}
+        onChange={(e) => setBio(e.target.value)}
+        maxLength={500}
+        rows={3}
+        placeholder="어떤 물건을 주로 나누는지 적어두면 거래가 수월해요."
+        error={error?.fieldError('bio')}
+      />
+
       <Input
         label="주 이용 건물"
         value={mainBuilding}
