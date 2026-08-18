@@ -8,7 +8,6 @@ import { ROUTES } from '@/shared/config/navigation';
 import { useAuthStore } from '@/shared/store/authStore';
 import { Button } from '@/shared/ui/Button';
 import { Input } from '@/shared/ui/Field';
-import { LoopIcon } from '@/shared/ui/icons';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -34,7 +33,11 @@ export function LoginPage() {
     <div className="flex min-h-dvh flex-col justify-center px-5 py-10">
       <div className="mx-auto w-full max-w-sm">
         <div className="mb-8 text-center">
-          <LoopIcon className="mx-auto h-10 w-10 text-brand-600" />
+          <img
+            src="/logo.png"
+            alt="Looper 로고"
+            className="mx-auto h-9 w-9 shrink-0 md:h-11 md:w-11"
+          />
           <h1 className="mt-3 text-2xl font-bold text-ink-900">루퍼</h1>
           <p className="mt-1.5 text-sm text-ink-500">
             같은 캠퍼스 안에서 물건을 순환시켜요
