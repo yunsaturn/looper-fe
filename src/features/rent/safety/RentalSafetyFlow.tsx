@@ -112,7 +112,10 @@ export function RentalSafetyFlow({
         return;
       }
       invalidate();
-      toast.show('반납 사진을 등록했어요. 제공자 확인을 기다려 주세요.', 'success');
+      toast.show(
+        '반납 사진을 등록했어요. 제공자 확인을 기다려 주세요.',
+        'success',
+      );
     },
     onError,
   });
@@ -132,7 +135,9 @@ export function RentalSafetyFlow({
 
   const createReport = useMutation({
     mutationFn: (payload: {
-      reportType: Parameters<typeof rentalSafetyApi.createReport>[1]['report_type'];
+      reportType: Parameters<
+        typeof rentalSafetyApi.createReport
+      >[1]['report_type'];
       description: string;
     }) =>
       rentalSafetyApi.createReport(rentalId, {
@@ -261,7 +266,10 @@ export function RentalSafetyFlow({
     if (isSelectedOfferer && hasBefore && !data.condition_accepted) {
       return (
         <section className="rounded-card border border-ink-200 p-4">
-          <PhotoGallery urls={data.before!.image_urls} label="등록한 기준 사진" />
+          <PhotoGallery
+            urls={data.before!.image_urls}
+            label="등록한 기준 사진"
+          />
           <p className="mt-3 text-sm text-ink-600">
             빌린 사람이 상태 확인을 하면 대여가 시작돼요.
           </p>
@@ -278,8 +286,7 @@ export function RentalSafetyFlow({
       <section className="rounded-card border border-brand-300 bg-brand-50 p-4">
         <h3 className="text-sm font-bold text-brand-800">반납 사진 촬영</h3>
         <p className="mt-1 text-sm text-ink-600">
-          반납할 때의 상태를 촬영해 주세요. AI가 대여 시작 때 사진과
-          비교해요.
+          반납할 때의 상태를 촬영해 주세요. AI가 대여 시작 때 사진과 비교해요.
         </p>
         <div className="mt-4 grid gap-3">
           {needsRetake && aiResult && <AiResultBadge result={aiResult} />}
@@ -327,10 +334,7 @@ export function RentalSafetyFlow({
                 urls={data.before?.image_urls ?? []}
                 label="대여 시작"
               />
-              <PhotoGallery
-                urls={data.after.image_urls}
-                label="반납"
-              />
+              <PhotoGallery urls={data.after.image_urls} label="반납" />
             </div>
 
             {aiResult && <AiResultBadge result={aiResult} />}
@@ -386,7 +390,10 @@ export function RentalSafetyFlow({
         </p>
         {data.after && (
           <div className="mt-3">
-            <PhotoGallery urls={data.after.image_urls} label="등록한 반납 사진" />
+            <PhotoGallery
+              urls={data.after.image_urls}
+              label="등록한 반납 사진"
+            />
           </div>
         )}
         {aiResult && (

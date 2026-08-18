@@ -15,12 +15,7 @@ interface Props {
 }
 
 /** "문제가 있어요" 선택 후 신고 유형을 고른다 */
-export function ReportTypeSheet({
-  open,
-  onClose,
-  onSubmit,
-  loading,
-}: Props) {
+export function ReportTypeSheet({ open, onClose, onSubmit, loading }: Props) {
   const [reportType, setReportType] = useState<ReportType | null>(null);
   const [description, setDescription] = useState('');
 
@@ -57,8 +52,7 @@ export function ReportTypeSheet({
     >
       <div className="grid gap-4">
         <p className="text-sm text-ink-600">
-          어떤 문제가 있었는지 알려주세요. 신고가 접수되면 확인 절차가
-          진행돼요.
+          어떤 문제가 있었는지 알려주세요. 신고가 접수되면 확인 절차가 진행돼요.
         </p>
 
         <div className="grid gap-2">

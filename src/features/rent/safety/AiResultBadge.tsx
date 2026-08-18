@@ -13,12 +13,7 @@ export function AiResultBadge({ result, className }: Props) {
   const meta = AI_CONDITION_META[result.status];
 
   return (
-    <div
-      className={cn(
-        'rounded-card border border-ink-200 p-4',
-        className,
-      )}
-    >
+    <div className={cn('rounded-card border border-ink-200 p-4', className)}>
       <div className="flex flex-wrap items-center gap-2">
         <span
           className={cn(
