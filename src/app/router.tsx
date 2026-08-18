@@ -7,6 +7,7 @@ import { MainLayout } from './layouts/MainLayout';
 import { StackLayout } from './layouts/StackLayout';
 
 import { LoginPage } from '@/features/auth/LoginPage';
+import { SignupPage } from '@/features/auth/SignupPage';
 import { HomePage } from '@/features/home/HomePage';
 import { TradeListPage } from '@/features/trade/TradeListPage';
 import { TradeDetailPage } from '@/features/trade/TradeDetailPage';
@@ -44,15 +45,7 @@ export function AppRouter() {
     <Routes>
       {/* 공개 */}
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-      <Route
-        path={ROUTES.SIGNUP}
-        element={
-          <PlaceholderPage
-            title="회원가입"
-            description="학교 이메일 인증 흐름은 실제 서버 연결 후 붙입니다."
-          />
-        }
-      />
+      <Route path={ROUTES.SIGNUP} element={<SignupPage />} />
 
       {/* 탭이 있는 메인 화면 */}
       <Route

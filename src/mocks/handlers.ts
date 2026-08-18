@@ -99,6 +99,59 @@ export const handlers = [
     });
   }),
 
+  /* 회원가입 3단계 — 목업에서는 인증번호 000000 으로 통과시킨다 */
+
+  http.post(`${BASE}/auth/email-verifications`, async () => {
+    await delay(LATENCY_MS);
+    return HttpResponse.json({
+      verification_id: 'mock-verification-id',
+      expires_in_seconds: 300,
+      message: '인증번호를 발송했습니다. (목업: 000000)',
+    });
+  }),
+
+  http.post(`${BASE}/auth/email-verifications/confirm`, async ({ request }) => {
+    await delay(LATENCY_MS);
+    const { code } = (await request.json()) as { code: string };
+    if (code !== '000000') {
+      return HttpResponse.json(
+        {
+          code: 'INVALID_VERIFICATION_CODE',
+          message: '인증번호가 올바르지 않습니다. (목업: 000000)',
+          field_errors: [],
+          current_status: null,
+          allowed_statuses: null,
+          requested_action: null,
+        },
+        { status: 400 },
+      );
+    }
+    return HttpResponse.json({
+      verification_token: 'mock-verification-token',
+      verified: true,
+      expires_in_seconds: 900,
+    });
+  }),
+
+  http.post(`${BASE}/auth/signup`, async ({ request }) => {
+    await delay(LATENCY_MS);
+    const body = (await request.json()) as { nickname: string };
+    return HttpResponse.json(
+      {
+        access_token: 'mock-access-token',
+        refresh_token: 'mock-refresh-token',
+        access_token_expires_in: 3600,
+        user: {
+          id: DEMO_ME_ID,
+          nickname: body.nickname,
+          campus_id: DEMO_CAMPUS_ID,
+          trust_score: 80,
+        },
+      },
+      { status: 201 },
+    );
+  }),
+
   http.get(`${BASE}/users/me`, async () => {
     await delay(LATENCY_MS);
     return HttpResponse.json({
@@ -119,20 +172,22 @@ export const handlers = [
 
   http.get(`${BASE}/campuses/:campusId/pickup-zones`, async () => {
     await delay(LATENCY_MS);
-    return HttpResponse.json({ content: pickupZones });
+    return HttpResponse.json({ pickup_zones: pickupZones });
   }),
 
   http.get(`${BASE}/meta/schools`, async () => {
     await delay(LATENCY_MS);
     return HttpResponse.json({
-      content: [
+      schools: [
         {
           id: 'school-1',
           name: 'XX대학교',
           email_domain: 'xx.ac.kr',
+          email_domains: ['xx.ac.kr'],
+          email_verification_enabled: true,
           campuses: [
-            { id: DEMO_CAMPUS_ID, name: '본교 캠퍼스' },
-            { id: 'campus-2', name: '제2캠퍼스' },
+            { id: DEMO_CAMPUS_ID, name: '본교 캠퍼스', region_name: '서울특별시', address: null },
+            { id: 'campus-2', name: '제2캠퍼스', region_name: '경기도', address: null },
           ],
         },
       ],
@@ -238,7 +293,7 @@ export const handlers = [
   http.get(`${BASE}/trades/:tradeId/applications`, async ({ params }) => {
     await delay(LATENCY_MS);
     return HttpResponse.json({
-      content: applications.filter((a) => a.trade_id === params.tradeId),
+      applications: applications.filter((a) => a.trade_id === params.tradeId),
     });
   }),
 
@@ -454,7 +509,7 @@ export const handlers = [
   http.get(`${BASE}/rentals/:rentalId/offers`, async ({ params }) => {
     await delay(LATENCY_MS);
     return HttpResponse.json({
-      content: offers.filter((o) => o.rental_id === params.rentalId),
+      offers: offers.filter((o) => o.rental_id === params.rentalId),
     });
   }),
 
