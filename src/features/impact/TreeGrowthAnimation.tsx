@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import type { ForestProgress } from '@/entities/impact/types';
 import { cn } from '@/shared/lib/cn';
@@ -67,16 +67,11 @@ export function TreeGrowthAnimation({
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }, []);
 
-  const [isMounted, setIsMounted] = useState(false);
   const previousCurrentTrees = getPreviousCurrentTrees();
   const { percent, stage, visibleTreeCount, hasNewTree } = getTreeGrowthState(
     forest,
     previousCurrentTrees ?? undefined,
   );
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   useEffect(() => {
     if (!autoPlay || reducedMotion || !activityId) return;
@@ -94,6 +89,7 @@ export function TreeGrowthAnimation({
     ? !reducedMotion && !shouldSkipTreeGrowth(activityId)
     : false;
   const barWidth = `${Math.min(100, Math.max(0, percent))}%`;
+  const displayStage = reducedMotion ? 'complete' : stage;
 
   return (
     <>
@@ -151,7 +147,7 @@ export function TreeGrowthAnimation({
 
       <div
         className={cn('tree-growth-shell grid gap-2', className)}
-        data-stage={shouldAnimate && isMounted ? stage : 'complete'}
+        data-stage={displayStage}
         style={{
           ['--progress-width' as string]: barWidth,
         }}
@@ -165,14 +161,16 @@ export function TreeGrowthAnimation({
                 compact ? 'h-10 w-10' : 'h-12 w-12',
               )}
             >
-              <span className="tree-branch">
-                <SaplingGlyph className={compact ? 'h-8 w-8' : 'h-10 w-10'} />
-              </span>
+              {displayStage === 'seed' ? (
+                <TreeSeed visible />
+              ) : (
+                <span className="tree-branch">
+                  <SaplingGlyph className={compact ? 'h-8 w-8' : 'h-10 w-10'} />
+                </span>
+              )}
             </div>
           ))}
-          {visibleTreeCount === 0 && (
-            <TreeSeed visible={!reducedMotion && shouldAnimate} />
-          )}
+          {visibleTreeCount === 0 && <TreeSeed visible={!reducedMotion} />}
           {visibleTreeCount > 0 &&
             !reducedMotion &&
             shouldAnimate &&
@@ -183,11 +181,13 @@ export function TreeGrowthAnimation({
                 </span>
               </div>
             )}
-          {visibleTreeCount > 0 && !shouldAnimate && (
-            <div className="tree-emblem flex items-center justify-center rounded-full bg-brand-100 p-1">
-              <SaplingGlyph className={compact ? 'h-8 w-8' : 'h-10 w-10'} />
-            </div>
-          )}
+          {visibleTreeCount > 0 &&
+            !shouldAnimate &&
+            displayStage !== 'seed' && (
+              <div className="tree-emblem flex items-center justify-center rounded-full bg-brand-100 p-1">
+                <SaplingGlyph className={compact ? 'h-8 w-8' : 'h-10 w-10'} />
+              </div>
+            )}
         </div>
 
         <div className="grid gap-1.5">

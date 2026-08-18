@@ -154,7 +154,7 @@ export function TradeNewPage() {
       />
 
       <form
-        className="grid max-w-2xl gap-5"
+        className="grid max-w-2xl gap-5 pb-10"
         onSubmit={(e) => {
           e.preventDefault();
           create.mutate();
