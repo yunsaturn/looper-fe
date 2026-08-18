@@ -100,15 +100,6 @@ export function CloseIcon(p: IconProps) {
   );
 }
 
-/** 무한대(∞) — Looper 워드마크의 상징 */
-export function LoopIcon(p: IconProps) {
-  return (
-    <Svg {...p}>
-      <path d="M8 12c0-2.2-1.3-3.5-3-3.5S2 9.8 2 12s1.3 3.5 3 3.5S8 14.2 8 12Zm0 0c0 2.2 1.3 3.5 3 3.5s3-1.3 3-3.5-1.3-3.5-3-3.5S8 9.8 8 12Z" />
-    </Svg>
-  );
-}
-
 const NAV_ICONS: Record<NavIconName, (p: IconProps) => React.ReactElement> = {
   home: HomeIcon,
   search: SearchIcon,
