@@ -1,3 +1,115 @@
+# 루퍼(Looper) — 개인 포트폴리오 사본
+
+> **2026 EST AI Challengers 해커톤**에서 진행한 5인 팀 프로젝트 **루퍼**(캠퍼스
+> 순환장터)의 프론트엔드 저장소를, 제 포트폴리오용으로 옮긴 개인 사본입니다.
+> 정본은 아래 팀 원본 저장소이며 이 사본은 제가 담당한 범위를 정리하기 위한
+> 것입니다. `Looper FE` 이하 본문은 팀 저장소 README 원문 그대로입니다.
+
+| 항목      | 내용                                          |
+| --------- | --------------------------------------------- |
+| 대회      | 2026 EST AI Challengers 해커톤                |
+| 성과      | 38개 팀 중 **우수상**                         |
+| 팀        | Team 37.5°C · 5인                             |
+| 개발 기간 | 2026-08-16 ~ 2026-08-19 (커밋 기록 기준)      |
+| 담당      | 프론트엔드 전체 및 백엔드 API 연동            |
+| 배포      | <https://fe-vlak.vercel.app>                  |
+
+## 팀 원본 저장소
+
+| 파트     | 저장소                                               |
+| -------- | ---------------------------------------------------- |
+| Frontend | <https://github.com/EST-AI-Challengers-37-Looper/FE> |
+| Backend  | <https://github.com/EST-AI-Challengers-37-Looper/BE> |
+| AI       | <https://github.com/EST-AI-Challengers-37-Looper/AI> |
+
+## 전체 아키텍처
+
+루퍼는 React 프론트엔드, Spring Boot 백엔드, FastAPI AI 서비스 세 갈래로
+구성됩니다. 브라우저에서 도는 React SPA는 Spring Boot REST API(`/api/v1`)
+한 곳하고만 통신하며, 인증은 Access/Refresh Token을 `Authorization` 헤더에
+실어 보냅니다. 상품 사진으로 상품명·카테고리를 추천하는 AI 기능은 FastAPI
+서비스가 담당하는데, 이 서비스는 Private이라 프론트에서 직접 호출하지 않고
+Spring Boot가 중계합니다. 따라서 프론트 입장에서는 AI 응답도 백엔드 API의
+일부입니다. 백엔드 없이도 화면을 시연할 수 있도록 프론트에는 MSW 목업 계층을
+따로 두고 `VITE_USE_MOCK`으로 전환합니다.
+
+## 담당 범위
+
+프론트엔드 전체와 백엔드 API 연동을 맡았습니다. git 기록 기준으로는 다음과
+같습니다.
+
+- 전체 82개 커밋 중 **75개**가 제 커밋입니다.
+- 현재 `src/` 아래 112개 파일 중 **103개**를 제가 최초 작성했습니다.
+- 나머지 9개 파일은 팀원이 구현한 대여 안전 확인(사진 대조) 흐름입니다.
+  (`src/features/rent/safety/`, `src/entities/rental/safety/`)
+
+구체적으로 담당한 작업입니다.
+
+- **라우팅·레이아웃 설계** — 모바일 하단 탭과 데스크톱 사이드바로 갈리는
+  반응형 내비게이션, 라우트 단위 코드 스플리팅, 인증 가드
+- **API 클라이언트** — 토큰 첨부, 여러 요청이 동시에 401을 받아도 Refresh
+  요청은 한 번만 보내는 자동 갱신, 공통 오류 처리, `baseURL` 정규화
+- **백엔드 연동 계층** — 도메인별 DTO 타입과 API 호출 함수(`src/entities/`).
+  서버가 snake_case라 변환 계층 없이 명세를 그대로 반영
+- **서버 상태 관리** — TanStack Query로 조회하고 변경 성공 후 관련 쿼리를
+  무효화합니다. 중복 수락·이중 완료를 막기 위해 mutation 자동 재시도와
+  낙관적 업데이트는 쓰지 않았습니다
+- **MSW 목업 서버와 시드 데이터** — 백엔드 없이 전체 화면이 돌아갑니다
+- **테스트** — API 계약 테스트, 픽업존·포맷 유틸 단위 테스트 (Vitest)
+- **배포·운영 대응** — Vercel 배포 설정, Render 무료 플랜 콜드 스타트 대응
+  (기동용 헬스체크 선요청 + 타임아웃 상향)
+
+## 구현한 화면
+
+| 영역   | 화면                    | 경로                             |
+| ------ | ----------------------- | -------------------------------- |
+| 인증   | 랜딩                    | `/landing`                       |
+| 인증   | 로그인                  | `/login`                         |
+| 인증   | 학교 이메일 회원가입    | `/signup`                        |
+| 인증   | 비밀번호 재설정         | `/password/reset`                |
+| 메인   | 홈 피드                 | `/`                              |
+| 메인   | 통합 검색               | `/search`                        |
+| 거래   | 목록                    | `/trades`                        |
+| 거래   | 등록 (사진·AI 입력 보조) | `/trades/new`                    |
+| 거래   | 상세                    | `/trades/:tradeId`               |
+| 거래   | 수정                    | `/trades/:tradeId/edit`          |
+| 거래   | 신청자 목록·선택        | `/trades/:tradeId/applicants`    |
+| 거래   | 거래 완료               | `/trades/:tradeId/complete`      |
+| 대여   | 목록                    | `/rentals`                       |
+| 대여   | 등록                    | `/rentals/new`                   |
+| 대여   | 상세                    | `/rentals/:rentalId`             |
+| 대여   | 수정                    | `/rentals/:rentalId/edit`        |
+| 대여   | 지원자 목록             | `/rentals/:rentalId/offers`      |
+| 대여   | 반납·완료               | `/rentals/:rentalId/complete`    |
+| 임팩트 | 개인·캠퍼스 대시보드    | `/impact`                        |
+| 임팩트 | 산정 방식·계수 출처     | `/impact/method`                 |
+| 임팩트 | 활동 상세               | `/impact/activities/:activityId` |
+| 프로필 | 내 프로필               | `/me`                            |
+| 프로필 | 내 활동                 | `/me/activities`                 |
+| 프로필 | 상대방 공개 프로필      | `/users/:userId`                 |
+| 알림   | 알림 목록               | `/notifications`                 |
+
+대여 상세 안에서 이어지는 안전 확인(사진 대조) 흐름은 팀원이 구현했습니다.
+관리자 화면(`/admin/login`, `/admin/status`)과 캠퍼스 대시보드
+(`/impact/campus`)는 대응하는 백엔드 API가 없어 자리만 잡아둔 상태입니다.
+
+## 기술 스택
+
+| 구분        | 사용 기술                                                     |
+| ----------- | ------------------------------------------------------------- |
+| 언어·빌드   | TypeScript 5 (strict), Vite 6                                  |
+| UI          | React 18, React Router 7, Tailwind CSS 4                       |
+| 서버 상태   | TanStack Query 5, Axios 1                                      |
+| 클라이언트 상태 | Zustand 5 (인증 상태)                                      |
+| 목업        | MSW 2                                                          |
+| 테스트      | Vitest 4                                                       |
+| 코드 품질   | ESLint 9, Prettier 3, `tsc --noEmit`                           |
+| 타입 생성   | openapi-typescript (백엔드 OpenAPI 스펙 → 타입)                |
+| 지도        | Kakao Maps JavaScript SDK (픽업존 마커 선택, 런타임 로드)      |
+| 배포        | Vercel                                                         |
+
+---
+
 # Looper FE
 
 > 같은 캠퍼스 안에서 물건을 사고, 나누고, 빌리며 자원 순환 효과를 확인하는
